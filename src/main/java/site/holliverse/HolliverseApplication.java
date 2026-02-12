@@ -1,4 +1,4 @@
-package site.holliverse.holliverse;
+package site.holliverse;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package site.holliverse.holliverse;
+package site.holliverse;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

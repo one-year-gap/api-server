@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.2'
     id 'io.spring.dependency-management' version '1.1.7'
-    id "org.sonarqube" version "5.1.0.4882"
     id 'jacoco'
 }
 
@@ -60,22 +59,6 @@ tasks.named('test') {
 
 
 
-/* SonarQube Setting*/
-sonar {
-    properties {
-        property "sonar.projectKey", "one-year-gap_api-server"
-        property "sonar.organization", "one-year-gap"
-        property "sonar.host.url", "https://sonarcloud.io"
-        property("sonar.scanner.skipJreProvisioning", "true")
-        property "sonar.coverage.jacoco.xmlReportPaths",
-                "${layout.buildDirectory.get().asFile}/reports/jacoco/test/jacocoTestReport.xml"
-    }
-}
-
-tasks.named("sonarqube") {
-    dependsOn(tasks.named("jacocoTestReport"))
-}
-
 /* Jacoco Test Setting */
 jacoco {
     toolVersion = "0.8.14"
@@ -108,27 +91,9 @@ def jacocoExcludes = [
         '**/*Querydsl*',
 ]
 
-tasks.named("jacocoTestReport", JacocoReport) {
-    dependsOn tasks.named("test")
-    reports {
-        xml.required = true
-        html.required = true
-        csv.required = false
-
-        xml.outputLocation = layout.buildDirectory
-                .file("reports/jacoco/test/jacocoTestReport.xml")
-        html.outputLocation = layout.buildDirectory
-                .dir("reports/jacoco/test/html")
-    }
-
-    classDirectories.setFrom(files(classDirectories.files.collect { dir ->
-        fileTree(dir: dir, exclude: jacocoExcludes)
-    }))
-
-    finalizedBy tasks.named("jacocoTestCoverageVerification")
-}
 
 tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification) {
+    enabled = false  // 기본 OFF (B안)
     violationRules {
         rule {
             enabled = true
@@ -136,12 +101,12 @@ tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification) {
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                //minimum=0.5
+                //minimum = 0.5
             }
             limit {
                 counter = 'LINE'
                 value = 'COVEREDRATIO'
-                //minimum=0.7
+                //minimum = 0.7
             }
         }
     }

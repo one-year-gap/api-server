@@ -1,0 +1,133 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+}
+
+group = 'api-server'
+version = '0.0.1-SNAPSHOT'
+description = 'api-server'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform('org.springframework.boot:spring-boot-dependencies:3.5.2')
+    testImplementation platform('org.springframework.boot:spring-boot-dependencies:3.5.2')
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    runtimeOnly 'org.postgresql:postgresql'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    /* Querydsl */
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy tasks.named("jacocoTestReport")
+}
+
+
+
+/* Jacoco Test Setting */
+jacoco {
+    toolVersion = "0.8.14"
+}
+
+def jacocoExcludes = [
+        '**/*Application*',
+        '**/*Dto*',
+        '**/*VO*',
+        '**/*Vo*',
+        '**/*Request*',
+        '**/*Response*',
+        '**/*Exception*',
+        '**/*Error*',
+        '**/*Config*',
+        '**/*Configuration*',
+        '**/*Properties*',
+        '**/*Interceptor*',
+        '**/*Filter*',
+        '**/*Advice*',
+        '**/*Handler*',
+        '**/*Mapper*',
+        '**/*Converter*',
+        '**/*Constant*',
+        '**/*Constants*',
+        '**/*Enum*',
+        '**/generated/**',
+        '**/Q*.class',
+        '**/Q*.java',
+        '**/*Querydsl*',
+]
+
+tasks.named("jacocoTestReport", JacocoReport) {
+    dependsOn tasks.named("test")
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+
+    classDirectories.setFrom(
+            files(classDirectories.files.collect { dir ->
+                fileTree(dir: dir, exclude: jacocoExcludes)
+            })
+    )
+}
+tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification) {
+    enabled = false
+
+    classDirectories.setFrom(
+            files(classDirectories.files.collect { dir ->
+                fileTree(dir: dir, exclude: jacocoExcludes)
+            })
+    )
+    violationRules {
+        rule {
+            enabled = true
+            element = 'BUNDLE'
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                //minimum = 0.5
+            }
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                //minimum = 0.7
+            }
+        }
+    }
+}

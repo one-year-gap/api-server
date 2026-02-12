@@ -91,9 +91,29 @@ def jacocoExcludes = [
         '**/*Querydsl*',
 ]
 
+tasks.named("jacocoTestReport", JacocoReport) {
+    dependsOn tasks.named("test")
 
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+
+    classDirectories.setFrom(
+            files(classDirectories.files.collect { dir ->
+                fileTree(dir: dir, exclude: jacocoExcludes)
+            })
+    )
+}
 tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification) {
-    enabled = false  // 기본 OFF (B안)
+    enabled = false
+
+    classDirectories.setFrom(
+            files(classDirectories.files.collect { dir ->
+                fileTree(dir: dir, exclude: jacocoExcludes)
+            })
+    )
     violationRules {
         rule {
             enabled = true

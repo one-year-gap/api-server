@@ -110,41 +110,39 @@ def jacocoExcludes = [
         '**/*Querydsl*',
 ]
 
-tasks.jacocoTestReport {
-    dependsOn tasks.test
-
+tasks.named("jacocoTestReport", JacocoReport) {
     reports {
-        xml.required.set(true)
-        html.required.set(true)
-        csv.required.set(false)
+        xml.required = true
+        html.required = true
+        csv.required = false
 
-        xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml"))
-        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/test/html"))
+        xml.outputLocation = layout.buildDirectory
+                .file("reports/jacoco/test/jacocoTestReport.xml")
+        html.outputLocation = layout.buildDirectory
+                .dir("reports/jacoco/test/html")
     }
 
     classDirectories.setFrom(files(classDirectories.files.collect { dir ->
         fileTree(dir: dir, exclude: jacocoExcludes)
     }))
 
-    finalizedBy tasks.jacocoTestCoverageVerification
+    finalizedBy tasks.named("jacocoTestCoverageVerification")
 }
 
-jacocoTestCoverageVerification {
+tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification) {
     violationRules {
         rule {
             enabled = true
             element = 'BUNDLE'
-
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                //minimum = 0.50
+                minimum=0.5
             }
-
             limit {
                 counter = 'LINE'
                 value = 'COVEREDRATIO'
-                //minimum = 0.70/
+                minimum=0.7
             }
         }
     }

@@ -1,0 +1,14 @@
+name: PR Checks
+
+on:
+  pull_request:
+
+jobs:
+  coverage:
+    uses: one-year-gap/infra/.github/workflows/test-coverage.yml@main
+    with:
+      working-directory: .
+      min-line-overall: 0.0
+      min-branch-overall: 0.0
+      min-line-changed: 0.0
+      min-branch-changed: 0.0

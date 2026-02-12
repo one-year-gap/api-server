@@ -1,0 +1,31 @@
+spring:
+  profiles:
+    active: customer
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
+  #DataBase
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/holliverse}
+    username: ${DB_USER_CUSTOMER:app_customer}
+    password: ${DB_PASS_CUSTOMER:app_customer_pw}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
+      connection-timeout: 3000
+      validation-timeout: 1000
+
+  flyway:
+    user: ${DB_USER_MIGRATOR:db_migrator}
+    password: ${DB_PASS_MIGRATOR:db_migrator_pw}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  runtime: customer
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://holliverse.site}

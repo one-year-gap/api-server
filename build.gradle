@@ -50,13 +50,15 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    /* Archunit Test */
+    testImplementation "com.tngtech.archunit:archunit-junit5:1.3.0"
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy tasks.named("jacocoTestReport")
 }
-
 
 
 /* Jacoco Test Setting */
@@ -89,6 +91,7 @@ def jacocoExcludes = [
         '**/Q*.class',
         '**/Q*.java',
         '**/*Querydsl*',
+        '**/*ArchitectureRules*',
 ]
 
 tasks.named("jacocoTestReport", JacocoReport) {

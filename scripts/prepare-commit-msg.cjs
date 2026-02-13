@@ -27,14 +27,8 @@ if (!mm) {
   process.exit(1);
 }
 
-const msgType = mm[1];
 const rest = mm[2];
 
-if (msgType !== branchType) {
-  console.error(`type 불일치: 브랜치="${branchType}", 커밋="${msgType}"`);
-  console.error(`- 브랜치가 ${branchType}/${ticket}이면 커밋은 "${branchType}: ..." 로 작성해야 합니다.`);
-  process.exit(1);
-}
 
 const expectedPrefix = `${branchType}/${ticket}: `;
 if (firstLine.startsWith(expectedPrefix)) process.exit(0);

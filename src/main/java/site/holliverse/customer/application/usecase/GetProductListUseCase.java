@@ -57,10 +57,14 @@ public class GetProductListUseCase {
 
     @Transactional(readOnly = true)
     public ProductListResult execute(String category, int page, int size) {
-        ProductType productType = CATEGORY_TO_TYPE.getOrDefault(
-                category != null ? category.toLowerCase() : "",
-                ProductType.MOBILE_PLAN
-        );
+        if (category == null || category.isBlank()) {
+            throw new IllegalArgumentException("카테고리는 필수입니다.");
+        }
+        String key = category.strip().toLowerCase();
+        ProductType productType = CATEGORY_TO_TYPE.get(key);
+        if (productType == null) {
+            throw new IllegalArgumentException("지원하지 않는 카테고리입니다: " + category);
+        }
         Pageable pageable = PageRequest.of(page, size);
         Page<Product> products = productRepository.findByProductType(productType, pageable);
 

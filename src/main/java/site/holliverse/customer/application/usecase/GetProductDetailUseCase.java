@@ -56,11 +56,19 @@ public class GetProductDetailUseCase {
         Long productId = product.getProductId();
         ProductType type = product.getProductType();
 
-        Optional<MobilePlan> mobilePlan = type == ProductType.MOBILE_PLAN ? mobilePlanRepository.findById(productId) : Optional.empty();
-        Optional<Internet> internet = type == ProductType.INTERNET ? internetRepository.findById(productId) : Optional.empty();
-        Optional<Iptv> iptv = type == ProductType.IPTV ? iptvRepository.findById(productId) : Optional.empty();
-        Optional<Addon> addon = type == ProductType.ADDON ? addonRepository.findById(productId) : Optional.empty();
-        Optional<TabWatchPlan> tabWatchPlan = type == ProductType.TAB_WATCH_PLAN ? tabWatchPlanRepository.findById(productId) : Optional.empty();
+        Optional<MobilePlan> mobilePlan = Optional.empty();
+        Optional<Internet> internet = Optional.empty();
+        Optional<Iptv> iptv = Optional.empty();
+        Optional<Addon> addon = Optional.empty();
+        Optional<TabWatchPlan> tabWatchPlan = Optional.empty();
+
+        switch (type) {
+            case MOBILE_PLAN -> mobilePlan = mobilePlanRepository.findById(productId);
+            case INTERNET -> internet = internetRepository.findById(productId);
+            case IPTV -> iptv = iptvRepository.findById(productId);
+            case ADDON -> addon = addonRepository.findById(productId);
+            case TAB_WATCH_PLAN -> tabWatchPlan = tabWatchPlanRepository.findById(productId);
+        }
 
         ProductSummaryDto productDto = toSummaryDto(product);
         return new ProductDetailResult(

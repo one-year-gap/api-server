@@ -78,16 +78,21 @@ public class GetProductListUseCase {
                 ? List.of()
                 : products.getContent().stream().map(Product::getProductId).collect(Collectors.toList());
 
-        List<MobilePlan> mobilePlans = productType == ProductType.MOBILE_PLAN && !productIds.isEmpty()
-                ? mobilePlanRepository.findByProductIdIn(productIds) : List.of();
-        List<Internet> internets = productType == ProductType.INTERNET && !productIds.isEmpty()
-                ? internetRepository.findByProductIdIn(productIds) : List.of();
-        List<Iptv> iptvs = productType == ProductType.IPTV && !productIds.isEmpty()
-                ? iptvRepository.findByProductIdIn(productIds) : List.of();
-        List<Addon> addons = productType == ProductType.ADDON && !productIds.isEmpty()
-                ? addonRepository.findByProductIdIn(productIds) : List.of();
-        List<TabWatchPlan> tabWatchPlans = productType == ProductType.TAB_WATCH_PLAN && !productIds.isEmpty()
-                ? tabWatchPlanRepository.findByProductIdIn(productIds) : List.of();
+        List<MobilePlan> mobilePlans = List.of();
+        List<Internet> internets = List.of();
+        List<Iptv> iptvs = List.of();
+        List<Addon> addons = List.of();
+        List<TabWatchPlan> tabWatchPlans = List.of();
+
+        if (!productIds.isEmpty()) {
+            switch (productType) {
+                case MOBILE_PLAN -> mobilePlans = mobilePlanRepository.findByProductIdIn(productIds);
+                case INTERNET -> internets = internetRepository.findByProductIdIn(productIds);
+                case IPTV -> iptvs = iptvRepository.findByProductIdIn(productIds);
+                case ADDON -> addons = addonRepository.findByProductIdIn(productIds);
+                case TAB_WATCH_PLAN -> tabWatchPlans = tabWatchPlanRepository.findByProductIdIn(productIds);
+            }
+        }
 
         Page<ProductSummaryDto> productDtos = products.map(this::toSummaryDto);
         return new ProductListResult(

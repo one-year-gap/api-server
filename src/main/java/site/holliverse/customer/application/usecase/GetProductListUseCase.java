@@ -5,6 +5,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.customer.application.usecase.dto.AddonDetailDto;
+import site.holliverse.customer.application.usecase.dto.InternetDetailDto;
+import site.holliverse.customer.application.usecase.dto.IptvDetailDto;
+import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
+import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
+import site.holliverse.customer.application.usecase.dto.TabWatchPlanDetailDto;
 import site.holliverse.customer.persistence.entity.Addon;
 import site.holliverse.customer.persistence.entity.Internet;
 import site.holliverse.customer.persistence.entity.Iptv;
@@ -83,6 +89,56 @@ public class GetProductListUseCase {
         List<TabWatchPlan> tabWatchPlans = productType == ProductType.TAB_WATCH_PLAN && !productIds.isEmpty()
                 ? tabWatchPlanRepository.findByProductIdIn(productIds) : List.of();
 
-        return new ProductListResult(products, mobilePlans, internets, iptvs, addons, tabWatchPlans);
+        Page<ProductSummaryDto> productDtos = products.map(this::toSummaryDto);
+        return new ProductListResult(
+                productDtos,
+                mobilePlans.stream().map(this::toMobilePlanDto).toList(),
+                internets.stream().map(this::toInternetDto).toList(),
+                iptvs.stream().map(this::toIptvDto).toList(),
+                addons.stream().map(this::toAddonDto).toList(),
+                tabWatchPlans.stream().map(this::toTabWatchPlanDto).toList()
+        );
+    }
+
+    private ProductSummaryDto toSummaryDto(Product p) {
+        return new ProductSummaryDto(
+                p.getProductId(),
+                p.getName(),
+                p.getPrice(),
+                p.getSalePrice(),
+                p.getProductType(),
+                p.getProductCode(),
+                p.getDiscountType()
+        );
+    }
+
+    private MobilePlanDetailDto toMobilePlanDto(MobilePlan m) {
+        return new MobilePlanDetailDto(
+                m.getProductId(),
+                m.getDataAmount(),
+                m.getTetheringSharingData(),
+                m.getBenefitBrands(),
+                m.getBenefitVoiceCall(),
+                m.getBenefitSms(),
+                m.getBenefitMedia(),
+                m.getBenefitPremium(),
+                m.getBenefitSignatureFamilyDiscount()
+        );
+    }
+
+    private InternetDetailDto toInternetDto(Internet i) {
+        return new InternetDetailDto(i.getProductId(), i.getSpeedMbps(), i.getAddonBenefit());
+    }
+
+    private IptvDetailDto toIptvDto(Iptv i) {
+        return new IptvDetailDto(i.getProductId(), i.getChannelCount(), i.getAddonBenefit());
+    }
+
+    private AddonDetailDto toAddonDto(Addon a) {
+        return new AddonDetailDto(a.getProductId(), a.getAddonType(), a.getDescription());
+    }
+
+    private TabWatchPlanDetailDto toTabWatchPlanDto(TabWatchPlan t) {
+        return new TabWatchPlanDetailDto(t.getProductId(), t.getDataAmount(), t.getBenefitVoiceCall(), t.getBenefitSms());
     }
 }

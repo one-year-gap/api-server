@@ -8,18 +8,17 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import site.holliverse.auth.dto.TokenRefreshResponse;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.persistence.entity.RefreshToken;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
 import site.holliverse.shared.security.CustomUserDetails;
+import site.holliverse.shared.web.response.ApiResponse;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
 
 @Component
 // 로그인 성공 시 Access/Refresh 토큰 발급 및 응답 바디를 작성하는 핸들러
@@ -71,31 +70,21 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                                 .build())
                 );
 
-        // 응답 data 블록 구성
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("accessToken", accessToken);
-        data.put("accessTokenExpiresIn", jwtTokenProvider.getAccessTokenExpirationSeconds());
-        data.put("refreshToken", refreshTokenRaw);
-        data.put("refreshTokenExpiresIn", jwtTokenProvider.getRefreshTokenExpirationSeconds());
+        // 응답 data DTO 구성
+        TokenRefreshResponse data = new TokenRefreshResponse(
+                accessToken,
+                jwtTokenProvider.getAccessTokenExpirationSeconds(),
+                refreshTokenRaw,
+                jwtTokenProvider.getRefreshTokenExpirationSeconds()
+        );
 
-        // 공통 응답 형식 구성
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", "success");
-        body.put("message", "로그인 성공");
-        body.put("data", data);
-        body.put("timestamp", Instant.now().toString());
-        body.put("requestId", resolveRequestId(request));
+        // 공통 응답 DTO 구성
+        ApiResponse<TokenRefreshResponse> body = ApiResponse.success("로그인 성공", data);
 
         // JSON 응답 반환
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(objectMapper.writeValueAsString(body));
-    }
-
-    // 요청 헤더의 X-Request-Id를 우선 사용하고, 없으면 새 UUID 생성
-    private String resolveRequestId(HttpServletRequest request) {
-        String requestId = request.getHeader("X-Request-Id");
-        return (requestId == null || requestId.isBlank()) ? UUID.randomUUID().toString() : requestId;
     }
 }

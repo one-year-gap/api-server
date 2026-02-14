@@ -59,7 +59,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 가능한 엔드포인트
-                        .requestMatchers("/auth/signup", "/auth/login", "/auth/refresh", "/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/api/v1/signup", "/v1/auth/login", "/v1/auth/refresh", "/actuator/health", "/actuator/info").permitAll()
                         // 그 외 API는 인증 필요
                         .anyRequest().authenticated()
                 )
@@ -76,3 +76,5 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+

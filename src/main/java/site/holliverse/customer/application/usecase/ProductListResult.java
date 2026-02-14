@@ -1,20 +1,20 @@
 package site.holliverse.customer.application.usecase;
 
 import org.springframework.data.domain.Page;
-import site.holliverse.customer.persistence.entity.Addon;
-import site.holliverse.customer.persistence.entity.Internet;
-import site.holliverse.customer.persistence.entity.Iptv;
-import site.holliverse.customer.persistence.entity.MobilePlan;
-import site.holliverse.customer.persistence.entity.Product;
-import site.holliverse.customer.persistence.entity.TabWatchPlan;
+import site.holliverse.customer.application.usecase.dto.AddonDetailDto;
+import site.holliverse.customer.application.usecase.dto.InternetDetailDto;
+import site.holliverse.customer.application.usecase.dto.IptvDetailDto;
+import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
+import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
+import site.holliverse.customer.application.usecase.dto.TabWatchPlanDetailDto;
 
 import java.util.List;
 
 public record ProductListResult(
-        Page<Product> products,
-        List<MobilePlan> mobilePlans,
-        List<Internet> internets,
-        List<Iptv> iptvs,
-        List<Addon> addons,
-        List<TabWatchPlan> tabWatchPlans
+        Page<ProductSummaryDto> products,
+        List<MobilePlanDetailDto> mobilePlans,
+        List<InternetDetailDto> internets,
+        List<IptvDetailDto> iptvs,
+        List<AddonDetailDto> addons,
+        List<TabWatchPlanDetailDto> tabWatchPlans
 ) {}

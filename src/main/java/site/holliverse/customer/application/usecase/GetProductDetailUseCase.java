@@ -45,7 +45,7 @@ public class GetProductDetailUseCase {
     @Transactional(readOnly = true)
     public ProductDetailResult execute(Long planId) {
         Product product = productRepository.findById(planId)
-                .orElseThrow(() -> new IllegalArgumentException("Plan not found: " + planId));
+                .orElseThrow(() -> new IllegalArgumentException("해당 상품을 찾을 수 없습니다: " + planId));
 
         Long productId = product.getProductId();
         ProductType type = product.getProductType();

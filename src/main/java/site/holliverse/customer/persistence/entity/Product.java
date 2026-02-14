@@ -25,8 +25,8 @@ public class Product {
     @Column(nullable = false)
     private Integer price;
 
-    /** 할인 적용가. IPTV 등 일부 상품은 미제공 시 null */
-    @Column(name = "saled_price")
+    /** 할인 후 금액 (상품가격과 동일 가능). 스키마 NOT NULL */
+    @Column(name = "saled_price", nullable = false)
     private Integer saledPrice;
 
     @Enumerated(EnumType.STRING)

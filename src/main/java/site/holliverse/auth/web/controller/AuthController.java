@@ -2,24 +2,21 @@
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import site.holliverse.auth.dto.RefreshTokenRequest;
-import site.holliverse.auth.dto.SignUpRequest;
-import site.holliverse.auth.dto.SingUpResponse;
 import site.holliverse.auth.application.usecase.AuthUseCase;
 import site.holliverse.auth.application.usecase.RefreshTokenUseCase;
-
-import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import site.holliverse.auth.dto.RefreshTokenRequest;
+import site.holliverse.auth.dto.SignUpDataResponse;
+import site.holliverse.auth.dto.SignUpRequest;
+import site.holliverse.auth.dto.TokenRefreshResponse;
+import site.holliverse.shared.web.response.ApiResponse;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping
 public class AuthController {
 
     private final AuthUseCase authUseCase;
@@ -30,24 +27,25 @@ public class AuthController {
         this.refreshTokenUseCase = refreshTokenUseCase;
     }
 
-    @PostMapping("/signup")
     // 회원가입 API
-    public ResponseEntity<SingUpResponse> signUp(@Valid @RequestBody SignUpRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authUseCase.signUp(request));
+    @PostMapping("/api/v1/signup")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<SignUpDataResponse> signUp(@Valid @RequestBody SignUpRequest request) {
+        Long memberId = authUseCase.signUp(request).memberId();
+
+        return ApiResponse.success(
+                "회원가입이 완료되었습니다.",
+                new SignUpDataResponse(memberId)
+        );
     }
 
-    @PostMapping("/refresh")
+    @PostMapping("/v1/auth/refresh")
     // 리프레시 토큰으로 액세스/리프레시 토큰 재발급 API
-    public ResponseEntity<Map<String, Object>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        Map<String, Object> data = refreshTokenUseCase.refresh(request.getRefreshToken());
+    public ApiResponse<TokenRefreshResponse> refresh(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        TokenRefreshResponse data = refreshTokenUseCase.refresh(request.getRefreshToken());
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", "success");
-        body.put("message", "토큰 재발급 성공");
-        body.put("data", data);
-        body.put("timestamp", Instant.now().toString());
-        body.put("requestId", UUID.randomUUID().toString());
-
-        return ResponseEntity.ok(body);
+        return ApiResponse.success("토큰 재발급 성공", data);
     }
 }

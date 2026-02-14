@@ -1,12 +1,12 @@
-package site.holliverse.auth.application.usecase;
+﻿package site.holliverse.auth.application.usecase;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import site.holliverse.auth.dto.SignUpRequest;
 import site.holliverse.auth.dto.SingUpResponse;
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Address;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.entity.enums.MemberRoleType;
@@ -35,10 +35,18 @@ public class AuthUseCase {
     @Transactional
     public SingUpResponse signUp(SignUpRequest request) {
         if (memberRepository.existsByEmail(request.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+            throw new CustomException(
+                    ErrorCode.DUPLICATED_EMAIL,
+                    "email",
+                    "동일한 이메일이 존재합니다."
+            );
         }
         if (memberRepository.existsByPhone(request.getPhone())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Phone already exists");
+            throw new CustomException(
+                    ErrorCode.DUPLICATED_PHONE,
+                    "phone",
+                    "동일한 전화번호가 존재합니다."
+            );
         }
 
         SignUpRequest.AddressRequest addressRequest = request.getAddress();

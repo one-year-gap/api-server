@@ -20,16 +20,16 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-// /auth/login 요청(JSON email/password)을 인증 토큰으로 변환하는 필터
+// /v1/auth/login 요청(JSON email/password)을 인증 토큰으로 변환하는 필터
 public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     // 로그인 JSON 키(email, password)
     public static final String SPRING_SECURITY_FORM_EMAIL_KEY = "email";
     public static final String SPRING_SECURITY_FORM_PASSWORD_KEY = "password";
 
-    // 이 필터가 처리할 경로: POST /auth/login
+    // 이 필터가 처리할 경로: POST /v1/auth/login
     private static final RequestMatcher DEFAULT_ANT_PATH_REQUEST_MATCHER = PathPatternRequestMatcher.withDefaults()
-            .matcher(HttpMethod.POST, "/auth/login");
+            .matcher(HttpMethod.POST, "/v1/auth/login");
 
     private String emailParameter = SPRING_SECURITY_FORM_EMAIL_KEY;
     private String passwordParameter = SPRING_SECURITY_FORM_PASSWORD_KEY;

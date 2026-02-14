@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.customer.persistence.entity.Product;
 import site.holliverse.customer.persistence.entity.ProductType;
 import site.holliverse.customer.persistence.repository.AddonRepository;
@@ -224,10 +225,12 @@ class GetProductListUseCaseTest {
             //when: 실행
             ProductListResult result = getProductListUseCase.execute("mobile", 0, 10);
 
-            //then: 결과의 Page 객체 상태 검증
-            assertThat(result.products().getTotalElements()).isEqualTo(100); // 전체 개수 보존 확인
-            assertThat(result.products().getContent()).hasSize(1); // 현재 페이지 데이터 개수 확인
-            assertThat(result.products().getNumber()).isZero(); // 현재 페이지 번호 확인
+            //then: 결과의 Page 객체 상태 검증 (반환 타입은 DTO)
+            assertThat(result.products().getTotalElements()).isEqualTo(100);
+            assertThat(result.products().getContent()).hasSize(1);
+            assertThat(result.products().getContent().get(0)).isInstanceOf(ProductSummaryDto.class);
+            assertThat(result.products().getContent().get(0).productId()).isEqualTo(1L);
+            assertThat(result.products().getNumber()).isZero();
         }
     }
 

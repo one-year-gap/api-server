@@ -12,8 +12,8 @@ import site.holliverse.customer.application.usecase.GetProductListUseCase;
 import site.holliverse.customer.application.usecase.ProductDetailResult;
 import site.holliverse.customer.application.usecase.ProductListResult;
 import site.holliverse.customer.web.dto.ApiResponse;
-import site.holliverse.customer.web.dto.ProductDetailResponse;
-import site.holliverse.customer.web.dto.ProductListResponse;
+import site.holliverse.customer.web.dto.product.ProductDetailResponse;
+import site.holliverse.customer.web.dto.product.ProductListResponse;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 
 import java.time.LocalDateTime;

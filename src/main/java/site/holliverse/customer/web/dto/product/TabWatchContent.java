@@ -1,4 +1,4 @@
-package site.holliverse.customer.web.dto;
+package site.holliverse.customer.web.dto.product;
 
 public record TabWatchContent(
         String data_amount,

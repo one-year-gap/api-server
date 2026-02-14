@@ -1,4 +1,4 @@
-package site.holliverse.customer.web.dto;
+package site.holliverse.customer.web.dto.product;
 
 public record InternetContent(
         Integer speed_mbps,

@@ -8,11 +8,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "product")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Product {
 
     @Id
@@ -26,8 +29,8 @@ public class Product {
     private Integer price;
 
     /** 할인 후 금액 (상품가격과 동일 가능). 스키마 NOT NULL */
-    @Column(name = "saled_price", nullable = false)
-    private Integer saledPrice;
+    @Column(name = "sale_price", nullable = false)
+    private Integer salePrice;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "product_type", nullable = false, length = 30)

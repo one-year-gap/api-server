@@ -8,7 +8,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * IPTV 상품 상세 (Product 1:1).
@@ -17,6 +19,7 @@ import lombok.Getter;
 @Entity
 @Table(name = "iptv")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Iptv {
 
     @Id
@@ -28,11 +31,11 @@ public class Iptv {
     private Product product;
 
     /** 채널 수 */
-    @Column(name = "channel_text", nullable = false)
-    private Integer channelText;
+    @Column(name = "channel_count", nullable = false)
+    private Integer channelCount;
 
     /** 추가 혜택 (웹서핑, 문서 작업 등) */
-    @Column(name = "addon_benefit", columnDefinition = "TEXT")
+    @Column(name = "addon_benefit", nullable = false, columnDefinition = "TEXT")
     private String addonBenefit;
 
 }

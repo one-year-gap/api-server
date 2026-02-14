@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(
-        scanBasePackages = "com.holliverse.shared"
+        scanBasePackages = "com.holliverse"
 )
 public class HolliverseApplication {
 

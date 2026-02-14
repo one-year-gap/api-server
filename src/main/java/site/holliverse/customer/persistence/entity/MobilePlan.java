@@ -8,7 +8,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 모바일(5G/LTE) 요금제 상세.
@@ -17,6 +19,7 @@ import lombok.Getter;
 @Entity
 @Table(name = "mobile_plan")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MobilePlan {
 
     @Id
@@ -33,7 +36,7 @@ public class MobilePlan {
 
     /** 테더링+쉐어링 데이터 (GB). 스키마 컬럼명 ththering_sharing_data */
     @Column(name = "ththering_sharing_data")
-    private Integer ththeringSharingData;
+    private Integer tetheringSharingData;
 
     @Column(name = "benefit_brands", length = 50)
     private String benefitBrands;

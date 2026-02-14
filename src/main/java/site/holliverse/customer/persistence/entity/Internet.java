@@ -8,7 +8,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 인터넷 요금제 상세 (Product 1:1).
@@ -16,6 +18,7 @@ import lombok.Getter;
 @Entity
 @Table(name = "internet")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Internet {
 
     @Id

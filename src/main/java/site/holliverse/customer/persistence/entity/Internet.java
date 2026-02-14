@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Internet {
 
-    @Id
+    @Id @Column(name = "product_id")
     private Long productId;
 
     @OneToOne(fetch = FetchType.LAZY)

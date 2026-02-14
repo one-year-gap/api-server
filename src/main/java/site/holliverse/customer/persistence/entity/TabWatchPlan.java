@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TabWatchPlan {
 
-    @Id
+    @Id @Column(name = "product_id")
     private Long productId;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -36,6 +36,6 @@ public class TabWatchPlan {
     @Column(name = "benefit_voice_call", length = 100)
     private String benefitVoiceCall;
 
-    @Column(name = "benefit_sms", length = 100)
+    @Column(name = "benefit_sms", length = 50)
     private String benefitSms;
 }

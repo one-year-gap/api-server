@@ -57,11 +57,11 @@ public class ProductResponseMapper {
     }
 
     public InternetContent toInternetContent(InternetDetailDto i) {
-        return new InternetContent(i.speedMbps(), i.addonBenefit());
+        return new InternetContent(i.planTitle(), i.speed(), i.benefits());
     }
 
     public IptvContent toIptvContent(IptvDetailDto i) {
-        return new IptvContent(i.channelCount(), i.addonBenefit());
+        return new IptvContent(i.planTitle(), i.channelCount(), i.benefits());
     }
 
     public AddonContent toAddonContent(AddonDetailDto a) {

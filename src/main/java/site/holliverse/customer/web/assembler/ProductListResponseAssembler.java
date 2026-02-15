@@ -1,6 +1,5 @@
 package site.holliverse.customer.web.assembler;
 
-import org.springframework.stereotype.Component;
 import site.holliverse.customer.application.usecase.ProductListResult;
 import site.holliverse.customer.web.dto.PageMeta;
 import site.holliverse.customer.web.dto.product.ProductContent;
@@ -13,7 +12,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Component
 public class ProductListResponseAssembler {
 
     private final ProductResponseMapper mapper;

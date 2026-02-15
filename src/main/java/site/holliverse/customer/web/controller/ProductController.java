@@ -11,6 +11,7 @@ import site.holliverse.customer.application.usecase.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.GetProductListUseCase;
 import site.holliverse.customer.application.usecase.ProductDetailResult;
 import site.holliverse.customer.application.usecase.ProductListResult;
+import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.dto.ApiResponse;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.ProductListResponse;
@@ -26,8 +27,8 @@ public class ProductController {
 
     private final GetProductListUseCase getProductListUseCase;
     private final GetProductDetailUseCase getProductDetailUseCase;
+    private final ProductListResponseAssembler productListResponseAssembler;
     private final ProductResponseMapper mapper;
-
 
     @GetMapping("/{planId}")
     public ApiResponse<ProductDetailResponse> getPlanDetail(@PathVariable Long planId) {
@@ -41,7 +42,7 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         ProductListResult result = getProductListUseCase.execute(category, page, size);
-        ProductListResponse response = mapper.toListResponse(result);
+        ProductListResponse response = productListResponseAssembler.assemble(result);
         return new ApiResponse<>("success", response, LocalDateTime.now());
     }
 }

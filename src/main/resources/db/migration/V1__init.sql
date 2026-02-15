@@ -101,7 +101,7 @@ CREATE TABLE product (
     -- 기본 정보
     name           VARCHAR(50)  NOT NULL,
     price          INTEGER      NOT NULL, -- 정상가
-    saled_price    INTEGER      NOT NULL, -- 할인가 (할인 안 하면 price와 같은 값 넣기)
+    sale_price     INTEGER      NOT NULL, -- 할인가 (할인 안 하면 price와 같은 값 넣기)
 
     -- ENUM 적용
     product_type   product_type_enum NOT NULL,

@@ -25,7 +25,7 @@ public class Iptv extends BaseEntity {
     private Product product;
 
     /** 요금제 요약 (웹서핑, 문서 작업 등) */
-    @Column(name = "plan_title ", nullable = false, length = 100)
+    @Column(name = "plan_title", nullable = false, length = 100)
     private String planTitle;
 
     /** 채널 수 */

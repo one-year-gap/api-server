@@ -27,8 +27,8 @@ public class Product extends BaseEntity {
     private Integer price;
 
     /** 할인 후 금액 (상품가격과 동일 가능). 스키마 NOT NULL */
-    @Column(name = "saled_price", nullable = false)
-    private Integer saledPrice;
+    @Column(name = "sale_price", nullable = false)
+    private Integer salePrice;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "product_type", nullable = false, length = 30)

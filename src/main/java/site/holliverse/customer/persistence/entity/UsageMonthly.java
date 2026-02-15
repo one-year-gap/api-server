@@ -27,7 +27,7 @@ public class UsageMonthly extends BaseEntity {
     private Subscription subscription;
 
     /** 사용 년월 (ex: 202602) */
-    @Column(nullable = false, length = 6)
+    @Column(name = "yyyymm", nullable = false, length = 6)
     private String yyyymm;
 
     /**

@@ -1,6 +1,5 @@
 package site.holliverse.customer.web.mapper;
 
-import org.springframework.stereotype.Component;
 import site.holliverse.customer.application.usecase.ProductDetailResult;
 import site.holliverse.customer.application.usecase.dto.AddonDetailDto;
 import site.holliverse.customer.application.usecase.dto.InternetDetailDto;
@@ -16,7 +15,6 @@ import site.holliverse.customer.web.dto.product.ProductContent;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.TabWatchContent;
 
-@Component
 public class ProductResponseMapper {
 
     public ProductDetailResponse toDetailResponse(ProductSummaryDto p, ProductContent content) {

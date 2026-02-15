@@ -8,6 +8,7 @@ import site.holliverse.shared.persistence.BaseEntity;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Map;
 
 @Entity
@@ -39,8 +40,9 @@ public class UsageMonthly extends BaseEntity {
      * 자바의 Map이나 DTO를 바로 JSONB 컬럼에 매핑 가능
      */
     @JdbcTypeCode(SqlTypes.JSON)
+    @Builder.Default
     @Column(name = "usage_details", nullable = false)
-    private Map<String, Object> usageDetails;
+    private Map<String, Object> usageDetails = new HashMap<>();
 
     @Converter
     static class YearMonthConverter implements AttributeConverter<YearMonth, String> {

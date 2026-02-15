@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import site.holliverse.shared.domain.model.AddonType;
 
 /**
  * 부가서비스 상세 (Product 1:1).

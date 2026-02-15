@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import site.holliverse.shared.domain.model.ProductType;
 
 @Entity
 @Table(name = "product")

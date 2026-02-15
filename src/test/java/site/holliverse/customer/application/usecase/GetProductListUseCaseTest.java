@@ -14,13 +14,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.customer.persistence.entity.Product;
-import site.holliverse.customer.persistence.entity.ProductType;
 import site.holliverse.customer.persistence.repository.AddonRepository;
 import site.holliverse.customer.persistence.repository.InternetRepository;
 import site.holliverse.customer.persistence.repository.IptvRepository;
 import site.holliverse.customer.persistence.repository.MobilePlanRepository;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
+import site.holliverse.shared.domain.model.ProductType;
 
 import java.util.List;
 

@@ -1,12 +1,12 @@
 package site.holliverse.customer.web.dto.product;
 
 public record ProductDetailResponse(
-        Long product_id,
+        Long productId,
         String name,
-        String product_type,
+        String productType,
         Integer price,
-        Integer sale_price,
-        String discount_type,
-        String product_code,
+        Integer salePrice,
+        String discountType,
+        String productCode,
         ProductContent content
 ) {}

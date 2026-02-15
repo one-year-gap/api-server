@@ -1,4 +1,4 @@
-﻿package site.holliverse.shared.persistence.repository;
+package site.holliverse.shared.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import site.holliverse.shared.persistence.entity.RefreshToken;

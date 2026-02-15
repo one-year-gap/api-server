@@ -108,11 +108,11 @@ public class GetProductDetailUseCase {
     }
 
     private InternetDetailDto toInternetDto(Internet i) {
-        return new InternetDetailDto(i.getProductId(), i.getSpeedMbps(), i.getAddonBenefit());
+        return new InternetDetailDto(i.getProductId(), i.getPlanTitle(), i.getSpeed(), i.getBenefits());
     }
 
     private IptvDetailDto toIptvDto(Iptv i) {
-        return new IptvDetailDto(i.getProductId(), i.getChannelCount(), i.getAddonBenefit());
+        return new IptvDetailDto(i.getProductId(), i.getPlanTitle(), i.getChannelCount(), i.getBenefits());
     }
 
     private AddonDetailDto toAddonDto(Addon a) {

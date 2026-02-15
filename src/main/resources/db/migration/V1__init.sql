@@ -330,8 +330,8 @@ CREATE TABLE member_coupon (
     -- 만료 날짜 (해당 시점이 지나면 사용 불가)
     expired_at       TIMESTAMP   NOT NULL,
 
-    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at       TIMESTAMP   NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMP   NOT NULL DEFAULT NOW(),
 
     CONSTRAINT pk_member_coupon PRIMARY KEY (member_coupon_id),
 

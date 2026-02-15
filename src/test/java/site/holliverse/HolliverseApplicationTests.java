@@ -2,7 +2,7 @@ package site.holliverse;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import site.holliverse.customer.persistence.repository.AddonRepository;
 import site.holliverse.customer.persistence.repository.InternetRepository;
 import site.holliverse.customer.persistence.repository.IptvRepository;
@@ -15,17 +15,17 @@ import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
 })
 class HolliverseApplicationTests {
 
-    @MockBean
+    @MockitoBean
     private ProductRepository productRepository;
-    @MockBean
+    @MockitoBean
     private MobilePlanRepository mobilePlanRepository;
-    @MockBean
+    @MockitoBean
     private InternetRepository internetRepository;
-    @MockBean
+    @MockitoBean
     private IptvRepository iptvRepository;
-    @MockBean
+    @MockitoBean
     private AddonRepository addonRepository;
-    @MockBean
+    @MockitoBean
     private TabWatchPlanRepository tabWatchPlanRepository;
 
     @Test

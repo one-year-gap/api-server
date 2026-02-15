@@ -4,7 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import site.holliverse.customer.persistence.entity.Product;
-import site.holliverse.customer.persistence.entity.ProductType;
+import site.holliverse.shared.domain.model.ProductType;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 

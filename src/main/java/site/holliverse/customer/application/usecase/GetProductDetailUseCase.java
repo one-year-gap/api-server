@@ -13,7 +13,7 @@ import site.holliverse.customer.persistence.entity.Internet;
 import site.holliverse.customer.persistence.entity.Iptv;
 import site.holliverse.customer.persistence.entity.MobilePlan;
 import site.holliverse.customer.persistence.entity.Product;
-import site.holliverse.customer.persistence.entity.ProductType;
+import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.customer.persistence.entity.TabWatchPlan;
 import site.holliverse.customer.persistence.repository.AddonRepository;
 import site.holliverse.customer.persistence.repository.InternetRepository;
@@ -86,7 +86,7 @@ public class GetProductDetailUseCase {
                 p.getProductId(),
                 p.getName(),
                 p.getPrice(),
-                p.getSalePrice(),
+                p.getPrice(), // salePrice 필드 제거됨, 동일값으로 노출
                 p.getProductType(),
                 p.getProductCode(),
                 p.getDiscountType()
@@ -108,7 +108,7 @@ public class GetProductDetailUseCase {
     }
 
     private InternetDetailDto toInternetDto(Internet i) {
-        return new InternetDetailDto(i.getProductId(), i.getSpeedMbps(), i.getAddonBenefit());
+        return new InternetDetailDto(i.getProductId(), i.getPlanTitle(), i.getSpeed(), i.getAddonBenefit(), i.getBenefits());
     }
 
     private IptvDetailDto toIptvDto(Iptv i) {

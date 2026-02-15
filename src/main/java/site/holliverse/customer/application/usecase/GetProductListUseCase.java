@@ -16,7 +16,7 @@ import site.holliverse.customer.persistence.entity.Internet;
 import site.holliverse.customer.persistence.entity.Iptv;
 import site.holliverse.customer.persistence.entity.MobilePlan;
 import site.holliverse.customer.persistence.entity.Product;
-import site.holliverse.customer.persistence.entity.ProductType;
+import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.customer.persistence.entity.TabWatchPlan;
 import site.holliverse.customer.persistence.repository.AddonRepository;
 import site.holliverse.customer.persistence.repository.InternetRepository;
@@ -132,11 +132,11 @@ public class GetProductListUseCase {
     }
 
     private InternetDetailDto toInternetDto(Internet i) {
-        return new InternetDetailDto(i.getProductId(), i.getSpeedMbps(), i.getAddonBenefit());
+        return new InternetDetailDto(i.getProductId(), i.getPlanTitle(), i.getSpeed(), i.getBenefits());
     }
 
     private IptvDetailDto toIptvDto(Iptv i) {
-        return new IptvDetailDto(i.getProductId(), i.getChannelCount(), i.getAddonBenefit());
+        return new IptvDetailDto(i.getProductId(), i.getPlanTitle(), i.getChannelCount(), i.getBenefits());
     }
 
     private AddonDetailDto toAddonDto(Addon a) {

@@ -1,4 +1,4 @@
-﻿package site.holliverse.auth.handler;
+package site.holliverse.auth.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
@@ -15,8 +15,10 @@ import site.holliverse.shared.web.response.ApiErrorResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * 로그인 실패 시 공통 에러 응답을 생성하는 핸들러.
+ */
 @Component
-// 로그인 실패 시 에러 응답 바디를 작성하는 핸들러
 public class LoginFailureHandler implements AuthenticationFailureHandler {
 
     private final ObjectMapper objectMapper;
@@ -37,7 +39,6 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
                 )
         );
 
-        // 401 Unauthorized JSON 응답 반환
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

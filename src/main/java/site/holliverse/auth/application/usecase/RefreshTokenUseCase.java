@@ -1,4 +1,4 @@
-﻿package site.holliverse.auth.application.usecase;
+package site.holliverse.auth.application.usecase;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,8 +15,16 @@ import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
 
 import java.time.Instant;
 
+/**
+ * 리프레시 토큰 검증 및 토큰 재발급 유스케이스.
+ * <p>
+ * 보안 보장 사항:
+ * - 리프레시 토큰 서명/타입/만료 검증
+ * - DB에는 해시 토큰만 저장
+ * - 토큰 소유자(memberId) 일치 검증
+ * - 성공 시 리프레시 토큰 회전
+ */
 @Service
-// 리프레시 토큰 검증 및 재발급 유스케이스
 public class RefreshTokenUseCase {
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -34,9 +42,12 @@ public class RefreshTokenUseCase {
         this.memberRepository = memberRepository;
     }
 
+    /**
+     * 전달받은 리프레시 토큰으로 액세스/리프레시 토큰을 재발급한다.
+     */
     @Transactional
     public TokenRefreshResponse refresh(String rawRefreshToken) {
-        // 1) JWT 서명/만료/타입 검증
+        // 1) JWT 서명/만료/토큰타입 검증
         if (!jwtTokenProvider.isValid(rawRefreshToken) || !jwtTokenProvider.isRefreshToken(rawRefreshToken)) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, null, "Invalid refresh token");
         }
@@ -44,16 +55,16 @@ public class RefreshTokenUseCase {
         Long memberId = jwtTokenProvider.getMemberId(rawRefreshToken);
         String tokenHash = refreshTokenHashService.hash(rawRefreshToken);
 
-        // 2) DB 해시 토큰 조회(폐기되지 않은 토큰만)
+        // 2) 활성 상태의 해시 토큰 조회
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHashAndRevokedFalse(tokenHash)
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, null, "Refresh token not found"));
 
-        // 3) 토큰-회원 매핑 검증
+        // 3) 토큰 소유자 일치 여부 확인
         if (!refreshToken.getMemberId().equals(memberId)) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, null, "Refresh token owner mismatch");
         }
 
-        // 4) 만료 토큰 차단 및 폐기
+        // 4) 만료 토큰은 폐기 후 차단
         if (refreshToken.isExpired()) {
             refreshToken.revoke();
             throw new CustomException(ErrorCode.TOKEN_EXPIRED, null, "Refresh token expired");
@@ -71,7 +82,7 @@ public class RefreshTokenUseCase {
             );
         }
 
-        // 6) 액세스/리프레시 토큰 재발급(리프레시 회전)
+        // 6) 새 토큰 발급 및 리프레시 토큰 회전
         String newAccessToken = jwtTokenProvider.generateAccessToken(member);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(memberId);
         String newRefreshTokenHash = refreshTokenHashService.hash(newRefreshToken);
@@ -79,7 +90,7 @@ public class RefreshTokenUseCase {
 
         refreshToken.rotate(newRefreshTokenHash, newRefreshExpiresAt);
 
-        // 7) DTO로 응답 데이터 구성
+        // 7) 컨트롤러/핸들러 전달용 토큰 페이로드 반환
         return new TokenRefreshResponse(
                 newAccessToken,
                 jwtTokenProvider.getAccessTokenExpirationSeconds(),

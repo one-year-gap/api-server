@@ -1,4 +1,4 @@
-﻿package site.holliverse.shared.security;
+package site.holliverse.shared.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,10 +58,8 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 인증 없이 접근 가능한 엔드포인트
-                        .requestMatchers("/api/v1/signup", "/v1/auth/login", "/v1/auth/refresh", "/actuator/health", "/actuator/info").permitAll()
-                        // 그 외 API는 인증 필요
-                        .anyRequest().authenticated()
+                        // 테스트용: 모든 API 접근 허용
+                        .anyRequest().permitAll()
                 )
                 // 로그인 필터를 UsernamePasswordAuthenticationFilter 위치에 배치
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)

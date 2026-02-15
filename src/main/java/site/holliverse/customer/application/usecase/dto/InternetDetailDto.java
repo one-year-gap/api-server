@@ -2,6 +2,8 @@ package site.holliverse.customer.application.usecase.dto;
 
 public record InternetDetailDto(
         Long productId,
-        Integer speedMbps,
-        String addonBenefit
+        String planTitle,
+        String speed,
+        String addonBenefit,
+        String benefits
 ) {}

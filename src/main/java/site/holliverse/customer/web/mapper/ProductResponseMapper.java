@@ -57,7 +57,7 @@ public class ProductResponseMapper {
     }
 
     public InternetContent toInternetContent(InternetDetailDto i) {
-        return new InternetContent(i.speedMbps(), i.addonBenefit());
+        return new InternetContent(i.planTitle(), i.speed(), i.addonBenefit(), i.benefits());
     }
 
     public IptvContent toIptvContent(IptvDetailDto i) {

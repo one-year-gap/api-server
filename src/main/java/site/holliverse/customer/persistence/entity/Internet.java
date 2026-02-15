@@ -1,16 +1,8 @@
 package site.holliverse.customer.persistence.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
+import site.holliverse.shared.persistence.BaseEntity;
 
 /**
  * 인터넷 요금제 상세 (Product 1:1).
@@ -18,10 +10,13 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "internet")
 @Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Internet {
+public class Internet extends BaseEntity {
 
-    @Id @Column(name = "product_id")
+    @Id
+    @Column(name = "product_id")
     private Long productId;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -29,11 +24,19 @@ public class Internet {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    /** 인터넷 최대 속도 (Mbps) */
-    @Column(name = "speed_mbps", nullable = false)
-    private Integer speedMbps;
+    /** 요금제 요약 */
+    @Column(name = "plan_title", nullable = false, length = 100)
+    private String planTitle;
+
+    /** 인터넷 속도 표기 (예: 100Mbps) */
+    @Column(name = "speed", nullable = false, length = 50)
+    private String speed;
 
     /** 추가 혜택 */
     @Column(name = "addon_benefit", nullable = false, columnDefinition = "TEXT")
     private String addonBenefit;
+
+    /** 제공혜택 */
+    @Column(name = "benefits", nullable = false, length = 255)
+    private String benefits;
 }

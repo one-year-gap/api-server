@@ -93,6 +93,8 @@ def jacocoExcludes = [
         '**/Q*.java',
         '**/*Querydsl*',
         '**/*ArchitectureRules*',
+        '**/*Content*',   // Web DTO
+        '**/*Meta*',      // Web DTO: PageMeta
 ]
 
 tasks.named("jacocoTestReport", JacocoReport) {
@@ -125,12 +127,12 @@ tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification) {
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                //minimum = 0.5
+                minimum = 0.5
             }
             limit {
                 counter = 'LINE'
                 value = 'COVEREDRATIO'
-                //minimum = 0.7
+                minimum = 0.7
             }
         }
     }

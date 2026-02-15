@@ -1,4 +1,4 @@
-﻿package site.holliverse.auth.jwt;
+package site.holliverse.auth.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -15,22 +15,19 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 
+/**
+ * JWT 발급/파싱/검증을 담당하는 중앙 컴포넌트.
+ */
 @Component
-// JWT 생성, 파싱, 검증을 담당하는 컴포넌트
 public class JwtTokenProvider {
 
-    // 토큰 타입 구분값
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
     private static final String REFRESH_TOKEN_TYPE = "REFRESH";
 
-    // 서명용 시크릿(app.jwt.secret)
     private final String secret;
-    // Access Token 만료 시간(ms)
     private final long accessTokenExpirationMs;
-    // Refresh Token 만료 시간(ms)
     private final long refreshTokenExpirationMs;
-    // 실제 서명/검증에 사용하는 HMAC 키
     private SecretKey secretKey;
 
     public JwtTokenProvider(
@@ -43,17 +40,17 @@ public class JwtTokenProvider {
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
+    /**
+     * 애플리케이션 시작 시 HMAC 서명 키를 초기화한다.
+     */
     @PostConstruct
-    // 애플리케이션 시작 시 시크릿 키 초기화
     void init() {
-        // HS256 사용 시 최소 길이(32자) 검증
         if (secret == null || secret.length() < 32) {
             throw new IllegalStateException("JWT secret must be at least 32 characters");
         }
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Member 정보를 기반으로 Access Token 생성
     public String generateAccessToken(Member member) {
         return generateAccessToken(
                 member.getId(),
@@ -63,12 +60,13 @@ public class JwtTokenProvider {
         );
     }
 
-    // principal 정보 기반으로 Access Token 생성
+    /**
+     * 사용자 식별/권한 정보를 포함한 Access Token을 발급한다.
+     */
     public String generateAccessToken(Long memberId, String email, String role, MemberStatusType status) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusMillis(accessTokenExpirationMs);
 
-        // subject: memberId, claims: email/role/status/tokenType
         return Jwts.builder()
                 .subject(String.valueOf(memberId))
                 .claim("email", email)
@@ -81,7 +79,9 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // Refresh Token 생성(subject에는 memberId만 저장)
+    /**
+     * 최소 정보(subject + tokenType)만 포함한 Refresh Token을 발급한다.
+     */
     public String generateRefreshToken(Long memberId) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusMillis(refreshTokenExpirationMs);
@@ -95,7 +95,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // 토큰을 파싱해 claims(payload) 반환
     public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
@@ -104,32 +103,29 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
-    // 토큰에서 memberId(subject) 추출
     public Long getMemberId(String token) {
         return Long.parseLong(parseClaims(token).getSubject());
     }
 
-    // 토큰에서 email claim 추출
     public String getEmail(String token) {
         return parseClaims(token).get("email", String.class);
     }
 
-    // 토큰에서 role claim 추출
     public String getRole(String token) {
         return parseClaims(token).get("role", String.class);
     }
 
-    // Access Token 여부 확인
     public boolean isAccessToken(String token) {
         return ACCESS_TOKEN_TYPE.equals(parseClaims(token).get(TOKEN_TYPE_CLAIM, String.class));
     }
 
-    // Refresh Token 여부 확인
     public boolean isRefreshToken(String token) {
         return REFRESH_TOKEN_TYPE.equals(parseClaims(token).get(TOKEN_TYPE_CLAIM, String.class));
     }
 
-    // 토큰 유효성 검증(서명, 만료)
+    /**
+     * 서명/포맷/만료를 포함한 JWT 유효성 검증 결과를 반환한다.
+     */
     public boolean isValid(String token) {
         try {
             parseClaims(token);
@@ -139,17 +135,14 @@ public class JwtTokenProvider {
         }
     }
 
-    // Access Token 만료 시간을 초 단위로 반환
     public long getAccessTokenExpirationSeconds() {
         return accessTokenExpirationMs / 1000;
     }
 
-    // Refresh Token 만료 시간을 초 단위로 반환
     public long getRefreshTokenExpirationSeconds() {
         return refreshTokenExpirationMs / 1000;
     }
 
-    // Refresh Token 만료 시간을 ms 단위로 반환
     public long getRefreshTokenExpirationMs() {
         return refreshTokenExpirationMs;
     }

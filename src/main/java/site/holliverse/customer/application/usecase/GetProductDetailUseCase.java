@@ -13,7 +13,7 @@ import site.holliverse.customer.persistence.entity.Internet;
 import site.holliverse.customer.persistence.entity.Iptv;
 import site.holliverse.customer.persistence.entity.MobilePlan;
 import site.holliverse.customer.persistence.entity.Product;
-import site.holliverse.customer.persistence.entity.ProductType;
+import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.customer.persistence.entity.TabWatchPlan;
 import site.holliverse.customer.persistence.repository.AddonRepository;
 import site.holliverse.customer.persistence.repository.InternetRepository;

@@ -1,6 +1,6 @@
 package site.holliverse.customer.application.usecase.dto;
 
-import site.holliverse.customer.persistence.entity.AddonType;
+import site.holliverse.shared.domain.model.AddonType;
 
 public record AddonDetailDto(
         Long productId,

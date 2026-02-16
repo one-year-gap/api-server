@@ -1,4 +1,4 @@
-package site.holliverse.customer.application.usecase;
+package site.holliverse.customer.application.usecase.product;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

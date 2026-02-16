@@ -7,12 +7,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import site.holliverse.customer.application.usecase.ComparePlansUseCase;
-import site.holliverse.customer.application.usecase.GetProductDetailUseCase;
-import site.holliverse.customer.application.usecase.GetProductListUseCase;
+
+import site.holliverse.customer.application.usecase.compare.ComparePlansUseCase;
 import site.holliverse.customer.application.usecase.compare.PlanCompareResult;
-import site.holliverse.customer.application.usecase.ProductDetailResult;
-import site.holliverse.customer.application.usecase.ProductListResult;
+import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
+import site.holliverse.customer.application.usecase.product.GetProductListUseCase;
+import site.holliverse.customer.application.usecase.product.ProductDetailResult;
+import site.holliverse.customer.application.usecase.product.ProductListResult;
 import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
 import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.dto.ApiResponse;

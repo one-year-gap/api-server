@@ -1,6 +1,6 @@
 package site.holliverse.customer.web.assembler;
 
-import site.holliverse.customer.application.usecase.ProductListResult;
+import site.holliverse.customer.application.usecase.product.ProductListResult;
 import site.holliverse.customer.web.dto.PageMeta;
 import site.holliverse.customer.web.dto.product.ProductContent;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;

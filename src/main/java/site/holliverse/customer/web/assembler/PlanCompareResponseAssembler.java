@@ -1,8 +1,9 @@
 package site.holliverse.customer.web.assembler;
 
-import site.holliverse.customer.application.usecase.PlanCompareResult;
-import site.holliverse.customer.web.dto.product.PlanCompareResponse;
+import site.holliverse.customer.application.usecase.compare.PlanCompareResult;
+import site.holliverse.customer.web.dto.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
+import site.holliverse.customer.web.mapper.CompareResponseMapper;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 
 /**
@@ -11,18 +12,20 @@ import site.holliverse.customer.web.mapper.ProductResponseMapper;
  */
 public class PlanCompareResponseAssembler {
 
-    private final ProductResponseMapper mapper;
+    private final ProductResponseMapper productMapper;
+    private final CompareResponseMapper compareMapper;
 
-    public PlanCompareResponseAssembler(ProductResponseMapper mapper) {
-        this.mapper = mapper;
+    public PlanCompareResponseAssembler(ProductResponseMapper productMapper, CompareResponseMapper compareMapper) {
+        this.productMapper = productMapper;
+        this.compareMapper = compareMapper;
     }
 
     public PlanCompareResponse assemble(PlanCompareResult result) {
-        ProductDetailResponse currentPlan = mapper.toDetailResponse(result.current());
-        ProductDetailResponse targetPlan = mapper.toDetailResponse(result.target());
+        ProductDetailResponse currentPlan = productMapper.toDetailResponse(result.current());
+        ProductDetailResponse targetPlan = productMapper.toDetailResponse(result.target());
         return new PlanCompareResponse(
                 currentPlan,
                 targetPlan,
-                mapper.toComparisonResponse(result.comparison()));
+                compareMapper.toComparisonResponse(result.comparison()));
     }
 }

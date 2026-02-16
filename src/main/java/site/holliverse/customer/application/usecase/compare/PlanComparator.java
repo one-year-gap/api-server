@@ -1,7 +1,5 @@
 package site.holliverse.customer.application.usecase.compare;
 
-import site.holliverse.customer.application.usecase.dto.BenefitChangeItemDto;
-import site.holliverse.customer.application.usecase.dto.ComparisonResultDto;
 import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import org.springframework.stereotype.Component;

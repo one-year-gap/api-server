@@ -2,6 +2,8 @@ package site.holliverse.customer.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.shared.persistence.BaseEntity;
 
@@ -30,7 +32,7 @@ public class Product extends BaseEntity {
     @Column(name = "sale_price", nullable = false)
     private Integer salePrice;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "product_type", nullable = false, length = 30)
     private ProductType productType;
 

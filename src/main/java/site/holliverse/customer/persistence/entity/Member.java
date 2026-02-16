@@ -2,6 +2,8 @@ package site.holliverse.customer.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import site.holliverse.shared.persistence.BaseEntity;
 import site.holliverse.shared.domain.model.*;
 
@@ -59,22 +61,22 @@ public class Member extends BaseEntity {
     @Column(name = "status_updated_at", nullable = false)
     private LocalDateTime statusUpdatedAt = LocalDateTime.now();
 
-    @Enumerated(EnumType.STRING) // DB에 숫자가 아닌 "ACTIVE" 문자열로 저장
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Builder.Default
     @Column(name = "status", nullable = false, length = 20)
     private MemberStatus status = MemberStatus.PROCESSING;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Builder.Default
     @Column(name = "type", nullable = false, length = 20)
     private MemberSignupType type = MemberSignupType.FORM;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Builder.Default
     @Column(name = "role", nullable = false, length = 20)
     private MemberRole role = MemberRole.CUSTOMER;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "membership", length = 20)
     private MemberMembership membership; 
 }

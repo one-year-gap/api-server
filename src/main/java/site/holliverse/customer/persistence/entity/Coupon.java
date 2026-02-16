@@ -2,6 +2,8 @@ package site.holliverse.customer.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import site.holliverse.shared.persistence.BaseEntity;
 import site.holliverse.shared.domain.model.CouponType; // Shared 패키지에 생성 필요
 
@@ -23,7 +25,7 @@ public class Coupon extends BaseEntity {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "coupon_type", nullable = false)
     private CouponType couponType;
 

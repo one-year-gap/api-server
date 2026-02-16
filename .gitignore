@@ -38,3 +38,6 @@ out/
 .env
 
 node_modules/
+
+# Querydsl generated sources
+src/main/generated/

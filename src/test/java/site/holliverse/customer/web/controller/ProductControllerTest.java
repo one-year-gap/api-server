@@ -13,11 +13,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import site.holliverse.customer.application.usecase.ComparePlansUseCase;
 import site.holliverse.customer.application.usecase.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.GetProductListUseCase;
+import site.holliverse.customer.application.usecase.PlanCompareResult;
 import site.holliverse.customer.application.usecase.ProductDetailResult;
 import site.holliverse.customer.application.usecase.ProductListResult;
+import site.holliverse.customer.application.usecase.compare.PlanComparator;
+import site.holliverse.customer.application.usecase.compare.PlanComparatorTestData;
+import site.holliverse.customer.application.usecase.dto.ComparisonResultDto;
+import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
+import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
 import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.dto.PageMeta;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
@@ -35,6 +42,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProductController.class)
@@ -50,7 +58,11 @@ class ProductControllerTest {
     @MockitoBean
     private GetProductDetailUseCase getProductDetailUseCase;
     @MockitoBean
+    private ComparePlansUseCase comparePlansUseCase;
+    @MockitoBean
     private ProductListResponseAssembler productListResponseAssembler;
+    @MockitoBean
+    private PlanCompareResponseAssembler planCompareResponseAssembler;
     @MockitoBean
     private ProductResponseMapper mapper;
 
@@ -246,6 +258,74 @@ class ProductControllerTest {
         void whenPlanIdNotNumeric_returns400() throws Exception {
             //when & then
             mockMvc.perform(get("/api/v1/plans/abc"))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/v1/plans/compare - 요금제 비교")
+    class ComparePlans {
+
+        @Test
+        @DisplayName("성공: PlanComparatorTestData(에센셜→플러스) 기준으로 200과 비교 결과를 반환한다")
+        void whenEssentialToPlus_returns200WithCompareResponse() throws Exception {
+            // 1. 테스트용 데이터 (시트 기반 실제 데이터)
+            ProductSummaryDto essentialSummary = PlanComparatorTestData.essentialSummary();
+            MobilePlanDetailDto essentialPlan = PlanComparatorTestData.essentialMobilePlan();
+            ProductSummaryDto plusSummary = PlanComparatorTestData.plusSummary();
+            MobilePlanDetailDto plusPlan = PlanComparatorTestData.plusMobilePlan();
+
+            // 현재 요금제
+            ProductDetailResult currentResult = new ProductDetailResult(
+                    essentialSummary,
+                    Optional.of(essentialPlan),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+            );
+            // 타겟 요금제
+            ProductDetailResult targetResult = new ProductDetailResult(
+                    plusSummary,
+                    Optional.of(plusPlan),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+            );
+            // 비교
+            ComparisonResultDto comparison = new PlanComparator().compare(
+                    essentialSummary, essentialPlan, plusSummary, plusPlan
+            );
+            // 비교 결과
+            PlanCompareResult planCompareResult = new PlanCompareResult(currentResult, targetResult, comparison);
+
+            given(comparePlansUseCase.execute(1L, 2L)).willReturn(planCompareResult);
+            given(planCompareResponseAssembler.assemble(any(PlanCompareResult.class)))
+                    .willAnswer(inv -> new PlanCompareResponseAssembler(new ProductResponseMapper()).assemble(inv.getArgument(0)));
+
+            mockMvc.perform(get("/api/v1/plans/compare")
+                            .param("currentPlanId", "1")
+                            .param("targetPlanId", "2"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.status").value("success"))
+                    .andExpect(jsonPath("$.data.current_plan.name").value("5G 프리미어 에센셜"))
+                    .andExpect(jsonPath("$.data.target_plan.name").value("5G 프리미어 플러스"))
+                    .andExpect(jsonPath("$.data.comparison.price_diff").value(15000))
+                    .andExpect(jsonPath("$.data.comparison.message").value("+15,000원"))
+                    .andExpect(jsonPath("$.data.comparison.benefit_changes").isArray())
+                    .andExpect(jsonPath("$.timestamp").exists())
+                    .andDo(print());
+
+            verify(comparePlansUseCase).execute(1L, 2L);
+        }
+
+        @Test
+        @DisplayName("실패: currentPlanId 누락 시 400 Bad Request 반환")
+        void whenCurrentPlanIdMissing_returns400() throws Exception {
+            mockMvc.perform(get("/api/v1/plans/compare").param("targetPlanId", "2"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("실패: targetPlanId 누락 시 400 Bad Request 반환")
+        void whenTargetPlanIdMissing_returns400() throws Exception {
+            mockMvc.perform(get("/api/v1/plans/compare").param("currentPlanId", "1"))
                     .andExpect(status().isBadRequest());
         }
     }

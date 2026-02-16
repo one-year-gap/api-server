@@ -2,123 +2,84 @@ package site.holliverse.shared.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
-import site.holliverse.shared.persistence.entity.enums.MemberMembershipType;
-import site.holliverse.shared.persistence.entity.enums.MemberRoleType;
-import site.holliverse.shared.persistence.entity.enums.MemberSignupType;
-import site.holliverse.shared.persistence.entity.enums.MemberStatusType;
 
-import java.time.Instant;
+
+import site.holliverse.shared.domain.model.MemberMembership;
+import site.holliverse.shared.domain.model.MemberRole;
+import site.holliverse.shared.domain.model.MemberSignupType;
+import site.holliverse.shared.domain.model.MemberStatus;
+import site.holliverse.shared.persistence.BaseEntity;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "member")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class Member {
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "member")
+public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id")
     private Long id;
 
-    /**
-     * 주소 테이블은 (province, city, street_address)로 유니크 처리되어 있어서
-     * 여러 member가 같은 address를 공유할 수 있음.
-     * 그래서 OneToOne + unique=true 는 스키마와 충돌 가능성이 큼 → ManyToOne이 맞음.
-     */
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    // 연관 관계 (N:1)
+    // Member가 주인(FK 보유). 주소 정보는 필요할 때 조회(LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id")
     private Address address;
 
-    // 소셜 로그인용 고유 식별자 (DDL에 추가됨)
+    // 소셜 로그인 정보
     @Column(name = "provider_id", length = 100)
-    private String providerId;
+    private String providerId; // 구글의 고유 ID (일반 가입은 null)
 
-    @Column(name = "email", nullable = false, length = 100, unique = true)
+    // 회원 기본 정보
+    @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
-    /**
-     * DDL 변경: 소셜 로그인은 비밀번호 NULL 허용
-     * (FORM이면 password NOT NULL, 소셜이면 provider_id NOT NULL은 DB 체크 제약이 보장)
-     */
     @Column(name = "password", length = 100)
-    private String password;
+    private String password; // 암호화된 비밀번호 (소셜 가입은 null)
 
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-
-    @Column(name = "phone", length = 100, unique = true)
+    @Column(name = "phone", unique = true, length = 100)
     private String phone;
 
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
     @Column(name = "gender", length = 1)
-    private String gender;
+    private String gender; // 'M', 'W'
 
-    // 날짜 정보
+    // 기본값 설정 필드 (@Builder.Default)
+    @Builder.Default // 빌더 사용 시에도 이 값이 기본으로 들어감
     @Column(name = "join_date", nullable = false)
-    private LocalDate joinDate;
+    private LocalDate joinDate = LocalDate.now();
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
+    @Builder.Default
     @Column(name = "status_updated_at", nullable = false)
-    private Instant statusUpdatedAt;
+    private LocalDateTime statusUpdatedAt = LocalDateTime.now();
 
-    // -------- PostgreSQL ENUM 컬럼 --------
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "status", nullable = false, columnDefinition = "member_status_type")
-    private MemberStatusType status;
-
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "type", nullable = false, columnDefinition = "member_signup_type")
-    private MemberSignupType type;
+    @Enumerated(EnumType.STRING) // DB에 숫자가 아닌 "ACTIVE" 문자열로 저장
+    @Builder.Default
+    @Column(name = "status", nullable = false, length = 20)
+    private MemberStatus status = MemberStatus.PROCESSING;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "role", nullable = false, columnDefinition = "member_role_type")
-    private MemberRoleType role;
+    @Builder.Default
+    @Column(name = "type", nullable = false, length = 20)
+    private MemberSignupType type = MemberSignupType.FORM;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "membership", columnDefinition = "member_membership_type")
-    private MemberMembershipType membership;
+    @Builder.Default
+    @Column(name = "role", nullable = false, length = 20)
+    private MemberRole role = MemberRole.CUSTOMER;
 
-    // -------- lifecycle --------
-    @PrePersist
-    void prePersist() {
-        if (joinDate == null) joinDate = LocalDate.now();
-        if (statusUpdatedAt == null) statusUpdatedAt = Instant.now();
-
-        // 기본값을 엔티티에서도 안전하게 세팅 (DB default와 일치시킴)
-        if (status == null) status = MemberStatusType.PROCESSING;
-        if (type == null) type = MemberSignupType.FORM;
-        if (role == null) role = MemberRoleType.CUSTOMER;
-    }
-
-    // 상태 변경은 메서드로만(감사 시간 업데이트 강제)
-    public void changeStatus(MemberStatusType newStatus) {
-        this.status = newStatus;
-        this.statusUpdatedAt = Instant.now();
-    }
-
-    //주소 변경도 메서드로 관리하면 좋음
-    public void changeAddress(Address address) {
-        this.address = address;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "membership", length = 20)
+    private MemberMembership membership;
 }

@@ -8,7 +8,6 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * 원문 리프레시 토큰을 SHA-256 해시 문자열로 변환한다.
- * <p>
  * DB에는 원문 토큰 대신 해시값만 저장한다.
  */
 @Component

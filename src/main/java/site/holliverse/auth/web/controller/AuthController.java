@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 import site.holliverse.auth.application.usecase.AuthUseCase;
 import site.holliverse.auth.application.usecase.RefreshTokenUseCase;
 import site.holliverse.auth.cookie.RefreshTokenCookieUtil;
-import site.holliverse.auth.dto.AuthTokenResponse;
-import site.holliverse.auth.dto.SignUpDataResponse;
-import site.holliverse.auth.dto.SignUpRequest;
-import site.holliverse.auth.dto.TokenRefreshResponse;
+import site.holliverse.auth.dto.AuthTokenResponseDto;
+import site.holliverse.auth.dto.SignUpDataResponseDto;
+import site.holliverse.auth.dto.SignUpRequestDto;
+import site.holliverse.auth.dto.TokenRefreshResponseDto;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.web.response.ApiResponse;
@@ -44,12 +44,12 @@ public class AuthController {
     /** 신규 고객 회원을 등록한다. */
     @PostMapping("/api/v1/signup")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<SignUpDataResponse> signUp(@Valid @RequestBody SignUpRequest request) {
+    public ApiResponse<SignUpDataResponseDto> signUp(@Valid @RequestBody SignUpRequestDto request) {
         Long memberId = authUseCase.signUp(request).memberId();
 
         return ApiResponse.success(
                 "회원가입이 완료되었습니다.",
-                new SignUpDataResponse(memberId)
+                new SignUpDataResponseDto(memberId)
         );
     }
 
@@ -59,7 +59,7 @@ public class AuthController {
      * 성공 시 리프레시 쿠키도 회전(재설정)한다.
      */
     @PostMapping("/v1/auth/refresh")
-    public ApiResponse<AuthTokenResponse> refresh(
+    public ApiResponse<AuthTokenResponseDto> refresh(
             @CookieValue(name = RefreshTokenCookieUtil.COOKIE_NAME, required = false) String refreshToken,
             HttpServletRequest request,
             HttpServletResponse response
@@ -68,7 +68,7 @@ public class AuthController {
             throw new CustomException(ErrorCode.UNAUTHORIZED, null, "리프레시 토큰이 없습니다");
         }
 
-        TokenRefreshResponse data = refreshTokenUseCase.refresh(refreshToken);
+        TokenRefreshResponseDto data = refreshTokenUseCase.refresh(refreshToken);
         RefreshTokenCookieUtil.addRefreshTokenCookie(
                 response,
                 data.refreshToken(),
@@ -76,7 +76,7 @@ public class AuthController {
                 request.isSecure()
         );
 
-        AuthTokenResponse bodyData = new AuthTokenResponse(
+        AuthTokenResponseDto bodyData = new AuthTokenResponseDto(
                 data.accessToken(),
                 "Bearer",
                 data.accessTokenExpiresIn()

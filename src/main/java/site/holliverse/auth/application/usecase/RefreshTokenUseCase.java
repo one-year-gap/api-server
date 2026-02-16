@@ -2,7 +2,7 @@ package site.holliverse.auth.application.usecase;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import site.holliverse.auth.dto.TokenRefreshResponse;
+import site.holliverse.auth.dto.TokenRefreshResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.domain.model.MemberStatus;
@@ -45,7 +45,7 @@ public class RefreshTokenUseCase {
      * 전달받은 리프레시 토큰으로 액세스/리프레시 토큰을 재발급한다.
      */
     @Transactional
-    public TokenRefreshResponse refresh(String rawRefreshToken) {
+    public TokenRefreshResponseDto refresh(String rawRefreshToken) {
         // 1) JWT 서명/만료/토큰타입 검증
         if (!jwtTokenProvider.isValid(rawRefreshToken) || !jwtTokenProvider.isRefreshToken(rawRefreshToken)) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, null, "Invalid refresh token");
@@ -90,7 +90,7 @@ public class RefreshTokenUseCase {
         refreshToken.rotate(newRefreshTokenHash, newRefreshExpiresAt);
 
         // 7) 컨트롤러/핸들러 전달용 토큰 페이로드 반환
-        return new TokenRefreshResponse(
+        return new TokenRefreshResponseDto(
                 newAccessToken,
                 jwtTokenProvider.getAccessTokenExpirationSeconds(),
                 newRefreshToken,

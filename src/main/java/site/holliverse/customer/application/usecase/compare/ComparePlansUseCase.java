@@ -1,12 +1,12 @@
-package site.holliverse.customer.application.usecase;
+package site.holliverse.customer.application.usecase.compare;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
-import site.holliverse.customer.application.usecase.compare.PlanComparator;
-import site.holliverse.customer.application.usecase.compare.PlanCompareResult;
+
 import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
+import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
+import site.holliverse.customer.application.usecase.product.ProductDetailResult;
 import site.holliverse.shared.domain.model.ProductType;
 
 /**

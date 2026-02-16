@@ -1,4 +1,4 @@
-package site.holliverse.customer.application.usecase;
+package site.holliverse.customer.application.usecase.product;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

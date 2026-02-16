@@ -1,12 +1,12 @@
 package site.holliverse.customer.web.mapper;
 
-import site.holliverse.customer.application.usecase.ProductDetailResult;
 import site.holliverse.customer.application.usecase.dto.AddonDetailDto;
 import site.holliverse.customer.application.usecase.dto.InternetDetailDto;
 import site.holliverse.customer.application.usecase.dto.IptvDetailDto;
 import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.customer.application.usecase.dto.TabWatchPlanDetailDto;
+import site.holliverse.customer.application.usecase.product.ProductDetailResult;
 import site.holliverse.customer.web.dto.product.AddonContent;
 import site.holliverse.customer.web.dto.product.InternetContent;
 import site.holliverse.customer.web.dto.product.IptvContent;

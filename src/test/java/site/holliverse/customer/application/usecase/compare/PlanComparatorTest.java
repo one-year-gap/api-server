@@ -3,7 +3,6 @@ package site.holliverse.customer.application.usecase.compare;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import site.holliverse.customer.application.usecase.dto.ComparisonResultDto;
 import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 

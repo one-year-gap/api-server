@@ -1,4 +1,4 @@
-package site.holliverse.customer.web.dto.product;
+package site.holliverse.customer.web.dto.compare;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

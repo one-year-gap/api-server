@@ -5,11 +5,11 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.auth.dto.TokenRefreshResponse;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.entity.RefreshToken;
-import site.holliverse.shared.persistence.entity.enums.MemberStatusType;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
 
@@ -17,7 +17,6 @@ import java.time.Instant;
 
 /**
  * 리프레시 토큰 검증 및 토큰 재발급 유스케이스.
- * <p>
  * 보안 보장 사항:
  * - 리프레시 토큰 서명/타입/만료 검증
  * - DB에는 해시 토큰만 저장
@@ -74,7 +73,7 @@ public class RefreshTokenUseCase {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "memberId", "Member not found"));
 
-        if (member.getStatus() != MemberStatusType.ACTIVE) {
+        if (member.getStatus() != MemberStatus.ACTIVE) {
             throw new CustomException(
                     ErrorCode.FORBIDDEN,
                     "memberStatus",

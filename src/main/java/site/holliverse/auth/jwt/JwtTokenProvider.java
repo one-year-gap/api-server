@@ -7,8 +7,8 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.persistence.entity.Member;
-import site.holliverse.shared.persistence.entity.enums.MemberStatusType;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -63,7 +63,7 @@ public class JwtTokenProvider {
     /**
      * 사용자 식별/권한 정보를 포함한 Access Token을 발급한다.
      */
-    public String generateAccessToken(Long memberId, String email, String role, MemberStatusType status) {
+    public String generateAccessToken(Long memberId, String email, String role, MemberStatus status) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusMillis(accessTokenExpirationMs);
 

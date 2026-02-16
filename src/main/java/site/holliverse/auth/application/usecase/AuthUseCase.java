@@ -6,13 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.auth.dto.SignUpRequest;
 import site.holliverse.auth.dto.SingUpResponse;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.shared.domain.model.MemberRole;
+import site.holliverse.shared.domain.model.MemberSignupType;
+import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Address;
 import site.holliverse.shared.persistence.entity.Member;
-import site.holliverse.shared.persistence.entity.enums.MemberRoleType;
-import site.holliverse.shared.persistence.entity.enums.MemberSignupType;
-import site.holliverse.shared.persistence.entity.enums.MemberStatusType;
 import site.holliverse.shared.persistence.repository.AddressRepository;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
@@ -52,8 +52,7 @@ public class AuthUseCase {
     }
 
     /**
-     * FORM 회원가입을 처리한다.
-     * <p>
+     * FORM 회원가입을 처리한다
      * 처리 순서:
      * 1) 이메일/전화번호 중복 검증
      * 2) 주소 재사용 또는 신규 생성
@@ -83,12 +82,14 @@ public class AuthUseCase {
                         addressRequest.getCity(),
                         addressRequest.getStreetAddress()
                 )
-                .orElseGet(() -> addressRepository.save(new Address(
-                        addressRequest.getProvince(),
-                        addressRequest.getCity(),
-                        addressRequest.getStreetAddress(),
-                        addressRequest.getPostalCode()
-                )));
+                .orElseGet(() -> addressRepository.save(
+                        Address.builder()
+                                .province(addressRequest.getProvince())
+                                .city(addressRequest.getCity())
+                                .streetAddress(addressRequest.getStreetAddress())
+                                .postalCode(addressRequest.getPostalCode())
+                                .build()
+                ));
 
         Member member = Member.builder()
                 .address(address)
@@ -100,8 +101,8 @@ public class AuthUseCase {
                 .gender(request.getGender())
                 .membership(request.getMembership())
                 .type(MemberSignupType.FORM)
-                .status(MemberStatusType.ACTIVE)
-                .role(MemberRoleType.CUSTOMER)
+                .status(MemberStatus.ACTIVE)
+                .role(MemberRole.CUSTOMER)
                 .build();
 
         Member saved = memberRepository.save(member);

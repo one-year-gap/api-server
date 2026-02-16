@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import site.holliverse.auth.dto.SignUpRequestDto;
-import site.holliverse.auth.dto.SingUpResponseDto;
+import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
@@ -85,7 +85,7 @@ class AuthUseCaseTest {
             });
 
             // when
-            SingUpResponseDto result = authUseCase.signUp(request);
+            SignUpResponseDto result = authUseCase.signUp(request);
 
             // then
             assertThat(result.memberId()).isEqualTo(1L);
@@ -122,7 +122,7 @@ class AuthUseCaseTest {
             });
 
             // when
-            SingUpResponseDto result = authUseCase.signUp(request);
+            SignUpResponseDto result = authUseCase.signUp(request);
 
             // then
             assertThat(result.memberId()).isEqualTo(2L);

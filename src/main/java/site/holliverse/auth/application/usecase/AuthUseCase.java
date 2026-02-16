@@ -4,7 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.auth.dto.SignUpRequestDto;
-import site.holliverse.auth.dto.SingUpResponseDto;
+import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberSignupType;
@@ -59,7 +59,7 @@ public class AuthUseCase {
      * 3) 기본 권한/상태/가입유형으로 회원 저장
      */
     @Transactional
-    public SingUpResponseDto signUp(SignUpRequestDto request) {
+    public SignUpResponseDto signUp(SignUpRequestDto request) {
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new CustomException(
                     ErrorCode.DUPLICATED_EMAIL,
@@ -106,7 +106,7 @@ public class AuthUseCase {
                 .build();
 
         Member saved = memberRepository.save(member);
-        return new SingUpResponseDto(saved.getId());
+        return new SignUpResponseDto(saved.getId());
     }
 
     /**

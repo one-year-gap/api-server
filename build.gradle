@@ -74,6 +74,9 @@ def jacocoExcludes = [
         '**/*Vo*',
         '**/*Request*',
         '**/*Response*',
+        '**/*Content*',
+        '**/*Result*',
+        '**/*Meta*',
         '**/*Exception*',
         '**/*Error*',
         '**/*Config*',
@@ -84,11 +87,15 @@ def jacocoExcludes = [
         '**/*Advice*',
         '**/*Handler*',
         '**/*Mapper*',
+        '**/*Assembler*',
         '**/*Converter*',
         '**/*Constant*',
         '**/*Constants*',
         '**/*Enum*',
         '**/generated/**',
+        '**/dto/**',
+        '**/web/dto/**',
+        '**/shared/domain/model/**',
         '**/Q*.class',
         '**/Q*.java',
         '**/*Querydsl*',
@@ -125,12 +132,12 @@ tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification) {
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                //minimum = 0.5
+                minimum = 0.5
             }
             limit {
                 counter = 'LINE'
                 value = 'COVEREDRATIO'
-                //minimum = 0.7
+                minimum = 0.7
             }
         }
     }

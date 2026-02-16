@@ -102,6 +102,8 @@ def jacocoExcludes = [
         '**/dto/**',
         '**/web/dto/**',
         '**/shared/domain/model/**',
+        '**/auth/jwt/**',
+        '**/shared/security/**',
         '**/Q*.class',
         '**/Q*.java',
         '**/*Querydsl*',

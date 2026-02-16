@@ -14,5 +14,5 @@ jobs:
       working-directory: .
       min-line-overall: 0.7
       min-branch-overall: 0.5
-      min-line-changed: 0.1
-      min-branch-changed: 0.1
+      min-line-changed: 0.8
+      min-branch-changed: 0.6

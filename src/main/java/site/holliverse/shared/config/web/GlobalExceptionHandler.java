@@ -7,8 +7,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.web.response.ApiErrorDetail;
@@ -56,6 +58,26 @@ public class GlobalExceptionHandler {
         ApiErrorResponse body = ApiErrorResponse.error(
                 ErrorCode.INVALID_INPUT.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), null, ex.getMessage())
+        );
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    // 필수 요청 파라미터 누락
+    public ResponseEntity<ApiErrorResponse> handleMissingParam(MissingServletRequestParameterException ex) {
+        ApiErrorResponse body = ApiErrorResponse.error(
+                ErrorCode.INVALID_INPUT.defaultMessage(),
+                new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), ex.getParameterName(), ex.getMessage())
+        );
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    // PathVariable/QueryParam 타입 불일치
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        ApiErrorResponse body = ApiErrorResponse.error(
+                ErrorCode.INVALID_INPUT.defaultMessage(),
+                new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), ex.getName(), ex.getMessage())
         );
         return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
     }

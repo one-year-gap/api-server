@@ -6,15 +6,14 @@ import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import site.holliverse.auth.application.usecase.AuthUseCase;
 import site.holliverse.auth.application.usecase.RefreshTokenUseCase;
-import site.holliverse.auth.dto.SingUpResponse;
-import site.holliverse.auth.dto.TokenRefreshResponse;
+import site.holliverse.auth.dto.SingUpResponseDto;
+import site.holliverse.auth.dto.TokenRefreshResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.shared.config.web.GlobalExceptionHandler;
 
@@ -47,7 +46,7 @@ class AuthControllerTest {
     @DisplayName("회원가입 성공 시 201과 성공 응답을 반환한다")
     void signUpSuccess() throws Exception {
         // given
-        BDDMockito.given(authUseCase.signUp(any())).willReturn(new SingUpResponse(1L));
+        BDDMockito.given(authUseCase.signUp(any())).willReturn(new SingUpResponseDto(1L));
         String requestBody = """
                 {
                   "email": "test@holliverse.com",
@@ -90,7 +89,7 @@ class AuthControllerTest {
     void refreshSuccess() throws Exception {
         // given
         BDDMockito.given(refreshTokenUseCase.refresh(eq("refresh-token-value")))
-                .willReturn(new TokenRefreshResponse(
+                .willReturn(new TokenRefreshResponseDto(
                         "new-access-token",
                         3600L,
                         "new-refresh-token",

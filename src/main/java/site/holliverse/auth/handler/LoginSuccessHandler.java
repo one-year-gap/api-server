@@ -9,8 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import site.holliverse.auth.cookie.RefreshTokenCookieUtil;
-import site.holliverse.auth.dto.AuthTokenResponse;
-import site.holliverse.auth.dto.TokenRefreshResponse;
+import site.holliverse.auth.dto.AuthTokenResponseDto;
+import site.holliverse.auth.dto.TokenRefreshResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.persistence.entity.RefreshToken;
@@ -84,7 +84,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                                 .build())
                 );
 
-        TokenRefreshResponse data = new TokenRefreshResponse(
+        TokenRefreshResponseDto data = new TokenRefreshResponseDto(
                 accessToken,
                 jwtTokenProvider.getAccessTokenExpirationSeconds(),
                 refreshTokenRaw,
@@ -98,12 +98,12 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                 request.isSecure()
         );
 
-        AuthTokenResponse bodyData = new AuthTokenResponse(
+        AuthTokenResponseDto bodyData = new AuthTokenResponseDto(
                 data.accessToken(),
                 "Bearer",
                 data.accessTokenExpiresIn()
         );
-        ApiResponse<AuthTokenResponse> body = ApiResponse.success("로그인 성공", bodyData);
+        ApiResponse<AuthTokenResponseDto> body = ApiResponse.success("로그인 성공", bodyData);
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

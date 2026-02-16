@@ -3,8 +3,8 @@ package site.holliverse.auth.application.usecase;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import site.holliverse.auth.dto.SignUpRequest;
-import site.holliverse.auth.dto.SingUpResponse;
+import site.holliverse.auth.dto.SignUpRequestDto;
+import site.holliverse.auth.dto.SingUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberSignupType;
@@ -59,7 +59,7 @@ public class AuthUseCase {
      * 3) 기본 권한/상태/가입유형으로 회원 저장
      */
     @Transactional
-    public SingUpResponse signUp(SignUpRequest request) {
+    public SingUpResponseDto signUp(SignUpRequestDto request) {
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new CustomException(
                     ErrorCode.DUPLICATED_EMAIL,
@@ -75,7 +75,7 @@ public class AuthUseCase {
             );
         }
 
-        SignUpRequest.AddressRequest addressRequest = request.getAddress();
+        SignUpRequestDto.AddressRequest addressRequest = request.getAddress();
         Address address = addressRepository
                 .findByProvinceAndCityAndStreetAddress(
                         addressRequest.getProvince(),
@@ -106,7 +106,7 @@ public class AuthUseCase {
                 .build();
 
         Member saved = memberRepository.save(member);
-        return new SingUpResponse(saved.getId());
+        return new SingUpResponseDto(saved.getId());
     }
 
     /**

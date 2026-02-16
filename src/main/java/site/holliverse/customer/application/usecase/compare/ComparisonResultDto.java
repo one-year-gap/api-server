@@ -1,4 +1,4 @@
-package site.holliverse.customer.application.usecase.dto;
+package site.holliverse.customer.application.usecase.compare;
 
 import java.util.List;
 

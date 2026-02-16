@@ -10,8 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
-import site.holliverse.auth.dto.SignUpRequest;
-import site.holliverse.auth.dto.SingUpResponse;
+import site.holliverse.auth.dto.SignUpRequestDto;
+import site.holliverse.auth.dto.SingUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
@@ -64,7 +64,7 @@ class AuthUseCaseTest {
         @DisplayName("기존 주소가 있으면 재사용하여 회원가입한다")
         void signUpSuccessWithExistingAddress() {
             // given
-            SignUpRequest request = createRequest();
+            SignUpRequestDto request = createRequest();
             Address existingAddress = Address.builder()
                     .province("seoul")
                     .city("gangnam")
@@ -85,7 +85,7 @@ class AuthUseCaseTest {
             });
 
             // when
-            SingUpResponse result = authUseCase.signUp(request);
+            SingUpResponseDto result = authUseCase.signUp(request);
 
             // then
             assertThat(result.memberId()).isEqualTo(1L);
@@ -107,7 +107,7 @@ class AuthUseCaseTest {
         @DisplayName("주소가 없으면 새 주소를 저장한 뒤 회원가입한다")
         void signUpSuccessWithNewAddress() {
             // given
-            SignUpRequest request = createRequest();
+            SignUpRequestDto request = createRequest();
             when(memberRepository.existsByEmail(request.getEmail())).thenReturn(false);
             when(memberRepository.existsByPhone(request.getPhone())).thenReturn(false);
             when(passwordEncoder.encode(request.getPassword())).thenReturn("encoded-password");
@@ -122,7 +122,7 @@ class AuthUseCaseTest {
             });
 
             // when
-            SingUpResponse result = authUseCase.signUp(request);
+            SingUpResponseDto result = authUseCase.signUp(request);
 
             // then
             assertThat(result.memberId()).isEqualTo(2L);
@@ -140,7 +140,7 @@ class AuthUseCaseTest {
         @DisplayName("이메일이 중복이면 예외를 던진다")
         void throwsWhenEmailDuplicated() {
             // given
-            SignUpRequest request = createRequest();
+            SignUpRequestDto request = createRequest();
             when(memberRepository.existsByEmail(request.getEmail())).thenReturn(true);
 
             // when, then
@@ -157,7 +157,7 @@ class AuthUseCaseTest {
         @DisplayName("전화번호가 중복이면 예외를 던진다")
         void throwsWhenPhoneDuplicated() {
             // given
-            SignUpRequest request = createRequest();
+            SignUpRequestDto request = createRequest();
             when(memberRepository.existsByEmail(request.getEmail())).thenReturn(false);
             when(memberRepository.existsByPhone(request.getPhone())).thenReturn(true);
 
@@ -208,8 +208,8 @@ class AuthUseCaseTest {
         }
     }
 
-    private SignUpRequest createRequest() {
-        SignUpRequest request = new SignUpRequest();
+    private SignUpRequestDto createRequest() {
+        SignUpRequestDto request = new SignUpRequestDto();
         ReflectionTestUtils.setField(request, "email", "test@holliverse.com");
         ReflectionTestUtils.setField(request, "password", "Password!123");
         ReflectionTestUtils.setField(request, "name", "hong");
@@ -218,7 +218,7 @@ class AuthUseCaseTest {
         ReflectionTestUtils.setField(request, "gender", "M");
         ReflectionTestUtils.setField(request, "membership", MemberMembership.BASIC);
 
-        SignUpRequest.AddressRequest address = new SignUpRequest.AddressRequest();
+        SignUpRequestDto.AddressRequest address = new SignUpRequestDto.AddressRequest();
         ReflectionTestUtils.setField(address, "province", "seoul");
         ReflectionTestUtils.setField(address, "city", "gangnam");
         ReflectionTestUtils.setField(address, "streetAddress", "teheran-ro 123");

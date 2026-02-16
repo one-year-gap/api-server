@@ -5,6 +5,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+
 ### STS ###
 .apt_generated
 .classpath
@@ -38,6 +39,6 @@ out/
 .env
 
 node_modules/
-
+.node_modules/*
 # Querydsl generated sources
 src/main/generated/

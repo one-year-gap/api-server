@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import site.holliverse.shared.persistence.entity.enums.MemberStatusType;
+import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.security.CustomUserDetails;
 
 import java.io.IOException;
@@ -55,7 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     email,
                     null,
                     role,
-                    status != null ? MemberStatusType.valueOf(status) : MemberStatusType.ACTIVE
+                    status != null ? MemberStatus.valueOf(status) : MemberStatus.ACTIVE
             );
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

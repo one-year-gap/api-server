@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import site.holliverse.shared.persistence.entity.enums.MemberMembershipType;
+import site.holliverse.shared.domain.model.MemberMembership;
 
 import java.time.LocalDate;
 
@@ -48,7 +48,7 @@ public class SignUpRequest {
 
     /** 멤버십 등급. */
     @NotNull(message = "필수 입력값입니다.")
-    private MemberMembershipType membership;
+    private MemberMembership membership;
 
     /** 중첩 주소 정보(@Valid 재귀 검증). */
     @Valid

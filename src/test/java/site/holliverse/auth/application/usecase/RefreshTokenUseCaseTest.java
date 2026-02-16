@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import site.holliverse.auth.dto.TokenRefreshResponse;
+import site.holliverse.auth.dto.TokenRefreshResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.domain.model.MemberRole;
@@ -80,7 +80,7 @@ class RefreshTokenUseCaseTest {
         when(jwtTokenProvider.getRefreshTokenExpirationSeconds()).thenReturn(120L);
 
         // 실행
-        TokenRefreshResponse result = refreshTokenUseCase.refresh(rawRefreshToken);
+        TokenRefreshResponseDto result = refreshTokenUseCase.refresh(rawRefreshToken);
 
         // 검증
         assertThat(result.accessToken()).isEqualTo("new-access-token");

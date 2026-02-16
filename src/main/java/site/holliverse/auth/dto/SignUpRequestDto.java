@@ -15,7 +15,7 @@ import java.time.LocalDate;
  * 회원가입 요청 JSON DTO.
  */
 @Getter
-public class SignUpRequest {
+public class SignUpRequestDto {
 
     /** 로그인 식별자로 사용할 고유 이메일. */
     @NotBlank(message = "필수 입력값입니다.")

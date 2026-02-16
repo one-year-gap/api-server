@@ -6,14 +6,19 @@ import site.holliverse.customer.application.usecase.dto.InternetDetailDto;
 import site.holliverse.customer.application.usecase.dto.IptvDetailDto;
 import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
+import site.holliverse.customer.application.usecase.dto.ComparisonResultDto;
 import site.holliverse.customer.application.usecase.dto.TabWatchPlanDetailDto;
 import site.holliverse.customer.web.dto.product.AddonContent;
+import site.holliverse.customer.web.dto.product.BenefitChangeItem;
+import site.holliverse.customer.web.dto.product.ComparisonResponse;
 import site.holliverse.customer.web.dto.product.InternetContent;
 import site.holliverse.customer.web.dto.product.IptvContent;
 import site.holliverse.customer.web.dto.product.MobileContent;
 import site.holliverse.customer.web.dto.product.ProductContent;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.TabWatchContent;
+
+import java.util.List;
 
 public class ProductResponseMapper {
 
@@ -70,5 +75,22 @@ public class ProductResponseMapper {
 
     public TabWatchContent toTabWatchContent(TabWatchPlanDetailDto t) {
         return new TabWatchContent(t.dataAmount(), t.benefitVoiceCall(), t.benefitSms());
+    }
+
+    public ComparisonResponse toComparisonResponse(ComparisonResultDto dto) {
+        List<BenefitChangeItem> items = dto.benefitChanges().stream()
+                .map(this::toBenefitChangeItem)
+                .toList();
+        return new ComparisonResponse(dto.priceDiff(), dto.message(), items);
+    }
+
+    private BenefitChangeItem toBenefitChangeItem(site.holliverse.customer.application.usecase.dto.BenefitChangeItemDto dto) {
+        return new BenefitChangeItem(
+                dto.item(),
+                dto.isChanged(),
+                dto.desc(),
+                dto.addedBrands(),
+                dto.removedBrands()
+        );
     }
 }

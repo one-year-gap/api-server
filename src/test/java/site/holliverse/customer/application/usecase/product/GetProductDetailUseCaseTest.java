@@ -8,8 +8,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import site.holliverse.customer.application.usecase.GetProductDetailUseCase;
-import site.holliverse.customer.application.usecase.ProductDetailResult;
 import site.holliverse.customer.persistence.entity.Addon;
 import site.holliverse.customer.persistence.entity.Internet;
 import site.holliverse.customer.persistence.entity.Iptv;

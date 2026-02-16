@@ -1,6 +1,6 @@
 package site.holliverse.customer.application.usecase.compare;
 
-import site.holliverse.customer.application.usecase.ProductDetailResult;
+import site.holliverse.customer.application.usecase.product.ProductDetailResult;
 
 /**
  * 요금제 비교 UseCase 결과 (current/target는 상세 조회와 동일한 Result 재사용).

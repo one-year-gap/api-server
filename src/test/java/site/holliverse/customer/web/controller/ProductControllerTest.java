@@ -16,12 +16,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import site.holliverse.customer.application.usecase.ComparePlansUseCase;
 import site.holliverse.customer.application.usecase.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.GetProductListUseCase;
-import site.holliverse.customer.application.usecase.PlanCompareResult;
+import site.holliverse.customer.application.usecase.compare.PlanCompareResult;
 import site.holliverse.customer.application.usecase.ProductDetailResult;
 import site.holliverse.customer.application.usecase.ProductListResult;
 import site.holliverse.customer.application.usecase.compare.PlanComparator;
 import site.holliverse.customer.application.usecase.compare.PlanComparatorTestData;
-import site.holliverse.customer.application.usecase.dto.ComparisonResultDto;
+import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
 import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
@@ -30,6 +30,7 @@ import site.holliverse.customer.web.dto.PageMeta;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.ProductListResponse;
 import site.holliverse.customer.web.dto.product.ProductContent;
+import site.holliverse.customer.web.mapper.CompareResponseMapper;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 import site.holliverse.shared.domain.model.ProductType;
 
@@ -296,7 +297,10 @@ class ProductControllerTest {
 
             given(comparePlansUseCase.execute(1L, 2L)).willReturn(planCompareResult);
             given(planCompareResponseAssembler.assemble(any(PlanCompareResult.class)))
-                    .willAnswer(inv -> new PlanCompareResponseAssembler(new ProductResponseMapper()).assemble(inv.getArgument(0)));
+                    .willAnswer(inv -> new PlanCompareResponseAssembler(
+                            new ProductResponseMapper(),
+                            new CompareResponseMapper()
+                    ).assemble(inv.getArgument(0)));
 
             mockMvc.perform(get("/api/v1/plans/compare")
                             .param("currentPlanId", "1")

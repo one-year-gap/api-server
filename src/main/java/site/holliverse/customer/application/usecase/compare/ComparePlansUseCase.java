@@ -7,10 +7,9 @@ import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.product.ProductDetailResult;
-import site.holliverse.shared.domain.model.ProductType;
 
 /**
- * 요금제 비교 UseCase. 현재는 모바일 요금제만 지원.
+ * 요금제 비교 UseCase. 현재는 모바일 요금제 비교만 구현되어 있으며, 동일 타입끼리만 비교 가능.
  */
 @Service
 public class ComparePlansUseCase {
@@ -32,8 +31,8 @@ public class ComparePlansUseCase {
         ProductSummaryDto currentSummary = currentResult.product();
         ProductSummaryDto targetSummary = targetResult.product();
 
-        if (currentSummary.productType() != ProductType.MOBILE_PLAN || targetSummary.productType() != ProductType.MOBILE_PLAN) {
-            throw new IllegalArgumentException("모바일 요금제만 비교할 수 있습니다.");
+        if (currentSummary.productType() != targetSummary.productType()) {
+            throw new IllegalArgumentException("현재 요금제와 비교 대상의 타입이 같아야 합니다.");
         }
 
         MobilePlanDetailDto currentPlan = currentResult.mobilePlan()

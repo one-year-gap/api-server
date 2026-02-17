@@ -48,7 +48,7 @@ public class RefreshTokenUseCase {
     public TokenRefreshResponseDto refresh(String rawRefreshToken) {
         // 1) JWT 서명/만료/토큰타입 검증
         if (!jwtTokenProvider.isValid(rawRefreshToken) || !jwtTokenProvider.isRefreshToken(rawRefreshToken)) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, null, "Invalid refresh token");
+            throw new CustomException(ErrorCode.UNAUTHORIZED, null);
         }
 
         Long memberId = jwtTokenProvider.getMemberId(rawRefreshToken);
@@ -56,28 +56,27 @@ public class RefreshTokenUseCase {
 
         // 2) 활성 상태의 해시 토큰 조회
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHashAndRevokedFalse(tokenHash)
-                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, null, "Refresh token not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, null));
 
         // 3) 토큰 소유자 일치 여부 확인
         if (!refreshToken.getMemberId().equals(memberId)) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, null, "Refresh token owner mismatch");
+            throw new CustomException(ErrorCode.UNAUTHORIZED, null);
         }
 
         // 4) 만료 토큰은 폐기 후 차단
         if (refreshToken.isExpired()) {
             refreshToken.revoke();
-            throw new CustomException(ErrorCode.TOKEN_EXPIRED, null, "Refresh token expired");
+            throw new CustomException(ErrorCode.TOKEN_EXPIRED, null);
         }
 
         // 5) 회원 상태 검증
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "memberId", "Member not found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "memberId"));
 
         if (member.getStatus() != MemberStatus.ACTIVE) {
             throw new CustomException(
                     ErrorCode.FORBIDDEN,
-                    "memberStatus",
-                    "Member status does not allow token refresh"
+                    "memberStatus"
             );
         }
 

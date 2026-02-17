@@ -89,13 +89,13 @@ public class GlobalExceptionHandler {
         msg = msg != null ? msg : "";
 
         if (msg.contains("uk_member_email")) {
-            return conflict(ErrorCode.DUPLICATED_EMAIL, "email", "동일한 이메일이 존재합니다.");
+            return conflict(ErrorCode.DUPLICATED_EMAIL, "email", ErrorCode.DUPLICATED_EMAIL.defaultMessage());
         }
         if (msg.contains("uk_member_phone")) {
-            return conflict(ErrorCode.DUPLICATED_PHONE, "phone", "동일한 전화번호가 존재합니다.");
+            return conflict(ErrorCode.DUPLICATED_PHONE, "phone", ErrorCode.DUPLICATED_PHONE.defaultMessage());
         }
 
-        return conflict(ErrorCode.CONFLICT, null, "중복 또는 충돌이 발생했습니다.");
+        return conflict(ErrorCode.CONFLICT, null,  ErrorCode.CONFLICT.defaultMessage());
     }
 
     @ExceptionHandler(AuthenticationException.class)

@@ -1,8 +1,12 @@
-package site.holliverse.customer.persistence.entity;
+package site.holliverse.shared.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import site.holliverse.shared.persistence.BaseEntity;
+
+import java.time.Instant;
 
 @Entity
 @Getter

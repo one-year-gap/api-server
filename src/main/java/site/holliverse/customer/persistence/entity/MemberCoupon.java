@@ -2,6 +2,7 @@ package site.holliverse.customer.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.BaseEntity;
 
 import java.time.LocalDateTime;

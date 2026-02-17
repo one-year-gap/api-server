@@ -41,8 +41,8 @@ public class AuthController {
         this.refreshTokenUseCase = refreshTokenUseCase;
     }
 
-    //회원 가입
-    @PostMapping("/api/customer/v1/signup")
+    //가입
+    @PostMapping("/api/v1/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SignUpDataResponseDto> signUp(@Valid @RequestBody SignUpRequestDto request) {
         Long memberId = authUseCase.signUp(request).memberId();

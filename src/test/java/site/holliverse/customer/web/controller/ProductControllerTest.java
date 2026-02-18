@@ -14,12 +14,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import site.holliverse.customer.application.usecase.compare.PlanCompareResult;
-import site.holliverse.customer.application.usecase.compare.PlanComparator;
-import site.holliverse.customer.application.usecase.compare.PlanComparatorTestData;
 import site.holliverse.customer.application.usecase.compare.ComparePlansUseCase;
 import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
-import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
+import site.holliverse.customer.application.usecase.compare.PlanCompareResult;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductListUseCase;
@@ -28,10 +25,11 @@ import site.holliverse.customer.application.usecase.product.ProductListResult;
 import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
 import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.dto.PageMeta;
+import site.holliverse.customer.web.dto.compare.ComparisonResponse;
+import site.holliverse.customer.web.dto.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.ProductListResponse;
 import site.holliverse.customer.web.dto.product.ProductContent;
-import site.holliverse.customer.web.mapper.CompareResponseMapper;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 import site.holliverse.shared.domain.model.ProductType;
 
@@ -40,7 +38,6 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -269,39 +266,34 @@ class ProductControllerTest {
     class ComparePlans {
 
         @Test
-        @DisplayName("성공: PlanComparatorTestData(에센셜→플러스) 기준으로 200과 비교 결과를 반환한다")
+        @DisplayName("성공: 200과 비교 결과를 반환한다 (Assembler/Mapper 미의존)")
         void whenEssentialToPlus_returns200WithCompareResponse() throws Exception {
-            // 1. 테스트용 데이터 (시트 기반 실제 데이터)
-            ProductSummaryDto essentialSummary = PlanComparatorTestData.essentialSummary();
-            MobilePlanDetailDto essentialPlan = PlanComparatorTestData.essentialMobilePlan();
-            ProductSummaryDto plusSummary = PlanComparatorTestData.plusSummary();
-            MobilePlanDetailDto plusPlan = PlanComparatorTestData.plusMobilePlan();
-
-            // 현재 요금제
+            // UseCase 스텁: Controller가 assemble에 넘길 최소 데이터만 반환
             ProductDetailResult currentResult = new ProductDetailResult(
-                    essentialSummary,
-                    Optional.of(essentialPlan),
-                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+                    summaryDto(1L, "current", ProductType.MOBILE_PLAN),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
             );
-            // 타겟 요금제
             ProductDetailResult targetResult = new ProductDetailResult(
-                    plusSummary,
-                    Optional.of(plusPlan),
-                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+                    summaryDto(2L, "target", ProductType.MOBILE_PLAN),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
             );
-            // 비교
-            ComparisonResultDto comparison = new PlanComparator().compare(
-                    essentialSummary, essentialPlan, plusSummary, plusPlan
+            PlanCompareResult planCompareResult = new PlanCompareResult(
+                    currentResult, targetResult, new ComparisonResultDto(0, "", List.of())
             );
-            // 비교 결과
-            PlanCompareResult planCompareResult = new PlanCompareResult(currentResult, targetResult, comparison);
-
             given(comparePlansUseCase.execute(1L, 2L)).willReturn(planCompareResult);
+
+            // Assembler/Mapper 의존 없이 생성 후 스텁
+            ProductDetailResponse currentPlanDto = new ProductDetailResponse(
+                    1L, "5G 프리미어 에센셜", "MOBILE_PLAN", 59_000, 49_500, "할인", "CODE", null);
+            ProductDetailResponse targetPlanDto = new ProductDetailResponse(
+                    2L, "5G 프리미어 플러스", "MOBILE_PLAN", 74_000, 62_000, "할인", "CODE", null);
+            PlanCompareResponse mockResponse = new PlanCompareResponse(
+                    currentPlanDto,
+                    targetPlanDto,
+                    new ComparisonResponse(15_000, "+15,000원", List.of())
+            );
             given(planCompareResponseAssembler.assemble(any(PlanCompareResult.class)))
-                    .willAnswer(inv -> new PlanCompareResponseAssembler(
-                            new ProductResponseMapper(),
-                            new CompareResponseMapper()
-                    ).assemble(inv.getArgument(0)));
+                    .willReturn(mockResponse);
 
             mockMvc.perform(get("/api/v1/plans/compare")
                             .param("currentPlanId", "1")

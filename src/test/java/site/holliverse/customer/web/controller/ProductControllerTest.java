@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProductController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("customer")
 class ProductControllerTest {
 
@@ -64,6 +66,8 @@ class ProductControllerTest {
     private PlanCompareResponseAssembler planCompareResponseAssembler;
     @MockitoBean
     private ProductResponseMapper mapper;
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
     // --- Helper Methods ---
     private static ProductSummaryDto summaryDto(Long productId, String name, ProductType productType) {

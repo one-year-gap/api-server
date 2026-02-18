@@ -7,6 +7,7 @@ import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.query.dao.MemberRawData;
 import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,16 +26,18 @@ public class RetrieveMemberUseCase {
      */
     @Transactional(readOnly = true) // 단순 조회의 경우 성능 최적화를 위해 읽기 전용 트랜잭션 사용
     public RetrieveMemberResult execute(AdminMemberListRequestDto requestDto) {
+        // 1. 전체 개수를 먼저 조회
+        int totalCount = (int) adminMemberDao.count(requestDto);
 
-        // 1. DAO를 통해 조건에 맞는 회원 목록(암호화된 상태) 조회
-        // DAO 내부에서 이미 검색어 암호화 로직이 있으므로 그대로 호출
+        // 데이터가 0건이면 굳이 목록 조회를 할 필요 X (성능 최적화)
+        if (totalCount == 0) {
+            return new RetrieveMemberResult(Collections.emptyList(), 0);
+        }
+
+        // 2. 데이터가 있을 때만 목록 조회 실행
         List<MemberRawData> members = adminMemberDao.findAll(requestDto);
 
-        // 2. 페이징 계산을 위한 전체 데이터 개수 조회
-        long totalCount = adminMemberDao.count(requestDto);
-
-        // 3. 수집된 데이터를 결과 객체에 담아 반환 (Web 계층으로 배달)
-        return new RetrieveMemberResult(members, (int) totalCount);
+        return new RetrieveMemberResult(members, totalCount);
     }
 
     /**

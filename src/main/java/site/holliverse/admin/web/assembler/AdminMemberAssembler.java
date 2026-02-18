@@ -1,6 +1,7 @@
 package site.holliverse.admin.web.assembler;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import site.holliverse.admin.query.dao.MemberRawData;
 import site.holliverse.admin.web.dto.member.AdminMemberDto;
@@ -10,6 +11,7 @@ import site.holliverse.shared.util.DecryptionTool;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Profile("admin")
 @Component
 @RequiredArgsConstructor
 public class AdminMemberAssembler {

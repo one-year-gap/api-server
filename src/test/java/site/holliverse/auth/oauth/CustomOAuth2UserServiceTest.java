@@ -12,7 +12,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.test.util.ReflectionTestUtils;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.persistence.entity.Member;
@@ -42,9 +41,7 @@ class CustomOAuth2UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        customOAuth2UserService = new CustomOAuth2UserService(memberRepository);
-        // 테스트에서는 Google 호출을 막기 위해 delegate를 목으로 바꾼다.
-        ReflectionTestUtils.setField(customOAuth2UserService, "delegate", delegate);
+        customOAuth2UserService = new CustomOAuth2UserService(memberRepository, delegate);
     }
 
     @Test

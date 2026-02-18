@@ -27,7 +27,7 @@ import java.util.Map;
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final MemberRepository memberRepository;
-    private final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
+    private final DefaultOAuth2UserService delegate;
 
     @Override
     @Transactional

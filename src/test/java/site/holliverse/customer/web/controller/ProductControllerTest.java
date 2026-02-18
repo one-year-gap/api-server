@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
 import site.holliverse.customer.application.usecase.compare.PlanComparator;
 import site.holliverse.customer.application.usecase.compare.PlanComparatorTestData;
@@ -46,7 +46,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProductController.class)
-@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("customer")
 class ProductControllerTest {
 

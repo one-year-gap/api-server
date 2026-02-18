@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -23,6 +24,7 @@ import java.util.List;
  * 관리자 회원 목록 조회를 위한 DAO.
  * - jOOQ를 사용하여 복잡한 동적 쿼리와 조인(Join)을 자바 코드로 작성.
  */
+@Profile("admin")
 @Repository
 @RequiredArgsConstructor
 public class AdminMemberDao {

@@ -1,11 +1,14 @@
 package site.holliverse.customer.web.assembler;
 
+import org.springframework.stereotype.Component;
+
 import site.holliverse.customer.application.usecase.product.ChangeProductResult;
 import site.holliverse.customer.web.dto.product.change.ChangeProductResponse;
 
 /**
  * ChangeProductResult(Application) → ChangeProductResponse(Web) 조립.
  */
+@Component
 public class ChangeProductResponseAssembler {
 
     public ChangeProductResponse assemble(ChangeProductResult result) {

@@ -22,8 +22,9 @@ public class ProductListResponseAssembler {
 
     public ProductListResponse assemble(ProductListResult result) {
         Map<Long, ProductContent> contentByProductId = buildContentMap(result);
+        List<Long> bestIds = result.bestProductIds();
         List<ProductDetailResponse> content = result.products().getContent().stream()
-                .map(p -> mapper.toDetailResponse(p, contentByProductId.get(p.productId())))
+                .map(p -> mapper.toDetailResponse(p, contentByProductId.get(p.productId()), bestIds.contains(p.productId())))
                 .toList();
         PageMeta page = new PageMeta(
                 result.products().getTotalElements(),

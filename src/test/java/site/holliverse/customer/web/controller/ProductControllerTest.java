@@ -99,7 +99,8 @@ class ProductControllerTest {
                 8000,
                 "할인",
                 "CODE-001",
-                (ProductContent) null
+                (ProductContent) null,
+                false
         );
     }
 
@@ -118,13 +119,14 @@ class ProductControllerTest {
                     List.of(),
                     List.of(),
                     List.of(),
+                    List.of(),
                     List.of()
             );
             ProductListResponse listResponse = new ProductListResponse(
                     new PageMeta(1L, 1, 0, 20),
                     List.of(detailResponse(1L, "상품1", "MOBILE_PLAN"))
             );
-            given(getProductListUseCase.execute(eq("mobile"), anyInt(), anyInt())).willReturn(result);
+            given(getProductListUseCase.execute(eq("mobile"), anyInt(), anyInt(), anyInt())).willReturn(result);
             given(productListResponseAssembler.assemble(result)).willReturn(listResponse);
 
 
@@ -136,7 +138,7 @@ class ProductControllerTest {
                     .andExpect(jsonPath("$.data.page").exists())
                     .andExpect(jsonPath("$.data.content").isArray())
                     .andExpect(jsonPath("$.timestamp").exists());
-            verify(getProductListUseCase).execute("mobile", 0, 20);
+            verify(getProductListUseCase).execute("mobile", 0, 20, 0);
         }
 
         @Test
@@ -148,6 +150,7 @@ class ProductControllerTest {
                     List.of(),
                     List.of(),
                     List.of(),
+                    List.of(),
                     List.of()
             );
             ProductListResponse listResponse = new ProductListResponse(
@@ -155,7 +158,7 @@ class ProductControllerTest {
                     List.of()
             );
 
-            when(getProductListUseCase.execute(eq("internet"), eq(0), eq(10))).thenReturn(result);
+            when(getProductListUseCase.execute(eq("internet"), eq(0), eq(10), eq(0))).thenReturn(result);
             when(productListResponseAssembler.assemble(result)).thenReturn(listResponse);
 
             mockMvc.perform(get("/api/v1/plans")
@@ -165,7 +168,7 @@ class ProductControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("success"));
 
-            verify(getProductListUseCase).execute("internet", 0, 10);
+            verify(getProductListUseCase).execute("internet", 0, 10, 0);
             verify(productListResponseAssembler).assemble(result);
         }
 
@@ -177,7 +180,9 @@ class ProductControllerTest {
 
             given(getProductListUseCase.execute(eq(category),
                                                 anyInt(),
+                                                anyInt(),
                                                 anyInt())).willReturn(new ProductListResult(new PageImpl<>(List.of()),
+                                                                                            List.of(),
                                                                                             List.of(),
                                                                                             List.of(),
                                                                                             List.of(),
@@ -201,6 +206,31 @@ class ProductControllerTest {
             mockMvc.perform(get("/api/v1/plans"))
                     .andExpect(status().isBadRequest());
         }
+
+        @Test
+        @DisplayName("정상: bestCount 파라미터 전달 시 UseCase에 해당 값으로 호출된다")
+        void whenBestCountGiven_useCaseCalledWithBestCount() throws Exception {
+            ProductListResult result = new ProductListResult(
+                    new PageImpl<>(List.of(), PageRequest.of(0, 20), 0),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of()
+            );
+            when(getProductListUseCase.execute(eq("mobile"), eq(0), eq(20), eq(5))).thenReturn(result);
+            when(productListResponseAssembler.assemble(result)).thenReturn(new ProductListResponse(new PageMeta(0L, 0, 0, 20), List.of()));
+
+            mockMvc.perform(get("/api/v1/plans")
+                            .param("category", "mobile")
+                            .param("bestCount", "5"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("success"));
+
+            verify(getProductListUseCase).execute("mobile", 0, 20, 5);
+        }
+
     }
 
     @Nested
@@ -297,9 +327,9 @@ class ProductControllerTest {
                     .willReturn(new ComparisonResultDto(15_000, "+15,000원", List.of()));
 
             ProductDetailResponse currentPlanDto = new ProductDetailResponse(
-                    1L, "5G 프리미어 에센셜", "MOBILE_PLAN", 59_000, 49_500, "할인", "CODE", null);
+                    1L, "5G 프리미어 에센셜", "MOBILE_PLAN", 59_000, 49_500, "할인", "CODE", null, false);
             ProductDetailResponse targetPlanDto = new ProductDetailResponse(
-                    2L, "5G 프리미어 플러스", "MOBILE_PLAN", 74_000, 62_000, "할인", "CODE", null);
+                    2L, "5G 프리미어 플러스", "MOBILE_PLAN", 74_000, 62_000, "할인", "CODE", null, false);
             PlanCompareResponse mockResponse = new PlanCompareResponse(
                     currentPlanDto, targetPlanDto,
                     new ComparisonResponse(15_000, "+15,000원", List.of())
@@ -355,9 +385,10 @@ class ProductControllerTest {
                     List.of(),
                     List.of(),
                     List.of(),
+                    List.of(),
                     List.of()
             );
-            when(getProductListUseCase.execute(eq("mobile"), eq(0), eq(20))).thenReturn(result);
+            when(getProductListUseCase.execute(eq("mobile"), eq(0), eq(20), eq(0))).thenReturn(result);
             when(productListResponseAssembler.assemble(result))
                     .thenReturn(new ProductListResponse(new PageMeta(0L, 0, 0, 20), List.of()));
 

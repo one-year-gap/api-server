@@ -2,13 +2,17 @@ package site.holliverse.customer.application.usecase.product;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.customer.domain.policy.SubscriptionChangeDecision;
 import site.holliverse.customer.domain.policy.SubscriptionChangePolicy;
-import site.holliverse.customer.domain.policy.SubscriptionChangeResult;
+import site.holliverse.customer.persistence.entity.Subscription;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.repository.MemberRepository;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 @Service
 public class ChangeProductUseCase {
@@ -17,15 +21,18 @@ public class ChangeProductUseCase {
     private final SubscriptionRepository subscriptionRepository;
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
+    private final Clock clock;
 
     public ChangeProductUseCase(SubscriptionChangePolicy subscriptionChangePolicy,
                                 SubscriptionRepository subscriptionRepository,
                                 ProductRepository productRepository,
-                                MemberRepository memberRepository) {
+                                MemberRepository memberRepository,
+                                Clock clock) {
         this.subscriptionChangePolicy = subscriptionChangePolicy;
         this.subscriptionRepository = subscriptionRepository;
         this.productRepository = productRepository;
         this.memberRepository = memberRepository;
+        this.clock = clock;
     }
 
     /**
@@ -42,10 +49,16 @@ public class ChangeProductUseCase {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "member", "회원 정보를 찾을 수 없습니다."));
 
         var currentSameType = subscriptionRepository.findActiveByMemberIdAndProductType(memberId, targetProduct.getProductType());
+        Long currentProductId = currentSameType.map(s -> s.getProduct().getProductId()).orElse(null);
 
-        SubscriptionChangeResult result = subscriptionChangePolicy.execute(member, targetProduct, currentSameType);
+        SubscriptionChangeDecision decision = subscriptionChangePolicy.decide(currentProductId, targetProduct.getProductId());
 
-        subscriptionRepository.save(result.newSubscription());
-        return ChangeProductResult.from(result.newSubscription(), result.product());
+        LocalDateTime now = LocalDateTime.now(clock);
+        if (decision.deactivateCurrent() && currentSameType.isPresent()) {
+            currentSameType.get().deactivate(now);
+        }
+        var newSubscription = Subscription.createActive(member, targetProduct, now);
+        subscriptionRepository.save(newSubscription);
+        return ChangeProductResult.from(newSubscription, targetProduct);
     }
 }

@@ -12,6 +12,7 @@ import java.util.List;
 
 public record ProductListResult(
         Page<ProductSummaryDto> products,
+        List<Long> bestProductIds,
         List<MobilePlanDetailDto> mobilePlans,
         List<InternetDetailDto> internets,
         List<IptvDetailDto> iptvs,

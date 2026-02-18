@@ -216,7 +216,6 @@ jooq {
 sourceSets {
     main {
         java {
-            // 기존 경로를 유지하면서 'src/main/generated'를 "추가"합니다.
             srcDirs += 'src/main/generated'
         }
     }

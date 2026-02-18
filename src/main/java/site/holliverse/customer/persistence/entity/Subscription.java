@@ -40,4 +40,31 @@ public class Subscription extends BaseEntity {
     @Builder.Default
     @Column(name = "status", nullable = false)
     private Boolean status = true;
+
+    /**
+     * 구독 비활성화 (요금제 변경 시 기존 구독 해지).
+     * status를 false로 두고 종료일을 기록한다.
+     */
+    public void deactivate(LocalDateTime timestamp) {
+        this.status = false;
+        this.endDate = timestamp;
+    }
+
+    /**
+     * 신규 활성 구독 생성 (신규 가입 또는 요금제 변경 후 새 구독).
+     *
+     * @param member  회원
+     * @param product 상품(요금제)
+     * @param timestamp 구독 시작 시각
+     * @return status=true, endDate=null, startDate=timestamp인 구독
+     */
+    public static Subscription createActive(Member member, Product product, LocalDateTime timestamp) {
+        return Subscription.builder()
+                .member(member)
+                .product(product)
+                .startDate(timestamp)
+                .endDate(null)
+                .status(true)
+                .build();
+    }
 }

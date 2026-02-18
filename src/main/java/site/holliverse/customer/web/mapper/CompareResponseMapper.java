@@ -2,8 +2,8 @@ package site.holliverse.customer.web.mapper;
 
 import site.holliverse.customer.application.usecase.compare.BenefitChangeItemDto;
 import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
-import site.holliverse.customer.web.dto.compare.BenefitChangeItem;
-import site.holliverse.customer.web.dto.compare.ComparisonResponse;
+import site.holliverse.customer.web.dto.product.compare.BenefitChangeItem;
+import site.holliverse.customer.web.dto.product.compare.ComparisonResponse;
 
 import java.util.List;
 

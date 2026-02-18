@@ -46,7 +46,7 @@ public class AdminMemberDao {
                         MEMBER.GENDER,
                         MEMBER.BIRTH_DATE,
                         MEMBER.EMAIL,
-                        MEMBER.MEMBERSHIP.as("grade"),
+                        MEMBER.MEMBERSHIP,
                         MEMBER.JOIN_DATE,
                         MEMBER.STATUS,
                         // 2. 요금제 정보 (Product 테이블에서 가져옴)

@@ -18,6 +18,10 @@ import site.holliverse.customer.web.dto.product.TabWatchContent;
 public class ProductResponseMapper {
 
     public ProductDetailResponse toDetailResponse(ProductSummaryDto p, ProductContent content) {
+        return toDetailResponse(p, content, false);
+    }
+
+    public ProductDetailResponse toDetailResponse(ProductSummaryDto p, ProductContent content, boolean isBest) {
         return new ProductDetailResponse(
                 p.productId(),
                 p.name(),
@@ -26,7 +30,8 @@ public class ProductResponseMapper {
                 p.salePrice(),
                 p.discountType(),
                 p.productCode(),
-                content
+                content,
+                isBest
         );
     }
 
@@ -40,7 +45,7 @@ public class ProductResponseMapper {
             case TAB_WATCH_PLAN -> result.tabWatchPlan().map(this::toTabWatchContent).orElse(null);
         };
 
-        return toDetailResponse(p, content);
+        return toDetailResponse(p, content, false);
     }
 
     public MobileContent toMobileContent(MobilePlanDetailDto m) {

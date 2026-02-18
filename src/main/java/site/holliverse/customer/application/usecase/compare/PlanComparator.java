@@ -20,6 +20,20 @@ import java.util.Set;
 public class PlanComparator {
 
     private static final String NONE = "없음";
+    private static final String LABEL_SAME = "동일";
+    private static final String SUFFIX_CURRENCY = "원";
+
+    /** 혜택 항목명 (할인/스펙 라벨) */
+    private static final String ITEM_DATA = "데이터";
+    private static final String ITEM_VOICE = "통화";
+    private static final String ITEM_SMS = "문자";
+    private static final String ITEM_TETHERING = "테더링";
+    private static final String ITEM_BENEFIT = "혜택";
+    private static final String ITEM_FAMILY_DISCOUNT = "가족할인";
+
+    private static final String PREFIX_ADDED = "추가: ";
+    private static final String PREFIX_REMOVED = "제외: ";
+    private static final String SEPARATOR_PARTS = " / ";
 
     public ComparisonResultDto compare(ProductSummaryDto currentSummary, MobilePlanDetailDto currentPlan,
                                       ProductSummaryDto targetSummary, MobilePlanDetailDto targetPlan) {
@@ -28,33 +42,22 @@ public class PlanComparator {
 
         List<BenefitChangeItemDto> changes = new ArrayList<>();
 
-        // 1. 데이터
-        addStringChange(changes, "데이터",
+        addStringChange(changes, ITEM_DATA,
                 norm(currentPlan.dataAmount()),
                 norm(targetPlan.dataAmount()));
-
-        // 2. 통화
-        addStringChange(changes, "통화",
+        addStringChange(changes, ITEM_VOICE,
                 norm(currentPlan.benefitVoiceCall()),
                 norm(targetPlan.benefitVoiceCall()));
-
-        // 3. 문자
-        addStringChange(changes, "문자",
+        addStringChange(changes, ITEM_SMS,
                 norm(currentPlan.benefitSms()),
                 norm(targetPlan.benefitSms()));
-
-        // 4. 테더링/쉐어링
-        addStringChange(changes, "테더링",
+        addStringChange(changes, ITEM_TETHERING,
                 norm(currentPlan.tetheringSharingData()),
                 norm(targetPlan.tetheringSharingData()));
-
-        // 5. 혜택 (브랜드+미디어+프리미엄 통합, Set 파싱)
-        addSetBenefitChange(changes, "혜택",
+        addSetBenefitChange(changes, ITEM_BENEFIT,
                 currentPlan.benefitBrands(), currentPlan.benefitMedia(), currentPlan.benefitPremium(),
                 targetPlan.benefitBrands(), targetPlan.benefitMedia(), targetPlan.benefitPremium());
-
-        // 6. 가족할인
-        addStringChange(changes, "가족할인",
+        addStringChange(changes, ITEM_FAMILY_DISCOUNT,
                 norm(currentPlan.benefitSignatureFamilyDiscount()),
                 norm(targetPlan.benefitSignatureFamilyDiscount()));
 
@@ -70,16 +73,16 @@ public class PlanComparator {
 
     private static String formatPriceMessage(int priceDiff) {
         if (priceDiff == 0) {
-            return "동일";
+            return LABEL_SAME;
         }
         String formatted = String.format("%,d", Math.abs(priceDiff));
-        return priceDiff > 0 ? "+" + formatted + "원" : "-" + formatted + "원";
+        return priceDiff > 0 ? "+" + formatted + SUFFIX_CURRENCY : "-" + formatted + SUFFIX_CURRENCY;
     }
 
     private static void addStringChange(List<BenefitChangeItemDto> changes,
                                         String item, String currentVal, String targetVal) {
         boolean changed = !currentVal.equals(targetVal);
-        String desc = changed ? currentVal + " → " + targetVal : "동일";
+        String desc = changed ? currentVal + " → " + targetVal : LABEL_SAME;
         changes.add(BenefitChangeItemDto.of(item, changed, desc));
     }
 
@@ -121,15 +124,15 @@ public class PlanComparator {
 
     private static String buildSetChangeDesc(Set<String> added, Set<String> removed) {
         if (added.isEmpty() && removed.isEmpty()) {
-            return "동일";
+            return LABEL_SAME;
         }
         List<String> parts = new ArrayList<>();
         if (!added.isEmpty()) {
-            parts.add("추가: " + String.join(", ", added));
+            parts.add(PREFIX_ADDED + String.join(", ", added));
         }
         if (!removed.isEmpty()) {
-            parts.add("제외: " + String.join(", ", removed));
+            parts.add(PREFIX_REMOVED + String.join(", ", removed));
         }
-        return String.join(" / ", parts);
+        return String.join(SEPARATOR_PARTS, parts);
     }
 }

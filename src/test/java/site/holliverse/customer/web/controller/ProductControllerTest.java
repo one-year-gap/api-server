@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -14,14 +13,21 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
 import site.holliverse.auth.jwt.JwtTokenProvider;
-import site.holliverse.customer.application.usecase.GetProductDetailUseCase;
-import site.holliverse.customer.application.usecase.GetProductListUseCase;
-import site.holliverse.customer.application.usecase.ProductDetailResult;
-import site.holliverse.customer.application.usecase.ProductListResult;
+import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
+import site.holliverse.customer.application.usecase.compare.PlanComparator;
+import site.holliverse.customer.application.usecase.compare.PlanComparatorTestData;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
+import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
+import site.holliverse.customer.application.usecase.product.GetProductListUseCase;
+import site.holliverse.customer.application.usecase.product.ProductDetailResult;
+import site.holliverse.customer.application.usecase.product.ProductListResult;
+import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
 import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.dto.PageMeta;
+import site.holliverse.customer.web.dto.compare.ComparisonResponse;
+import site.holliverse.customer.web.dto.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.ProductListResponse;
 import site.holliverse.customer.web.dto.product.ProductContent;
@@ -33,14 +39,19 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ProductController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@WebMvcTest(
+        controllers = ProductController.class,
+        excludeAutoConfiguration = {
+                org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+                org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration.class
+        }
+)
 @ActiveProfiles("customer")
 class ProductControllerTest {
 
@@ -53,9 +64,14 @@ class ProductControllerTest {
     @MockitoBean
     private GetProductDetailUseCase getProductDetailUseCase;
     @MockitoBean
+    private PlanComparator planComparator;
+    @MockitoBean
     private ProductListResponseAssembler productListResponseAssembler;
     @MockitoBean
+    private PlanCompareResponseAssembler planCompareResponseAssembler;
+    @MockitoBean
     private ProductResponseMapper mapper;
+    /** SecurityConfig 등 로드 시 필요. JWT 로직은 사용하지 않고 컨텍스트 기동용 목만 둠. */
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
 
@@ -251,6 +267,75 @@ class ProductControllerTest {
         void whenPlanIdNotNumeric_returns400() throws Exception {
             //when & then
             mockMvc.perform(get("/api/v1/plans/abc"))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/v1/plans/compare - 요금제 비교")
+    class ComparePlans {
+
+        @Test
+        @DisplayName("성공: 200과 비교 결과를 반환한다 (Web 계층 오케스트레이션, Assembler/Mapper 미의존)")
+        void whenEssentialToPlus_returns200WithCompareResponse() throws Exception {
+            // Controller가 GetProductDetailUseCase 2회 호출 → 검증 → PlanComparator → Assembler
+            ProductDetailResult currentResult = new ProductDetailResult(
+                    PlanComparatorTestData.essentialSummary(),
+                    Optional.of(PlanComparatorTestData.essentialMobilePlan()),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+            );
+            ProductDetailResult targetResult = new ProductDetailResult(
+                    PlanComparatorTestData.plusSummary(),
+                    Optional.of(PlanComparatorTestData.plusMobilePlan()),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+            );
+            given(getProductDetailUseCase.execute(1L)).willReturn(currentResult);
+            given(getProductDetailUseCase.execute(2L)).willReturn(targetResult);
+            given(planComparator.compare(any(), any(), any(), any()))
+                    .willReturn(new ComparisonResultDto(15_000, "+15,000원", List.of()));
+
+            ProductDetailResponse currentPlanDto = new ProductDetailResponse(
+                    1L, "5G 프리미어 에센셜", "MOBILE_PLAN", 59_000, 49_500, "할인", "CODE", null);
+            ProductDetailResponse targetPlanDto = new ProductDetailResponse(
+                    2L, "5G 프리미어 플러스", "MOBILE_PLAN", 74_000, 62_000, "할인", "CODE", null);
+            PlanCompareResponse mockResponse = new PlanCompareResponse(
+                    currentPlanDto, targetPlanDto,
+                    new ComparisonResponse(15_000, "+15,000원", List.of())
+            );
+            given(planCompareResponseAssembler.assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class)))
+                    .willReturn(mockResponse);
+
+            mockMvc.perform(get("/api/v1/plans/compare")
+                            .param("currentPlanId", "1")
+                            .param("targetPlanId", "2"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.status").value("success"))
+                    .andExpect(jsonPath("$.data.current_plan.name").value("5G 프리미어 에센셜"))
+                    .andExpect(jsonPath("$.data.target_plan.name").value("5G 프리미어 플러스"))
+                    .andExpect(jsonPath("$.data.comparison.price_diff").value(15000))
+                    .andExpect(jsonPath("$.data.comparison.message").value("+15,000원"))
+                    .andExpect(jsonPath("$.data.comparison.benefit_changes").isArray())
+                    .andExpect(jsonPath("$.timestamp").exists())
+                    .andDo(print());
+
+            verify(getProductDetailUseCase).execute(1L);
+            verify(getProductDetailUseCase).execute(2L);
+            verify(planComparator).compare(any(), any(), any(), any());
+            verify(planCompareResponseAssembler).assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class));
+        }
+
+        @Test
+        @DisplayName("실패: currentPlanId 누락 시 400 Bad Request 반환")
+        void whenCurrentPlanIdMissing_returns400() throws Exception {
+            mockMvc.perform(get("/api/v1/plans/compare").param("targetPlanId", "2"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("실패: targetPlanId 누락 시 400 Bad Request 반환")
+        void whenTargetPlanIdMissing_returns400() throws Exception {
+            mockMvc.perform(get("/api/v1/plans/compare").param("currentPlanId", "1"))
                     .andExpect(status().isBadRequest());
         }
     }

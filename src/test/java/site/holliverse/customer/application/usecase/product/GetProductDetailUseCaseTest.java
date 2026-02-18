@@ -1,4 +1,4 @@
-package site.holliverse.customer.application.usecase;
+package site.holliverse.customer.application.usecase.product;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import site.holliverse.customer.persistence.entity.Addon;
 import site.holliverse.customer.persistence.entity.Internet;
 import site.holliverse.customer.persistence.entity.Iptv;

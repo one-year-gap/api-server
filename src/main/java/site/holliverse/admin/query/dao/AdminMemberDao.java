@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
 import site.holliverse.shared.util.EncryptionTool;
 
-// jOOQ가 생성한 테이블 객체들 (Static Import)
+// jOOQ가 생성한 테이블 객체들 (Static Import) 
 import static site.holliverse.admin.query.jooq.Tables.MEMBER;
 import static site.holliverse.admin.query.jooq.Tables.PRODUCT;
 import static site.holliverse.admin.query.jooq.Tables.SUBSCRIPTION;

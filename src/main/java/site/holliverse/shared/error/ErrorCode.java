@@ -5,13 +5,16 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     // 400
-    INVALID_INPUT(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "유효성 검사에 실패했습니다."),
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "유효성 검증에 실패했습니다."),
     MISSING_FIELD(HttpStatus.BAD_REQUEST, "MISSING_FIELD", "필수 입력값이 누락되었습니다."),
+    OAUTH_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "OAUTH_INVALID_REQUEST", "OAuth 요청이 올바르지 않습니다."),
+    OAUTH_USER_INFO_INVALID(HttpStatus.BAD_REQUEST, "OAUTH_USER_INFO_INVALID", "OAuth 사용자 정보가 유효하지 않습니다."),
 
     // 401
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증에 실패했습니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않습니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", "토큰이 만료되었습니다."),
+    OAUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "OAUTH_UNAUTHORIZED", "OAuth 인증에 실패했습니다."),
 
     // 403
     FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "접근 권한이 없습니다."),

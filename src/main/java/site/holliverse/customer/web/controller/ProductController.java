@@ -17,9 +17,9 @@ import site.holliverse.customer.application.usecase.product.ProductListResult;
 import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
 import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.dto.ApiResponse;
-import site.holliverse.customer.web.dto.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.ProductListResponse;
+import site.holliverse.customer.web.dto.product.compare.PlanCompareResponse;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 
 import java.time.LocalDateTime;

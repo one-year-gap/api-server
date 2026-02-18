@@ -1,4 +1,4 @@
-spring:
+﻿spring:
   application:
     name: holliverse-api-server
 
@@ -41,3 +41,9 @@ logging:
     root: INFO
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql: WARN
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}
+    access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:3600000}
+    refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:1209600000}

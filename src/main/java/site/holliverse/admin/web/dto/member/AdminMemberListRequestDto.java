@@ -15,9 +15,9 @@ public record AdminMemberListRequestDto(
         String keyword,
 
         // 필터 조건들
-        List<String> grades,      // 등급 다중 선택
+        List<String> memberships,      // 등급 다중 선택
         String gender,            // 성별
-        String planNames,         // 요금제명 다중 선택
+        List<String> planNames,   // 요금제명 다중 선택
 
         // 10이 들어오면 10~19세, 20이 들어오면 20~29세를 의미
         List<Integer> ageGroups,  // 연령대 다중 선택 (예: 10, 20, 30...)

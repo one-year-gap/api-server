@@ -6,6 +6,14 @@ plugins {
     id 'nu.studer.jooq' version '9.0'
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', 'src/main/generated']
+        }
+    }
+}
+
 group = 'api-server'
 version = '0.0.1-SNAPSHOT'
 description = 'api-server'
@@ -73,6 +81,23 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy tasks.named("jacocoTestReport")
+}
+
+// CI 환경(GitHub Actions)에서는 generateJooq 태스크 실행 안 함
+// afterEvaluate로 감싸서 모든 태스크가 생성된 후 접근하도록 변경
+afterEvaluate {
+    if (tasks.findByName('generateJooq')) {
+        tasks.named('generateJooq') {
+            onlyIf {
+                System.getenv('CI') == null
+            }
+        }
+    }
+}
+
+// clean 태스크 실행 시 생성된 코드도 같이 지우기
+tasks.named('clean') {
+    delete 'src/main/generated'
 }
 
 
@@ -185,7 +210,7 @@ jooq {
                     }
                     target {
                         packageName = 'site.holliverse.admin.query.jooq'
-                        directory = 'build/generated/jooq'
+                        directory = 'src/main/generated'
                     }
                     strategy {
                         name = 'org.jooq.codegen.DefaultGeneratorStrategy'

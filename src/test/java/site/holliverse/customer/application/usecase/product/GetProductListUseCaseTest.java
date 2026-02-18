@@ -20,6 +20,7 @@ import site.holliverse.customer.persistence.repository.InternetRepository;
 import site.holliverse.customer.persistence.repository.IptvRepository;
 import site.holliverse.customer.persistence.repository.MobilePlanRepository;
 import site.holliverse.customer.persistence.repository.ProductRepository;
+import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
 import site.holliverse.shared.domain.model.ProductType;
 
@@ -37,6 +38,8 @@ class GetProductListUseCaseTest {
 
     @Mock
     private ProductRepository productRepository;
+    @Mock
+    private SubscriptionRepository subscriptionRepository;
     @Mock
     private MobilePlanRepository mobilePlanRepository;
     @Mock
@@ -67,7 +70,7 @@ class GetProductListUseCaseTest {
             //given
             String invalidCategory = " ";
             //when & then
-            assertThatThrownBy(() -> getProductListUseCase.execute(invalidCategory, 0, 10))
+            assertThatThrownBy(() -> getProductListUseCase.execute(invalidCategory, 0, 10, 0))
                     .isInstanceOf(IllegalArgumentException.class) //기존 에러타입 변경
                     .hasMessageContaining("카테고리는 필수입니다.");
             verify(productRepository, never()).findByProductType(any(), any());
@@ -82,7 +85,7 @@ class GetProductListUseCaseTest {
             int page = 0;
             int size = 10;
             // When & Then: 예외 발생 여부와 메시지를 함께 검증
-            assertThatThrownBy(() -> getProductListUseCase.execute(unknownCategory, page, size))
+            assertThatThrownBy(() -> getProductListUseCase.execute(unknownCategory, page, size, 0))
                     .isInstanceOf(IllegalArgumentException.class) // 현재 코드 스펙에 맞춤
                     .hasMessageContaining("지원하지 않는 카테고리입니다: " + unknownCategory);
 
@@ -107,7 +110,7 @@ class GetProductListUseCaseTest {
             when(mobilePlanRepository.findByProductIdIn(anyList())).thenReturn(List.of());
 
             //when: 실제 로직 실행
-            getProductListUseCase.execute("mobile", 0, 10);
+            getProductListUseCase.execute("mobile", 0, 10, 0);
 
             //then: 상세 repo 호출 여부 검증
             verify(mobilePlanRepository).findByProductIdIn(List.of(1L));
@@ -125,7 +128,7 @@ class GetProductListUseCaseTest {
             when(internetRepository.findByProductIdIn(anyList())).thenReturn(List.of());
 
             //when: 실제 로직 실행
-            getProductListUseCase.execute("internet", 0, 10);
+            getProductListUseCase.execute("internet", 0, 10, 0);
 
             //then: 상세 repo 호출 여부 검증
             verify(internetRepository).findByProductIdIn(List.of(2L));
@@ -143,7 +146,7 @@ class GetProductListUseCaseTest {
             when(iptvRepository.findByProductIdIn(anyList())).thenReturn(List.of());
 
             //when: 실제 로직 실행
-            getProductListUseCase.execute("iptv", 0, 10);
+            getProductListUseCase.execute("iptv", 0, 10, 0);
 
             //then: 상세 repo 호출 여부 검증
             verify(iptvRepository).findByProductIdIn(List.of(3L));
@@ -161,7 +164,7 @@ class GetProductListUseCaseTest {
             when(addonRepository.findByProductIdIn(anyList())).thenReturn(List.of());
 
             //when: 실제 로직 실행
-            getProductListUseCase.execute("add-on", 0, 10);
+            getProductListUseCase.execute("add-on", 0, 10, 0);
 
             //then: 상세 repo 호출 여부 검증
             verify(addonRepository).findByProductIdIn(List.of(4L));
@@ -179,7 +182,7 @@ class GetProductListUseCaseTest {
             when(tabWatchPlanRepository.findByProductIdIn(anyList())).thenReturn(List.of());
 
             //when: 실제 로직 실행
-            getProductListUseCase.execute("tab-watch", 0, 10);
+            getProductListUseCase.execute("tab-watch", 0, 10, 0);
 
             //then: 상세 repo 호출 여부 검증
             verify(tabWatchPlanRepository).findByProductIdIn(List.of(5L));
@@ -202,7 +205,7 @@ class GetProductListUseCaseTest {
                     .thenReturn(page);
 
             //when: UseCase 실행
-            getProductListUseCase.execute("mobile", requestPage, requestSize);
+            getProductListUseCase.execute("mobile", requestPage, requestSize, 0);
 
             //then: ArgumentCaptor를 통해 전달된 Pageable 검증
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
@@ -224,7 +227,7 @@ class GetProductListUseCaseTest {
             when(mobilePlanRepository.findByProductIdIn(anyList())).thenReturn(List.of());
 
             //when: 실행
-            ProductListResult result = getProductListUseCase.execute("mobile", 0, 10);
+            ProductListResult result = getProductListUseCase.execute("mobile", 0, 10, 0);
 
             //then: 결과의 Page 객체 상태 검증 (반환 타입은 DTO)
             assertThat(result.products().getTotalElements()).isEqualTo(100);
@@ -254,7 +257,7 @@ class GetProductListUseCaseTest {
             when(internetRepository.findByProductIdIn(anyList())).thenReturn(List.of());
 
             //when: 실행
-            getProductListUseCase.execute("internet", 0, 10);
+            getProductListUseCase.execute("internet", 0, 10, 0);
 
             //then: 개별 조회가 아닌 ID 리스트를 통한 한번의 호출인지 검증
             ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
@@ -264,5 +267,33 @@ class GetProductListUseCaseTest {
             assertThat(captor.getValue()).containsExactlyInAnyOrder(1L, 2L);
 
         }
+    }
+
+    @Nested
+    @DisplayName("인기 상품(best) 조회")
+    class BestProductIds {
+
+
+        @Test
+        @DisplayName("bestCount > 0 이면 해당 카테고리로 인기 상품 ID를 N개 조회하고 결과에 포함한다")
+        void whenBestCountPositive_callsSubscriptionRepositoryAndReturnsBestIds() {
+            int bestCount = 5;
+            List<Long> popularIds = List.of(10L, 20L, 30L);
+            Page<Product> page = new PageImpl<>(List.of(productWithId(1L)), PageRequest.of(0, 10), 1);
+
+            when(productRepository.findByProductType(eq(ProductType.MOBILE_PLAN), any(Pageable.class))).thenReturn(page);
+            when(mobilePlanRepository.findByProductIdIn(anyList())).thenReturn(List.of());
+            when(subscriptionRepository.findTopPopularProductIdsByProductType(eq(ProductType.MOBILE_PLAN), any(Pageable.class)))
+                    .thenReturn(popularIds);
+
+            ProductListResult result = getProductListUseCase.execute("mobile", 0, 10, bestCount);
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            verify(subscriptionRepository).findTopPopularProductIdsByProductType(eq(ProductType.MOBILE_PLAN), pageableCaptor.capture());
+            assertThat(pageableCaptor.getValue().getPageNumber()).isZero();
+            assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(bestCount);
+            assertThat(result.bestProductIds()).isEqualTo(popularIds);
+        }
+
     }
 }

@@ -2,6 +2,8 @@ package site.holliverse.customer.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import site.holliverse.shared.persistence.BaseEntity;
 import site.holliverse.shared.domain.model.AddonType;
 
@@ -25,7 +27,7 @@ public class Addon extends BaseEntity {
     private Product product;
 
     /** 부가 서비스 타입 */
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "addon_type", nullable = false, length = 30)
     private AddonType addonType;
 

@@ -1,12 +1,12 @@
-spring:
+﻿spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
   #DataBase
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5435/holliverse}
-    username: ${DB_USER_CUSTOMER:postgres}
-    password: ${DB_PASS_CUSTOMER:postgres}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/holliverse}
+    username: ${DB_USER_CUSTOMER:app_customer}
+    password: ${DB_PASS_CUSTOMER:app_customer_pw}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:20}
@@ -15,11 +15,15 @@ spring:
       validation-timeout: 1000
 
   flyway:
-    user: ${FLYWAY_USER:${spring.datasource.username}}
-    password: ${FLYWAY_PASSWORD:${spring.datasource.password}}
+    user: ${DB_USER_MIGRATOR:db_migrator}
+    password: ${DB_PASS_MIGRATOR:db_migrator_pw}
 
 server:
   port: ${SERVER_PORT:8080}
 
 app:
   runtime: customer
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}
+    access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:3600000}
+    refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:1209600000}

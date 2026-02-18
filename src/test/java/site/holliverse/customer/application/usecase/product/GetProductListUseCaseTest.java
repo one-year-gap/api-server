@@ -1,4 +1,4 @@
-package site.holliverse.customer.application.usecase;
+package site.holliverse.customer.application.usecase.product;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.customer.persistence.entity.Product;
 import site.holliverse.customer.persistence.repository.AddonRepository;

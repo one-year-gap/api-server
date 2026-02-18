@@ -7,8 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import site.holliverse.customer.domain.policy.SubscriptionChangeDecision;
 import site.holliverse.customer.domain.policy.SubscriptionChangePolicy;
-import site.holliverse.customer.domain.policy.SubscriptionChangeResult;
 import site.holliverse.customer.persistence.entity.Product;
 import site.holliverse.customer.persistence.entity.Subscription;
 import site.holliverse.customer.persistence.repository.ProductRepository;
@@ -19,13 +19,18 @@ import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,12 +45,19 @@ class ChangeProductUseCaseTest {
     private ProductRepository productRepository;
     @Mock
     private MemberRepository memberRepository;
+    @Mock
+    private Clock clock;
 
     @InjectMocks
     private ChangeProductUseCase changeProductUseCase;
 
+    /** 테스트에서 사용할 고정 시각 (deactivate/createActive 일관성·검증용) */
+    private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2026, 2, 18, 12, 0, 0);
+    private static final ZoneId ZONE = ZoneId.systemDefault();
+
     private static final Long MEMBER_ID = 1L;
     private static final Long TARGET_PRODUCT_ID = 5L;
+    private static final Long OTHER_PRODUCT_ID = 3L;
     private static final ProductType PRODUCT_TYPE = ProductType.MOBILE_PLAN;
 
     // -- Helper  methods --
@@ -86,28 +98,53 @@ class ChangeProductUseCaseTest {
     class ProductApplyChangeFlow {
 
         @Test
-        @DisplayName("성공: 정책 결과로 받은 새로운 구독을 저장하고 결과 반환")
+        @DisplayName("성공(신규): 정책 decide 후 새 구독 생성·저장 후 결과 반환")
         void success_orchestration() {
-            // given
+            given(clock.instant()).willReturn(FIXED_NOW.atZone(ZONE).toInstant());
+            given(clock.getZone()).willReturn(ZONE);
             Member member = createMember(MEMBER_ID);
             Product targetProduct = createProduct(TARGET_PRODUCT_ID, PRODUCT_TYPE);
-            Subscription newSub = createSubscription(100L, member, targetProduct, true);
             given(productRepository.findById(TARGET_PRODUCT_ID)).willReturn(Optional.of(targetProduct));
             given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
             given(subscriptionRepository.findActiveByMemberIdAndProductType(MEMBER_ID, PRODUCT_TYPE))
                     .willReturn(Optional.empty());
-            given(subscriptionChangePolicy.execute(member, targetProduct, Optional.empty()))
-                    .willReturn(new SubscriptionChangeResult(newSub, targetProduct));
+            given(subscriptionChangePolicy.decide(eq(null), eq(TARGET_PRODUCT_ID)))
+                    .willReturn(new SubscriptionChangeDecision(false, true));
+            given(subscriptionRepository.save(any(Subscription.class))).willAnswer(inv -> inv.getArgument(0));
 
-            // when
             ChangeProductResult result = changeProductUseCase.execute(MEMBER_ID, TARGET_PRODUCT_ID);
 
-            // then
-            verify(subscriptionRepository).save(newSub); // 새로운 구독 저장
-            // 반환값 검증
+            verify(subscriptionRepository).save(any(Subscription.class));
             assertThat(result.productId()).isEqualTo(TARGET_PRODUCT_ID);
             assertThat(result.productName()).isEqualTo(targetProduct.getName());
             assertThat(result.salePrice()).isEqualTo(targetProduct.getSalePrice());
+            assertThat(result.startDate()).isEqualTo(FIXED_NOW);
+        }
+
+        @Test
+        @DisplayName("성공(변경): 기존 구독 해지 후 새 구독 저장, 동일 시각 적용")
+        void changePlan_deactivatesCurrentAndSavesNew() {
+            given(clock.instant()).willReturn(FIXED_NOW.atZone(ZONE).toInstant());
+            given(clock.getZone()).willReturn(ZONE);
+            Member member = createMember(MEMBER_ID);
+            Product targetProduct = createProduct(TARGET_PRODUCT_ID, PRODUCT_TYPE);
+            Product currentProduct = createProduct(OTHER_PRODUCT_ID, PRODUCT_TYPE);
+            Subscription currentSub = createSubscription(10L, member, currentProduct, true);
+            given(productRepository.findById(TARGET_PRODUCT_ID)).willReturn(Optional.of(targetProduct));
+            given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
+            given(subscriptionRepository.findActiveByMemberIdAndProductType(MEMBER_ID, PRODUCT_TYPE))
+                    .willReturn(Optional.of(currentSub));
+            given(subscriptionChangePolicy.decide(eq(OTHER_PRODUCT_ID), eq(TARGET_PRODUCT_ID)))
+                    .willReturn(new SubscriptionChangeDecision(true, true));
+            given(subscriptionRepository.save(any(Subscription.class))).willAnswer(inv -> inv.getArgument(0));
+
+            ChangeProductResult result = changeProductUseCase.execute(MEMBER_ID, TARGET_PRODUCT_ID);
+
+            assertThat(currentSub.getStatus()).isFalse();
+            assertThat(currentSub.getEndDate()).isEqualTo(FIXED_NOW);
+            verify(subscriptionRepository).save(any(Subscription.class));
+            assertThat(result.productId()).isEqualTo(TARGET_PRODUCT_ID);
+            assertThat(result.startDate()).isEqualTo(FIXED_NOW);
         }
     }
 
@@ -147,6 +184,30 @@ class ChangeProductUseCaseTest {
                         assertThat(ce.getReason()).isEqualTo("회원 정보를 찾을 수 없습니다.");
                     });
             verify(memberRepository).findById(MEMBER_ID);
+        }
+    }
+
+    @Nested
+    @DisplayName("execute - 정책 규칙 위반")
+    class PolicyViolation {
+
+        @Test
+        @DisplayName("정책이 CONFLICT(동일 상품) throw 시 예외 전파, save 미호출")
+        void whenPolicyThrowsConflict_exceptionPropagatesAndSaveNotCalled() {
+            Product targetProduct = createProduct(TARGET_PRODUCT_ID, PRODUCT_TYPE);
+            Subscription currentSub = createSubscription(10L, createMember(MEMBER_ID), targetProduct, true);
+            given(productRepository.findById(TARGET_PRODUCT_ID)).willReturn(Optional.of(targetProduct));
+            given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(createMember(MEMBER_ID)));
+            given(subscriptionRepository.findActiveByMemberIdAndProductType(MEMBER_ID, PRODUCT_TYPE))
+                    .willReturn(Optional.of(currentSub));
+            given(subscriptionChangePolicy.decide(eq(TARGET_PRODUCT_ID), eq(TARGET_PRODUCT_ID)))
+                    .willThrow(new CustomException(ErrorCode.CONFLICT, "target_product_id", "지금 가입되어있는 상품입니다."));
+
+            assertThatThrownBy(() -> changeProductUseCase.execute(MEMBER_ID, TARGET_PRODUCT_ID))
+                    .isInstanceOf(CustomException.class)
+                    .satisfies(ex -> assertThat(((CustomException) ex).getErrorCode()).isEqualTo(ErrorCode.CONFLICT));
+
+            verify(subscriptionRepository, never()).save(any(Subscription.class));
         }
     }
 }

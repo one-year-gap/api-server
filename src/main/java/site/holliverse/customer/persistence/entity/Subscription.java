@@ -45,9 +45,9 @@ public class Subscription extends BaseEntity {
      * 구독 비활성화 (요금제 변경 시 기존 구독 해지).
      * status를 false로 두고 종료일을 기록한다.
      */
-    public void deactivate() {
+    public void deactivate(LocalDateTime timestamp) {
         this.status = false;
-        this.endDate = LocalDateTime.now();
+        this.endDate = timestamp;
     }
 
     /**
@@ -55,13 +55,14 @@ public class Subscription extends BaseEntity {
      *
      * @param member  회원
      * @param product 상품(요금제)
-     * @return status=true, endDate=null, startDate=now()인 구독
+     * @param timestamp 구독 시작 시각
+     * @return status=true, endDate=null, startDate=timestamp인 구독
      */
-    public static Subscription createActive(Member member, Product product) {
+    public static Subscription createActive(Member member, Product product, LocalDateTime timestamp) {
         return Subscription.builder()
                 .member(member)
                 .product(product)
-                .startDate(LocalDateTime.now())
+                .startDate(timestamp)
                 .endDate(null)
                 .status(true)
                 .build();

@@ -47,3 +47,12 @@ app:
     secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}
     access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:3600000}
     refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:1209600000}
+
+# =================================================================
+# Security & Encryption Configuration
+# - secret-key: 32byte 필수 (AES-256 기준)
+# - 환경변수 설정 시: SECRET_KEY, ALGORITHM, TRANSFORMATION
+# =================================================================
+secret-key: ${SECRET_KEY:Xy9zPvQ3kL5mRnJwT8bH2cD4fG7jA1sE}
+algorithm: ${ALGORITHM:AES}
+transformation: ${TRANSFORMATION:AES/ECB/PKCS5Padding}

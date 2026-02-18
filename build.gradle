@@ -6,14 +6,6 @@ plugins {
     id 'nu.studer.jooq' version '9.0'
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src/main/java', 'src/main/generated']
-        }
-    }
-}
-
 group = 'api-server'
 version = '0.0.1-SNAPSHOT'
 description = 'api-server'
@@ -217,6 +209,15 @@ jooq {
                     }
                 }
             }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            // 기존 경로를 유지하면서 'src/main/generated'를 "추가"합니다.
+            srcDirs += 'src/main/generated'
         }
     }
 }

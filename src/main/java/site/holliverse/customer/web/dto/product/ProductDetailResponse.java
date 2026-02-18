@@ -8,5 +8,6 @@ public record ProductDetailResponse(
         Integer salePrice,
         String discountType,
         String productCode,
-        ProductContent content
+        ProductContent content,
+        boolean isBest
 ) {}

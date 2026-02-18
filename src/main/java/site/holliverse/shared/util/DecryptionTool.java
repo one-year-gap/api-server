@@ -1,0 +1,43 @@
+package site.holliverse.shared.util;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+/**
+ * AES-256 복호화 유틸리티.
+ * Base64로 인코딩된 암호문을 받아 원본 문자열로 복원.
+ */
+public class DecryptionTool {
+    private final String secretKey;
+    private final String algorithm;
+    private final String transformation;
+
+    public DecryptionTool(String secretKey, String algorithm, String transformation) {
+        this.secretKey = secretKey;
+        this.algorithm = algorithm;
+        this.transformation = transformation;
+    }
+
+    /**
+     * 암호문을 복호화
+     * @param cipherText Base64로 인코딩된 암호문
+     * @return 복호화된 원본 문자열
+     */
+    public String decrypt(String cipherText) {
+        if (cipherText == null || cipherText.isBlank()) return null;
+
+        try {
+            byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), algorithm);
+            Cipher cipher = Cipher.getInstance(transformation);
+            cipher.init(Cipher.DECRYPT_MODE, keySpec);
+
+            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("Decryption failed", e);
+        }
+    }
+}

@@ -15,7 +15,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import site.holliverse.auth.filter.LoginFilter;
 import site.holliverse.auth.handler.LoginFailureHandler;
 import site.holliverse.auth.handler.LoginSuccessHandler;
+import site.holliverse.auth.handler.SocialFailureHandler;
+import site.holliverse.auth.handler.SocialSuccessHandler;
 import site.holliverse.auth.jwt.JwtAuthenticationFilter;
+import site.holliverse.auth.oauth.CustomOAuth2UserService;
 
 @Configuration
 @EnableWebSecurity
@@ -50,7 +53,11 @@ public class SecurityConfig {
 
     @Bean
     // 보안 정책 및 필터 순서 구성
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginFilter loginFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   LoginFilter loginFilter,
+                                                   CustomOAuth2UserService customOAuth2UserService,
+                                                   SocialFailureHandler socialFailureHandler,
+                                                   SocialSuccessHandler socialSuccessHandler) throws Exception {
         return http
                 // JWT API 서버 설정: 기본 폼 로그인/세션 인증 비활성화
                 .csrf(AbstractHttpConfigurer::disable)
@@ -60,6 +67,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 테스트용: 모든 API 접근 허용
                         .anyRequest().permitAll()
+                )
+
+                //oauth2 인증
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .failureHandler(socialFailureHandler)
+                        .successHandler(socialSuccessHandler)
                 )
                 // 로그인 필터를 UsernamePasswordAuthenticationFilter 위치에 배치
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)

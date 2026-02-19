@@ -62,14 +62,14 @@ class AdminMemberAssemblerTest {
         AdminMemberDto memberDto = result.getMembers().get(0);
 
         // [1] 이름 마스킹 확인 (김영현 -> 김*현)
-        assertThat(memberDto.getName()).isEqualTo("김*현");
+        assertThat(memberDto.name()).isEqualTo("김*현");
 
         // [2] 전화번호 포맷팅 & 마스킹 확인 (01012345678 -> 010-****-5678)
-        assertThat(memberDto.getPhone()).isEqualTo("010-****-5678");
+        assertThat(memberDto.phone()).isEqualTo("010-****-5678");
 
         // [3] 나머지 데이터는 그대로 잘 들어갔는지
-        assertThat(memberDto.getEmail()).isEqualTo("test@holliverse.site");
-        assertThat(memberDto.getId()).isEqualTo(1L);
+        assertThat(memberDto.email()).isEqualTo("test@holliverse.site");
+        assertThat(memberDto.id()).isEqualTo(1L);
 
         // [4] 페이징 계산 (DTO of 메서드 로직) 확인
         // 150개 / 10개씩 = 15페이지
@@ -98,9 +98,9 @@ class AdminMemberAssemblerTest {
         AdminMemberDto memberDto = result.getMembers().get(0);
 
         // 이산 -> 이* (2글자 마스킹 규칙 확인)
-        assertThat(memberDto.getName()).isEqualTo("이*");
+        assertThat(memberDto.name()).isEqualTo("이*");
 
         // 010-9876-5432 -> 010-****-5432 (하이픈 제거 후 포맷팅 확인)
-        assertThat(memberDto.getPhone()).isEqualTo("010-****-5432");
+        assertThat(memberDto.phone()).isEqualTo("010-****-5432");
     }
 }

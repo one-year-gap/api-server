@@ -97,7 +97,7 @@ public class Member extends TableImpl<MemberRecord> {
     /**
      * The column <code>public.member.name</code>.
      */
-    public final TableField<MemberRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(50).nullable(false), this, "");
+    public final TableField<MemberRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(100).nullable(false), this, "");
 
     /**
      * The column <code>public.member.phone</code>.
@@ -309,7 +309,7 @@ public class Member extends TableImpl<MemberRecord> {
     public List<Check<MemberRecord>> getChecks() {
         return Arrays.asList(
             Internal.createCheck(this, DSL.name("ck_auth_method"), "((((type = 'FORM'::member_signup_type) AND (password IS NOT NULL)) OR ((type <> 'FORM'::member_signup_type) AND (provider_id IS NOT NULL))))", true),
-            Internal.createCheck(this, DSL.name("ck_member_info_required"), "((((role = 'CUSTOMER'::member_role_type) AND (phone IS NOT NULL) AND (birth_date IS NOT NULL) AND (gender IS NOT NULL) AND (address_id IS NOT NULL) AND (membership IS NOT NULL)) OR (role <> 'CUSTOMER'::member_role_type)))", true)
+            Internal.createCheck(this, DSL.name("ck_member_info_required"), "(((role <> 'CUSTOMER'::member_role_type) OR (type <> 'FORM'::member_signup_type) OR ((phone IS NOT NULL) AND (birth_date IS NOT NULL) AND (gender IS NOT NULL) AND (address_id IS NOT NULL) AND (membership IS NOT NULL))))", true)
         );
     }
 

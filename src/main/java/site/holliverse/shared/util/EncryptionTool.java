@@ -3,6 +3,7 @@ package site.holliverse.shared.util;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.util.Base64;
 
 /**
@@ -35,8 +36,8 @@ public class EncryptionTool {
 
             byte[] encryptedBytes = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(encryptedBytes);
-        } catch (Exception e) {
-            throw new RuntimeException("Encryption failed", e);
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException("암호화 실패: 보안 키 또는 알고리즘 설정이 잘못되었습니다.", e);
         }
     }
 }

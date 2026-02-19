@@ -1,0 +1,12 @@
+name: release-label-policy
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, labeled, unlabeled, edited]
+
+jobs:
+  call-central-policy:
+    uses: one-year-gap/infra/.github/workflows/release-label-policy.yml@main
+    with:
+      labels-json: ${{ toJson(github.event.pull_request.labels.*.name) }}

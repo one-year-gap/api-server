@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Profile("admin")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/members")
+@RequestMapping("/api/v1/admin/members")
 public class AdminMemberController {
 
     private final RetrieveMemberUseCase retrieveMemberUseCase;

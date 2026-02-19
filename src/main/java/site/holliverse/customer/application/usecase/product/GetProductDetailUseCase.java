@@ -21,10 +21,11 @@ import site.holliverse.customer.persistence.repository.IptvRepository;
 import site.holliverse.customer.persistence.repository.MobilePlanRepository;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
-
+import org.springframework.context.annotation.Profile;
 import java.util.Optional;
 
 @Service
+@Profile("customer")
 public class GetProductDetailUseCase {
 
     private final ProductRepository productRepository;

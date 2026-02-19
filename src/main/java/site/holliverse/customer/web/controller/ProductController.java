@@ -74,8 +74,9 @@ public class ProductController {
     public ApiResponse<ProductListResponse> getPlanList(
             @RequestParam String category,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        ProductListResult result = getProductListUseCase.execute(category, page, size);
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false, defaultValue = "0") int bestCount) {
+        ProductListResult result = getProductListUseCase.execute(category, page, size, bestCount);
         ProductListResponse response = productListResponseAssembler.assemble(result);
         return new ApiResponse<>("success", response, LocalDateTime.now());
     }

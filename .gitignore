@@ -41,4 +41,4 @@ out/
 node_modules/
 .node_modules/*
 # Querydsl generated sources
-src/main/generated/
+#src/main/generated/

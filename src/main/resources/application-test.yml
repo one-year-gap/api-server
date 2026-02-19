@@ -1,0 +1,2 @@
+# 테스트 환경에서만 사용할 가짜 비밀키
+secret-key: "test-secret-key-for-local-123456"

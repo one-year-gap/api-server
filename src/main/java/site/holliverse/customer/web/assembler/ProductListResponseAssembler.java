@@ -7,8 +7,10 @@ import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.ProductListResponse;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,8 +24,9 @@ public class ProductListResponseAssembler {
 
     public ProductListResponse assemble(ProductListResult result) {
         Map<Long, ProductContent> contentByProductId = buildContentMap(result);
+        Set<Long> bestIdsSet = new HashSet<>(result.bestProductIds());
         List<ProductDetailResponse> content = result.products().getContent().stream()
-                .map(p -> mapper.toDetailResponse(p, contentByProductId.get(p.productId())))
+                .map(p -> mapper.toDetailResponse(p, contentByProductId.get(p.productId()), bestIdsSet.contains(p.productId())))
                 .toList();
         PageMeta page = new PageMeta(
                 result.products().getTotalElements(),

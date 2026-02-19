@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.jooq.JooqTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
 import site.holliverse.shared.util.EncryptionTool;
 
@@ -24,6 +25,7 @@ import static site.holliverse.admin.query.jooq.tables.Member.MEMBER;
 import static site.holliverse.admin.query.jooq.tables.Address.ADDRESS;
 import site.holliverse.admin.query.jooq.enums.*;
 
+@ActiveProfiles("admin")
 @JooqTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({AdminMemberDao.class, AdminMemberDaoTest.TestConfig.class})

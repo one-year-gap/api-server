@@ -21,6 +21,19 @@
     locations: classpath:db/migration
     schemas:
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-name: google
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI:{baseUrl}/login/oauth2/code/{registrationId}}
+            authorization-grant-type: authorization_code
+            scope: [ profile, email ]
+
+
 server:
   port: 8080
 
@@ -43,6 +56,8 @@ logging:
     org.hibernate.type.descriptor.sql: WARN
 
 app:
+  oauth2:
+    redirect-uri: ${APP_OAUTH2_REDIRECT_URI:http://localhost:8080/test/callback}
   jwt:
     secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}
     access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:3600000}

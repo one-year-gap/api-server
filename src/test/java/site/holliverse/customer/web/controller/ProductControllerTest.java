@@ -26,10 +26,10 @@ import site.holliverse.customer.application.usecase.product.ProductListResult;
 import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
 import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.dto.PageMeta;
-import site.holliverse.customer.web.dto.compare.ComparisonResponse;
-import site.holliverse.customer.web.dto.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.ProductListResponse;
+import site.holliverse.customer.web.dto.product.compare.ComparisonResponse;
+import site.holliverse.customer.web.dto.product.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductContent;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 import site.holliverse.shared.domain.model.ProductType;
@@ -49,7 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         controllers = ProductController.class,
         excludeAutoConfiguration = {
                 org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration.class
+                org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration.class,
+                org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration.class,
+                org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientWebSecurityAutoConfiguration.class
         }
 )
 @ActiveProfiles("customer")

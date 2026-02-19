@@ -141,6 +141,7 @@ public class AdminMemberDao {
         // 논리: (20대 조건) OR (40대 조건)
         if (!CollectionUtils.isEmpty(req.ageGroups())) {
             Condition ageCondition = DSL.noCondition(); // 빈 조건으로 시작해서 OR로 붙여나감
+            LocalDate today = LocalDate.now();
 
             for (Integer ageStart : req.ageGroups()) {
                 // 예: ageStart = 20 (20대 검색)
@@ -148,7 +149,6 @@ public class AdminMemberDao {
                 // - 가장 늦게 태어난 사람(제일 어린 20세): 오늘 날짜 - 20년
                 // - 가장 일찍 태어난 사람(제일 많은 29세): 오늘 날짜 - 30년 + 1일
 
-                LocalDate today = LocalDate.now();
                 LocalDate maxBirth = today.minusYears(ageStart);
                 LocalDate minBirth = today.minusYears(ageStart + 10).plusDays(1);
 

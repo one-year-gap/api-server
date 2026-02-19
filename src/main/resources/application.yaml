@@ -68,6 +68,6 @@ app:
 # - secret-key: 32byte 필수 (AES-256 기준)
 # - 환경변수 설정 시: SECRET_KEY, ALGORITHM, TRANSFORMATION
 # =================================================================
-secret-key: ${SECRET_KEY:Xy9zPvQ3kL5mRnJwT8bH2cD4fG7jA1sE}
+secret-key: ${SECRET_KEY}
 algorithm: ${ALGORITHM:AES}
 transformation: ${TRANSFORMATION:AES/ECB/PKCS5Padding}

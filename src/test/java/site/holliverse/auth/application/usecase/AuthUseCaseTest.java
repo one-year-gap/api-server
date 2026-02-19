@@ -25,6 +25,7 @@ import site.holliverse.shared.persistence.entity.RefreshToken;
 import site.holliverse.shared.persistence.repository.AddressRepository;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
+import site.holliverse.shared.util.EncryptionTool;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -52,6 +53,8 @@ class AuthUseCaseTest {
     private RefreshTokenHashService refreshTokenHashService;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private EncryptionTool encryptionTool;
 
     @InjectMocks
     private AuthUseCase authUseCase;
@@ -72,8 +75,12 @@ class AuthUseCaseTest {
                     .postalCode("06234")
                     .build();
 
+            // 암호화 동작 정의 (입력값 -> 암호문 반환)
+            when(encryptionTool.encrypt(request.getName())).thenReturn("encrypted-name");
+            when(encryptionTool.encrypt(request.getPhone())).thenReturn("encrypted-phone");
+
             when(memberRepository.existsByEmail(request.getEmail())).thenReturn(false);
-            when(memberRepository.existsByPhone(request.getPhone())).thenReturn(false);
+            when(memberRepository.existsByPhone("encrypted-phone")).thenReturn(false);
             when(passwordEncoder.encode(request.getPassword())).thenReturn("encoded-password");
             when(addressRepository.findByProvinceAndCityAndStreetAddress(
                     eq("seoul"), eq("gangnam"), eq("teheran-ro 123")
@@ -97,6 +104,11 @@ class AuthUseCaseTest {
 
             assertThat(savedMember.getAddress()).isEqualTo(existingAddress);
             assertThat(savedMember.getPassword()).isEqualTo("encoded-password");
+
+            // DB에 저장된 값이 암호문인지 확인
+            assertThat(savedMember.getName()).isEqualTo("encrypted-name");
+            assertThat(savedMember.getPhone()).isEqualTo("encrypted-phone");
+
             assertThat(savedMember.getRole()).isEqualTo(MemberRole.CUSTOMER);
             assertThat(savedMember.getStatus()).isEqualTo(MemberStatus.ACTIVE);
             assertThat(savedMember.getType()).isEqualTo(MemberSignupType.FORM);
@@ -108,8 +120,10 @@ class AuthUseCaseTest {
         void signUpSuccessWithNewAddress() {
             // given
             SignUpRequestDto request = createRequest();
+            when(encryptionTool.encrypt(request.getName())).thenReturn("encrypted-name");
+            when(encryptionTool.encrypt(request.getPhone())).thenReturn("encrypted-phone");
             when(memberRepository.existsByEmail(request.getEmail())).thenReturn(false);
-            when(memberRepository.existsByPhone(request.getPhone())).thenReturn(false);
+            when(memberRepository.existsByPhone("encrypted-phone")).thenReturn(false);
             when(passwordEncoder.encode(request.getPassword())).thenReturn("encoded-password");
             when(addressRepository.findByProvinceAndCityAndStreetAddress(
                     any(), any(), any()
@@ -134,6 +148,13 @@ class AuthUseCaseTest {
             assertThat(savedAddress.getCity()).isEqualTo("gangnam");
             assertThat(savedAddress.getStreetAddress()).isEqualTo("teheran-ro 123");
             assertThat(savedAddress.getPostalCode()).isEqualTo("06234");
+
+            // [추가 검증] 저장된 멤버의 정보가 암호화되었는지 확인
+            ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
+            verify(memberRepository).save(memberCaptor.capture());
+            Member savedMember = memberCaptor.getValue();
+            assertThat(savedMember.getName()).isEqualTo("encrypted-name");
+            assertThat(savedMember.getPhone()).isEqualTo("encrypted-phone");
         }
 
         @Test
@@ -158,8 +179,12 @@ class AuthUseCaseTest {
         void throwsWhenPhoneDuplicated() {
             // given
             SignUpRequestDto request = createRequest();
+
+            when(encryptionTool.encrypt(request.getName())).thenReturn("encrypted-name");
+            when(encryptionTool.encrypt(request.getPhone())).thenReturn("encrypted-phone");
+
             when(memberRepository.existsByEmail(request.getEmail())).thenReturn(false);
-            when(memberRepository.existsByPhone(request.getPhone())).thenReturn(true);
+            when(memberRepository.existsByPhone("encrypted-phone")).thenReturn(true);
 
             // when, then
             assertThatThrownBy(() -> authUseCase.signUp(request))

@@ -10,6 +10,7 @@ permissions:
 jobs:
   coverage:
     uses: one-year-gap/infra/.github/workflows/test-coverage.yml@main
+    secrets: inherit
     with:
       working-directory: .
       min-line-overall: 0.7

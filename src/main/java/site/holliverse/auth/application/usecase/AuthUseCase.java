@@ -16,6 +16,7 @@ import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.AddressRepository;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
+import site.holliverse.shared.util.EncryptionTool;
 
 /**
  * 인증 도메인의 계정 생명주기 유스케이스.
@@ -36,30 +37,39 @@ public class AuthUseCase {
     private final RefreshTokenHashService refreshTokenHashService;
     /** 원문 비밀번호를 안전하게 인코딩하는 컴포넌트. */
     private final PasswordEncoder passwordEncoder;
+    /** 개인정보(이름, 폰번호) 암호화를 위한 도구. */
+    private final EncryptionTool encryptionTool;
 
     public AuthUseCase(
             MemberRepository memberRepository,
             AddressRepository addressRepository,
             RefreshTokenRepository refreshTokenRepository,
             RefreshTokenHashService refreshTokenHashService,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            EncryptionTool encryptionTool
     ) {
         this.memberRepository = memberRepository;
         this.addressRepository = addressRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.refreshTokenHashService = refreshTokenHashService;
         this.passwordEncoder = passwordEncoder;
+        this.encryptionTool = encryptionTool;
     }
 
     /**
      * FORM 회원가입을 처리한다
      * 처리 순서:
-     * 1) 이메일/전화번호 중복 검증
-     * 2) 주소 재사용 또는 신규 생성
-     * 3) 기본 권한/상태/가입유형으로 회원 저장
+     * 1) 개인정보 암호화 (검색 및 저장을 위해 선행)
+     * 2) 이메일/전화번호 중복 검증 (암호화된 값으로 비교)
+     * 3) 주소 재사용 또는 신규 생성
+     * 4) 기본 권한/상태/가입유형으로 회원 저장
      */
     @Transactional
     public SignUpResponseDto signUp(SignUpRequestDto request) {
+        // DB 조회 및 저장을 위해 먼저 암호화를 수행
+        String encryptedName = encryptionTool.encrypt(request.getName());
+        String encryptedPhone = encryptionTool.encrypt(request.getPhone());
+
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new CustomException(
                     ErrorCode.DUPLICATED_EMAIL,
@@ -67,7 +77,7 @@ public class AuthUseCase {
                     "동일한 이메일이 존재합니다."
             );
         }
-        if (memberRepository.existsByPhone(request.getPhone())) {
+        if (memberRepository.existsByPhone(encryptedPhone)) {
             throw new CustomException(
                     ErrorCode.DUPLICATED_PHONE,
                     "phone",
@@ -95,8 +105,8 @@ public class AuthUseCase {
                 .address(address)
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
-                .phone(request.getPhone())
+                .name(encryptedName)
+                .phone(encryptedPhone)
                 .birthDate(request.getBirthDate())
                 .gender(request.getGender())
                 .membership(request.getMembership())

@@ -10,11 +10,12 @@ import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.repository.MemberRepository;
-
+import org.springframework.context.annotation.Profile;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Service
+@Profile("customer")
 public class ChangeProductUseCase {
 
     private final SubscriptionChangePolicy subscriptionChangePolicy;

@@ -23,13 +23,15 @@ import site.holliverse.customer.persistence.repository.InternetRepository;
 import site.holliverse.customer.persistence.repository.IptvRepository;
 import site.holliverse.customer.persistence.repository.MobilePlanRepository;
 import site.holliverse.customer.persistence.repository.ProductRepository;
+import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
-
+import org.springframework.context.annotation.Profile;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Profile("customer")
 public class GetProductListUseCase {
 
     private static final Map<String, ProductType> CATEGORY_TO_TYPE = Map.of(
@@ -41,6 +43,7 @@ public class GetProductListUseCase {
     );
 
     private final ProductRepository productRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final MobilePlanRepository mobilePlanRepository;
     private final InternetRepository internetRepository;
     private final IptvRepository iptvRepository;
@@ -48,12 +51,14 @@ public class GetProductListUseCase {
     private final TabWatchPlanRepository tabWatchPlanRepository;
 
     public GetProductListUseCase(ProductRepository productRepository,
+                              SubscriptionRepository subscriptionRepository,
                               MobilePlanRepository mobilePlanRepository,
                               InternetRepository internetRepository,
                               IptvRepository iptvRepository,
                               AddonRepository addonRepository,
                               TabWatchPlanRepository tabWatchPlanRepository) {
         this.productRepository = productRepository;
+        this.subscriptionRepository = subscriptionRepository;
         this.mobilePlanRepository = mobilePlanRepository;
         this.internetRepository = internetRepository;
         this.iptvRepository = iptvRepository;
@@ -62,7 +67,7 @@ public class GetProductListUseCase {
     }
 
     @Transactional(readOnly = true)
-    public ProductListResult execute(String category, int page, int size) {
+    public ProductListResult execute(String category, int page, int size, int bestCount) {
         if (category == null || category.isBlank()) {
             throw new IllegalArgumentException("카테고리는 필수입니다.");
         }
@@ -71,6 +76,11 @@ public class GetProductListUseCase {
         if (productType == null) {
             throw new IllegalArgumentException("지원하지 않는 카테고리입니다: " + category);
         }
+
+        List<Long> bestProductIds = bestCount <= 0
+                ? List.of()
+                : subscriptionRepository.findTopPopularProductIdsByProductType(productType, PageRequest.of(0, bestCount));
+
         Pageable pageable = PageRequest.of(page, size);
         Page<Product> products = productRepository.findByProductType(productType, pageable);
 
@@ -97,6 +107,7 @@ public class GetProductListUseCase {
         Page<ProductSummaryDto> productDtos = products.map(this::toSummaryDto);
         return new ProductListResult(
                 productDtos,
+                bestProductIds,
                 mobilePlans.stream().map(this::toMobilePlanDto).toList(),
                 internets.stream().map(this::toInternetDto).toList(),
                 iptvs.stream().map(this::toIptvDto).toList(),

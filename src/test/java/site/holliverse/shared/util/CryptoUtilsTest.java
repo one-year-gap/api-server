@@ -72,6 +72,6 @@ class CryptoUtilsTest {
         // then: 복호화 시도 시 에러 발생 확인
         assertThatThrownBy(() -> wrongDecryptor.decrypt(encryptedText))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Decryption failed");
+                .hasMessageContaining("복호화 실패: 보안 키 또는 알고리즘 설정이 잘못되었습니다.");
     }
 }

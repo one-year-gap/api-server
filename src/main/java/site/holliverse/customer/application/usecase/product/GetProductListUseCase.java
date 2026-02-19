@@ -25,12 +25,13 @@ import site.holliverse.customer.persistence.repository.MobilePlanRepository;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
-
+import org.springframework.context.annotation.Profile;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Profile("customer")
 public class GetProductListUseCase {
 
     private static final Map<String, ProductType> CATEGORY_TO_TYPE = Map.of(

@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
+
+import java.time.Clock;
 import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.mapper.CompareResponseMapper;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
@@ -11,6 +13,11 @@ import site.holliverse.customer.web.mapper.ProductResponseMapper;
 @Configuration
 @Profile("customer")
 public class CustomerWebConfig {
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemDefaultZone();
+    }
 
     @Bean
     public ProductResponseMapper productResponseMapper() {

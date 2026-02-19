@@ -2,8 +2,8 @@ package site.holliverse.customer.web.assembler;
 
 import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
 import site.holliverse.customer.application.usecase.product.ProductDetailResult;
-import site.holliverse.customer.web.dto.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
+import site.holliverse.customer.web.dto.product.compare.PlanCompareResponse;
 import site.holliverse.customer.web.mapper.CompareResponseMapper;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 

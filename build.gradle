@@ -118,7 +118,7 @@ def jacocoExcludes = [
         '**/*Constants*',
         '**/*Enum*',
         // jOOQ 생성 파일들 제외 (패키지 경로 기반)
-        '**/site/holliverse/*/query/jooq/**',  
+        '**/site/holliverse/*/query/jooq/**',
         '**/site/holliverse/*/query/jooq/tables/**',
         '**/site/holliverse/*/query/jooq/tables/records/**',
         '**/site/holliverse/*/query/jooq/enums/**',

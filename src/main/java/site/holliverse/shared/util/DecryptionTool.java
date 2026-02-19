@@ -3,6 +3,7 @@ package site.holliverse.shared.util;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.util.Base64;
 
 /**
@@ -36,8 +37,13 @@ public class DecryptionTool {
 
             byte[] decryptedBytes = cipher.doFinal(decodedBytes);
             return new String(decryptedBytes, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new RuntimeException("Decryption failed", e);
+        } catch (GeneralSecurityException e) {
+            // 1. 순수하게 암호화 로직(키, 알고리즘)이 터졌을 때
+            throw new RuntimeException("복호화 실패: 보안 키 또는 알고리즘 설정이 잘못되었습니다.", e);
+
+        } catch (IllegalArgumentException e) {
+            // 2. Base64로 변환할 수 없는 이상한 문자열이 들어왔을 때
+            throw new RuntimeException("복호화 실패: 올바른 Base64 인코딩 형식이 아닙니다.", e);
         }
     }
 }

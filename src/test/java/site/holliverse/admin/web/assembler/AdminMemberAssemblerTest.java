@@ -57,9 +57,9 @@ class AdminMemberAssemblerTest {
 
         // then
         // 4. 검증 시작
-        assertThat(result.getMembers()).hasSize(1);
+        assertThat(result.members()).hasSize(1);
 
-        AdminMemberDto memberDto = result.getMembers().get(0);
+        AdminMemberDto memberDto = result.members().get(0);
 
         // [1] 이름 마스킹 확인 (김영현 -> 김*현)
         assertThat(memberDto.name()).isEqualTo("김*현");
@@ -73,8 +73,8 @@ class AdminMemberAssemblerTest {
 
         // [4] 페이징 계산 (DTO of 메서드 로직) 확인
         // 150개 / 10개씩 = 15페이지
-        assertThat(result.getPagination().getTotalPage()).isEqualTo(15);
-        assertThat(result.getPagination().getTotalCount()).isEqualTo(150);
+        assertThat(result.pagination().totalPage()).isEqualTo(15);
+        assertThat(result.pagination().totalCount()).isEqualTo(150);
     }
 
     @Test
@@ -95,7 +95,7 @@ class AdminMemberAssemblerTest {
         );
 
         // then
-        AdminMemberDto memberDto = result.getMembers().get(0);
+        AdminMemberDto memberDto = result.members().get(0);
 
         // 이산 -> 이* (2글자 마스킹 규칙 확인)
         assertThat(memberDto.name()).isEqualTo("이*");

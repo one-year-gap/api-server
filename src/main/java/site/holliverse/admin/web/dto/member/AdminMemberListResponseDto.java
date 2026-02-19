@@ -1,15 +1,14 @@
 package site.holliverse.admin.web.dto.member;
 
 import lombok.Builder;
-import lombok.Getter;
 
 import java.util.List;
 
-@Getter
 @Builder
-public class AdminMemberListResponseDto {
-    private List<AdminMemberDto> members; // 회원 목록
-    private Pagination pagination;        // 페이징 정보
+public record AdminMemberListResponseDto(
+        List<AdminMemberDto> members, // 회원 목록
+        Pagination pagination         // 페이징 정보
+) {
 
     public static AdminMemberListResponseDto of(List<AdminMemberDto> members, int totalCount, int page, int size) {
         return AdminMemberListResponseDto.builder()
@@ -23,12 +22,11 @@ public class AdminMemberListResponseDto {
                 .build();
     }
 
-    @Getter
     @Builder
-    public static class Pagination {
-        private int totalCount;
-        private int currentPage;
-        private int size;
-        private int totalPage;
-    }
+    public record Pagination(
+            int totalCount,
+            int currentPage,
+            int size,
+            int totalPage
+    ) {}
 }

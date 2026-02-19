@@ -67,7 +67,7 @@ class AdminMemberControllerTest {
                 .willReturn(mockResponse);
 
         // when & then
-        mockMvc.perform(get("/api/v1/members")
+        mockMvc.perform(get("/api/v1/admin/members")
                         .param("page", "1")
                         .param("size", "20")
                         .param("keyword", "김영현")) // 검색어 파라미터 예시

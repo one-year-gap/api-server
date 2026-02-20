@@ -218,6 +218,16 @@ public class AdminMemberDao {
     }
 
     // ==========================================
+    // 회원 존재 여부 확인
+    // ==========================================
+    public boolean existsById(Long memberId) {
+        return dsl.fetchExists(
+                dsl.selectFrom(MEMBER)
+                        .where(MEMBER.MEMBER_ID.eq(memberId))
+        );
+    }
+
+    // ==========================================
     // 회원 정보 (부분) 수정
     // ==========================================
     public void updateMember(Long memberId, String encryptedName, String encryptedPhone, String status, String membership) {

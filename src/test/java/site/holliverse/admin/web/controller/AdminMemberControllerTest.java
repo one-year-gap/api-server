@@ -173,4 +173,37 @@ class AdminMemberControllerTest {
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("회원 정보 수정 실패: 이름이 20자를 초과하면 400 에러가 발생한다 (@Size 검증)")
+    void updateMember_Fail_NameTooLong() throws Exception {
+        // given
+        Long memberId = 1L;
+        String longName = "이름이매우매우매우매우매우매우매우매우매우매우길어요"; // 20자 초과
+        AdminMemberUpdateRequestDto requestDto = new AdminMemberUpdateRequestDto(
+                longName, null, null, null
+        );
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/{memberId}", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 실패: 유효하지 않은 상태값(Enum)이 들어오면 입구에서 막힌다 (@Pattern 검증)")
+    void updateMember_Fail_InvalidStatusPattern() throws Exception {
+        // given
+        Long memberId = 1L;
+        AdminMemberUpdateRequestDto requestDto = new AdminMemberUpdateRequestDto(
+                "김수정", null, "WEIRD_STATUS", null
+        );
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/{memberId}", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
+    }
 }

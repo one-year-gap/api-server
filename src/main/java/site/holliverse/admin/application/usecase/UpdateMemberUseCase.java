@@ -27,16 +27,10 @@ public class UpdateMemberUseCase {
         }
 
         // 2. 이름 암호화 (값이 들어왔을 때만)
-        String encryptedName = null;
-        if (StringUtils.hasText(dto.name())) {
-            encryptedName = encryptionTool.encrypt(dto.name());
-        }
+        String encryptedName = StringUtils.hasText(dto.name()) ? encryptionTool.encrypt(dto.name()) : null;
 
         // 3. 전화번호 암호화 (값이 들어왔을 때만)
-        String encryptedPhone = null;
-        if (StringUtils.hasText(dto.phone())) {
-            encryptedPhone = encryptionTool.encrypt(dto.phone());
-        }
+        String encryptedPhone = StringUtils.hasText(dto.phone()) ? encryptionTool.encrypt(dto.phone()) : null;
 
         // 4. Dao 호출
         adminMemberDao.updateMember(

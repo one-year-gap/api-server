@@ -3,6 +3,7 @@ package site.holliverse.admin.query.dao;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.UpdateQuery;
 import org.jooq.impl.DSL;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
@@ -17,6 +18,8 @@ import static site.holliverse.admin.query.jooq.Tables.PRODUCT;
 import static site.holliverse.admin.query.jooq.Tables.SUBSCRIPTION;
 import static site.holliverse.admin.query.jooq.Tables.ADDRESS;
 import static site.holliverse.admin.query.jooq.enums.ProductTypeEnum.MOBILE_PLAN;
+import site.holliverse.admin.query.jooq.enums.MemberStatusType;
+import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -212,5 +215,47 @@ public class AdminMemberDao {
         }
 
         return conditions;
+    }
+
+    // ==========================================
+    // 회원 정보 (부분) 수정
+    // ==========================================
+    public void updateMember(Long memberId, String encryptedName, String encryptedPhone, String status, String membership) {
+
+        // 1. 동적 업데이트 쿼리 객체 생성
+        UpdateQuery<?> query = dsl.updateQuery(MEMBER);
+        boolean hasUpdate = false; // 수정할 데이터가 하나라도 있는지 체크하는 플래그
+
+        // 2. 값이 존재하는 필드만 SET 절에 추가 (동적 매핑)
+        if (StringUtils.hasText(encryptedName)) {
+            query.addValue(MEMBER.NAME, encryptedName);
+            hasUpdate = true;
+        }
+
+        if (StringUtils.hasText(encryptedPhone)) {
+            query.addValue(MEMBER.PHONE, encryptedPhone);
+            hasUpdate = true;
+        }
+
+        if (StringUtils.hasText(status)) {
+            // String으로 들어온 상태값을 jOOQ Enum으로 변환해서 넣기
+            query.addValue(MEMBER.STATUS, MemberStatusType.valueOf(status));
+            hasUpdate = true;
+        }
+
+        if (StringUtils.hasText(membership)) {
+            // String으로 들어온 멤버십을 jOOQ Enum으로 변환해서 넣기
+            query.addValue(MEMBER.MEMBERSHIP, MemberMembershipType.valueOf(membership));
+            hasUpdate = true;
+        }
+
+        // 3. 만약 프론트에서 아무 값도 안 보냈다면? 쿼리 실행 없이 종료
+        if (!hasUpdate) {
+            return;
+        }
+
+        // 4. WHERE 조건 달고 실행
+        query.addConditions(MEMBER.MEMBER_ID.eq(memberId));
+        query.execute();
     }
 }

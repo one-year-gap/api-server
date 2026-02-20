@@ -108,4 +108,50 @@ class UpdateMemberUseCaseTest {
                 MemberMembershipType.GOLD
         );
     }
+
+    @Test
+    @DisplayName("유효하지 않은 상태값(Status)이 들어오면 INVALID_INPUT 예외가 발생한다")
+    void throwExceptionWhenInvalidStatus() {
+        // given
+        Long memberId = 1L;
+        // "BANNED" 가 아닌 이상한 문자열 "WEIRD_STATUS" 전송
+        AdminMemberUpdateRequestDto dto = new AdminMemberUpdateRequestDto("김길동", null, "WEIRD_STATUS", null);
+
+        given(adminMemberDao.existsById(memberId)).willReturn(true);
+
+        // when
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            updateMemberUseCase.execute(memberId, dto);
+        });
+
+        // then
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT);
+        assertThat(exception.getField()).isEqualTo("status");
+
+        // Dao까지 넘어가면 안 됨
+        verify(adminMemberDao, never()).updateMember(anyLong(), anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 멤버십(Membership)이 들어오면 INVALID_INPUT 예외가 발생한다")
+    void throwExceptionWhenInvalidMembership() {
+        // given
+        Long memberId = 1L;
+        // 이상한 문자열 "VVVIP" 전송
+        AdminMemberUpdateRequestDto dto = new AdminMemberUpdateRequestDto("김길동", null, null, "VVVIP");
+
+        given(adminMemberDao.existsById(memberId)).willReturn(true);
+
+        // when
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            updateMemberUseCase.execute(memberId, dto);
+        });
+
+        // then
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT);
+        assertThat(exception.getField()).isEqualTo("membership");
+
+        // Dao까지 넘어가면 안 됨
+        verify(adminMemberDao, never()).updateMember(anyLong(), anyString(), anyString(), any(), any());
+    }
 }

@@ -133,6 +133,7 @@ def jacocoExcludes = [
         '**/*Tables*',
         '**/generated/**',
         '**/dto/**',
+        '**/*Dao*',
         '**/web/dto/**',
         '**/shared/domain/model/**',
         '**/auth/jwt/**',

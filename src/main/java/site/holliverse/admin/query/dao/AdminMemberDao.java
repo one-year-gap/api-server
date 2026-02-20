@@ -15,10 +15,13 @@ import site.holliverse.shared.util.EncryptionTool;
 import static site.holliverse.admin.query.jooq.Tables.MEMBER;
 import static site.holliverse.admin.query.jooq.Tables.PRODUCT;
 import static site.holliverse.admin.query.jooq.Tables.SUBSCRIPTION;
+import static site.holliverse.admin.query.jooq.Tables.ADDRESS;
+import static site.holliverse.admin.query.jooq.enums.ProductTypeEnum.MOBILE_PLAN;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 관리자 회원 목록 조회를 위한 DAO.
@@ -89,6 +92,54 @@ public class AdminMemberDao {
                 .where(createConditions(req))
                 .fetchOne(0, Long.class); // 결과가 1행 1열(숫자)이므로 Long으로 변환해서 반환
         return totalCount != null ? totalCount : 0L; // null이면 0L(0)을 반환하고, 아니면 값을 반환
+    }
+
+    /**
+     * 특정 회원의 상세 정보 조회 (4단 조인: MEMBER + ADDRESS + SUBSCRIPTION + PRODUCT)
+     * - 반환값이 없을 수 있으므로 Optional로 감싸서 반환
+     */
+    public Optional<MemberDetailRawData> findDetailById(Long memberId) {
+        return dsl.select(
+                        // 1. 회원 기본 정보
+                        MEMBER.NAME.as("encryptedName"),
+                        MEMBER.PHONE.as("encryptedPhone"),
+                        MEMBER.EMAIL,
+                        MEMBER.BIRTH_DATE,
+                        MEMBER.GENDER,
+                        MEMBER.MEMBERSHIP,
+                        MEMBER.JOIN_DATE,
+                        MEMBER.STATUS,
+
+                        // 2. 주소 정보
+                        ADDRESS.PROVINCE,
+                        ADDRESS.CITY,
+                        ADDRESS.STREET_ADDRESS,
+
+                        // 3. 모바일 요금제 정보
+                        PRODUCT.NAME.as("currentMobilePlan")
+                )
+                .from(MEMBER)
+
+                // [조인 1] 회원 -> 주소
+                .leftJoin(ADDRESS).on(MEMBER.ADDRESS_ID.eq(ADDRESS.ADDRESS_ID))
+
+                // [조인 2] 회원 -> 구독 (현재 활성화된 구독만)
+                .leftJoin(SUBSCRIPTION).on(
+                        MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
+                                .and(SUBSCRIPTION.STATUS.isTrue())
+                )
+
+                // [조인 3] 구독 -> 상품 (MOBILE_PLAN 만)
+                .leftJoin(PRODUCT).on(
+                        SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID)
+                                .and(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                )
+
+                // 검색 조건: 대상 회원의 ID
+                .where(MEMBER.MEMBER_ID.eq(memberId))
+
+                // 결과가 1건이거나 없으므로 Optional 반환
+                .fetchOptionalInto(MemberDetailRawData.class);
     }
 
     // ==========================================

@@ -17,8 +17,11 @@ import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
 import site.holliverse.admin.web.dto.member.AdminMemberListResponseDto;
 import site.holliverse.admin.web.mapper.AdminMemberMapper;
 import site.holliverse.shared.web.response.ApiResponse;
-
-import java.time.LocalDateTime;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import site.holliverse.admin.application.usecase.UpdateMemberUseCase;
+import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
 
 /**
  * 관리자 회원 관리 API 컨트롤러
@@ -34,6 +37,7 @@ public class AdminMemberController {
     private final AdminMemberAssembler adminMemberAssembler;
     private final GetMemberDetailUseCase getMemberDetailUseCase;
     private final AdminMemberMapper adminMemberMapper;
+    private final UpdateMemberUseCase updateMemberUseCase;
 
     /**
      * 회원 목록 조회 API
@@ -70,5 +74,23 @@ public class AdminMemberController {
         AdminMemberDetailResponseDto data = adminMemberMapper.toResponse(rawData);
 
         return ResponseEntity.ok(ApiResponse.success("회원 상세 조회가 완료되었습니다.", data));
+    }
+
+    /**
+     * 회원 정보 수정 API
+     * @param memberId 수정할 회원의 고유 ID
+     * @param requestDto 수정할 필드 (값이 null 인 필드는 수정하지 않음)
+     */
+    @PatchMapping("/{memberId}")
+    public ResponseEntity<ApiResponse<Void>> updateMember(
+            @PathVariable("memberId") Long memberId,
+            @Valid @RequestBody AdminMemberUpdateRequestDto requestDto
+    ) {
+
+        // 1. UseCase 호출: 회원 검증, 필드 암호화 및 DB 동적 업데이트 실행
+        updateMemberUseCase.execute(memberId, requestDto);
+
+        // 2. 응답 반환: 데이터(Body) 없이 성공 메시지만 깔끔하게 전달
+        return ResponseEntity.ok(ApiResponse.success("회원 정보 수정이 완료되었습니다.", null));
     }
 }

@@ -16,6 +16,7 @@ import static site.holliverse.admin.query.jooq.Tables.MEMBER;
 import static site.holliverse.admin.query.jooq.Tables.PRODUCT;
 import static site.holliverse.admin.query.jooq.Tables.SUBSCRIPTION;
 import static site.holliverse.admin.query.jooq.Tables.ADDRESS;
+import static site.holliverse.admin.query.jooq.enums.ProductTypeEnum.MOBILE_PLAN;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -131,7 +132,7 @@ public class AdminMemberDao {
                 // [조인 3] 구독 -> 상품 (MOBILE_PLAN 만)
                 .leftJoin(PRODUCT).on(
                         SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID)
-                                .and(PRODUCT.PRODUCT_TYPE.cast(String.class).eq("MOBILE_PLAN"))
+                                .and(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
                 )
 
                 // 검색 조건: 대상 회원의 ID

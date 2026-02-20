@@ -5,7 +5,7 @@ import java.time.LocalDate;
 /**
  * 회원 상세 정보 응답용 DTO
  */
-public record AdminMemberDetailDto(
+public record AdminMemberDetailResponseDto(
         String name,              // 1. 이름 (복호화 완료된 상태)
         int age,                  // 2. 나이 (생년월일로 계산된 만 나이)
         String membership,        // 3. 등급 (VVIP, VIP 등)

@@ -26,6 +26,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import site.holliverse.admin.application.usecase.GetMemberDetailUseCase;
+import site.holliverse.admin.web.dto.member.AdminMemberDetailResponseDto;
+import site.holliverse.admin.web.mapper.AdminMemberMapper;
+import site.holliverse.admin.query.dao.MemberDetailRawData;
+import java.time.LocalDate;
+import static org.mockito.BDDMockito.mock;
+
 @ActiveProfiles("admin")
 @WebMvcTest(AdminMemberController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -42,6 +49,9 @@ class AdminMemberControllerTest {
 
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean private GetMemberDetailUseCase getMemberDetailUseCase;
+    @MockitoBean private AdminMemberMapper adminMemberMapper;
 
     @Test
     @DisplayName("회원 목록 조회 성공 시 ApiResponse 규격에 맞춰 데이터를 반환한다.")
@@ -83,5 +93,37 @@ class AdminMemberControllerTest {
                 // 내부 데이터 검증 (Pagination 등)
                 .andExpect(jsonPath("$.data.pagination.currentPage").value(1))
                 .andExpect(jsonPath("$.data.pagination.size").value(20));
+    }
+
+    @Test
+    @DisplayName("회원 상세 조회 성공 시 200 OK와 회원 상세 데이터를 반환한다.")
+    void getMemberDetail_success() throws Exception {
+        // given
+        Long memberId = 2L;
+
+        // UseCase와 Mapper가 주고받을 가짜 객체들
+        MemberDetailRawData mockRaw = mock(MemberDetailRawData.class);
+        AdminMemberDetailResponseDto mockResponse = new AdminMemberDetailResponseDto(
+                "김영현", 31, "VIP", "M", "경기도 구리시", "test@test.com",
+                LocalDate.of(1995, 1, 1), "5G 요금제", "010-1234-5678",
+                LocalDate.of(2024, 1, 1), 416L, "ACTIVE"
+        );
+
+        given(getMemberDetailUseCase.execute(memberId)).willReturn(mockRaw);
+        given(adminMemberMapper.toResponse(mockRaw)).willReturn(mockResponse);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/members/{memberId}", memberId))
+                .andDo(print())
+                .andExpect(status().isOk())
+
+                // ApiResponse 규격 검증
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("회원 상세 조회가 완료되었습니다."))
+
+                // 데이터 검증
+                .andExpect(jsonPath("$.data.name").value("김영현"))
+                .andExpect(jsonPath("$.data.currentMobilePlan").value("5G 요금제"))
+                .andExpect(jsonPath("$.data.phone").value("010-1234-5678"));
     }
 }

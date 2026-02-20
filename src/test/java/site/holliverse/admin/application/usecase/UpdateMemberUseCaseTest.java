@@ -11,6 +11,8 @@ import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.util.EncryptionTool;
+import site.holliverse.admin.query.jooq.enums.MemberStatusType;
+import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -50,7 +52,7 @@ class UpdateMemberUseCaseTest {
         assertThat(exception.getField()).isEqualTo("memberId");
 
         // Dao의 update 메서드는 절대 호출되지 않아야 함
-        verify(adminMemberDao, never()).updateMember(anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(adminMemberDao, never()).updateMember(anyLong(), anyString(), anyString(), any(), any());
     }
 
     @Test
@@ -79,7 +81,7 @@ class UpdateMemberUseCaseTest {
                 "encrypted_김길동", // 암호화된 이름
                 null,              // 폰 번호 (입력 안 했으니 null)
                 null,              // 상태 (입력 안 했으니 null)
-                "VIP"              // 멤버십
+                MemberMembershipType.VIP        // 멤버십
         );
     }
 
@@ -102,8 +104,8 @@ class UpdateMemberUseCaseTest {
                 memberId,
                 "encrypted_홍길동",
                 "encrypted_01012345678",
-                "BANNED",
-                "GOLD"
+                MemberStatusType.BANNED,
+                MemberMembershipType.GOLD
         );
     }
 }

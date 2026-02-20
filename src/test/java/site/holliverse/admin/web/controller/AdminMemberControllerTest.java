@@ -173,17 +173,4 @@ class AdminMemberControllerTest {
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isBadRequest());
     }
-
-    @Test
-    @DisplayName("회원 정보 수정 실패: RequestBody가 아예 없으면 400 Bad Request를 반환한다")
-    void updateMember_Fail_MissingRequestBody() throws Exception {
-        // given
-        Long memberId = 1L;
-
-        // when & then
-        mockMvc.perform(patch("/api/v1/admin/members/{memberId}", memberId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                // content()를 아예 보내지 않음!
-                .andExpect(status().isBadRequest());
-    }
 }

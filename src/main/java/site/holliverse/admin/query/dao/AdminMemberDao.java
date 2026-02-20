@@ -230,7 +230,7 @@ public class AdminMemberDao {
     // ==========================================
     // 회원 정보 (부분) 수정
     // ==========================================
-    public void updateMember(Long memberId, String encryptedName, String encryptedPhone, String status, String membership) {
+    public void updateMember(Long memberId, String encryptedName, String encryptedPhone, MemberStatusType status, MemberMembershipType membership) {
 
         // 1. 동적 업데이트 쿼리 객체 생성
         UpdateQuery<?> query = dsl.updateQuery(MEMBER);
@@ -247,15 +247,15 @@ public class AdminMemberDao {
             hasUpdate = true;
         }
 
-        if (StringUtils.hasText(status)) {
-            // String으로 들어온 상태값을 jOOQ Enum으로 변환해서 넣기
-            query.addValue(MEMBER.STATUS, MemberStatusType.valueOf(status));
+        // StringUtils.hasText 대신 null 체크로 변경
+        if (status != null) {
+            query.addValue(MEMBER.STATUS, status);
             hasUpdate = true;
         }
 
-        if (StringUtils.hasText(membership)) {
-            // String으로 들어온 멤버십을 jOOQ Enum으로 변환해서 넣기
-            query.addValue(MEMBER.MEMBERSHIP, MemberMembershipType.valueOf(membership));
+        // StringUtils.hasText 대신 null 체크로 변경
+        if (membership != null) {
+            query.addValue(MEMBER.MEMBERSHIP, membership);
             hasUpdate = true;
         }
 

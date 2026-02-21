@@ -53,7 +53,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      app: api-sever
+      profile: ${SPRING_PROFILES_ACTIVE:unknown}
+    export:
+      cloudwatch:
+        enabled: true
+        namespace: HSC/Spring
+        step: 1m
   endpoint:
     health:
       probes:

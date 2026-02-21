@@ -25,7 +25,7 @@ import site.holliverse.customer.web.mapper.ProductResponseMapper;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/v1/plans")
+@RequestMapping("/api/v1/customer/plans")
 @Profile("customer")
 @RequiredArgsConstructor
 public class ProductController {

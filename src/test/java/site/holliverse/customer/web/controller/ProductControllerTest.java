@@ -105,7 +105,7 @@ class ProductControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/v1/plans - 카테고리별 상품 목록")
+    @DisplayName("GET /api/v1/customer/plans - 카테고리별 상품 목록")
     class GetPlanList {
 
         @Test
@@ -131,7 +131,7 @@ class ProductControllerTest {
 
 
             //when & then
-            mockMvc.perform(get("/api/v1/plans").param("category", "mobile"))
+            mockMvc.perform(get("/api/v1/customer/plans").param("category", "mobile"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").value("success"))
@@ -161,7 +161,7 @@ class ProductControllerTest {
             when(getProductListUseCase.execute(eq("internet"), eq(0), eq(10), eq(0))).thenReturn(result);
             when(productListResponseAssembler.assemble(result)).thenReturn(listResponse);
 
-            mockMvc.perform(get("/api/v1/plans")
+            mockMvc.perform(get("/api/v1/customer/plans")
                             .param("category", "internet")
                             .param("page", "0")
                             .param("size", "10"))
@@ -195,7 +195,7 @@ class ProductControllerTest {
                                                                                                    List.of()));
 
             //when & then
-            mockMvc.perform(get("/api/v1/plans").param("category", category))
+            mockMvc.perform(get("/api/v1/customer/plans").param("category", category))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("success"));
         }
@@ -203,7 +203,7 @@ class ProductControllerTest {
         @Test
         @DisplayName("실패: 카테고리 파라미터 누락되면 400 Bad Request 반환")
         void whenCategoryMissing_returns400() throws Exception {
-            mockMvc.perform(get("/api/v1/plans"))
+            mockMvc.perform(get("/api/v1/customer/plans"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -222,7 +222,7 @@ class ProductControllerTest {
             when(getProductListUseCase.execute(eq("mobile"), eq(0), eq(20), eq(5))).thenReturn(result);
             when(productListResponseAssembler.assemble(result)).thenReturn(new ProductListResponse(new PageMeta(0L, 0, 0, 20), List.of()));
 
-            mockMvc.perform(get("/api/v1/plans")
+            mockMvc.perform(get("/api/v1/customer/plans")
                             .param("category", "mobile")
                             .param("bestCount", "5"))
                     .andExpect(status().isOk())
@@ -234,7 +234,7 @@ class ProductControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/v1/plans/{planId} - 특정 상품 스펙 조회")
+    @DisplayName("GET /api/v1/customer/plans/{planId} - 특정 상품 스펙 조회")
     class GetPlanDetail {
 
         @Test
@@ -255,7 +255,7 @@ class ProductControllerTest {
             given(mapper.toDetailResponse(result)).willReturn(response);
 
             //when & then
-            mockMvc.perform(get("/api/v1/plans/{planId}", planId))
+            mockMvc.perform(get("/api/v1/customer/plans/{planId}", planId))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").value("success"))
@@ -286,7 +286,7 @@ class ProductControllerTest {
             given(mapper.toDetailResponse(result)).willReturn(response);
 
             //when & then
-            mockMvc.perform(get("/api/v1/plans/{planId}", planId))
+            mockMvc.perform(get("/api/v1/customer/plans/{planId}", planId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("success"))
                     .andExpect(jsonPath("$.data.productId").value(99));
@@ -298,13 +298,13 @@ class ProductControllerTest {
         @DisplayName("실패: planId가 숫자가 아니면 400 Bad Request 반환")
         void whenPlanIdNotNumeric_returns400() throws Exception {
             //when & then
-            mockMvc.perform(get("/api/v1/plans/abc"))
+            mockMvc.perform(get("/api/v1/customer/plans/abc"))
                     .andExpect(status().isBadRequest());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/v1/plans/compare - 요금제 비교")
+    @DisplayName("GET /api/v1/customer/plans/compare - 요금제 비교")
     class ComparePlans {
 
         @Test
@@ -337,7 +337,7 @@ class ProductControllerTest {
             given(planCompareResponseAssembler.assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class)))
                     .willReturn(mockResponse);
 
-            mockMvc.perform(get("/api/v1/plans/compare")
+            mockMvc.perform(get("/api/v1/customer/plans/compare")
                             .param("currentPlanId", "1")
                             .param("targetPlanId", "2"))
                     .andExpect(status().isOk())
@@ -360,14 +360,14 @@ class ProductControllerTest {
         @Test
         @DisplayName("실패: currentPlanId 누락 시 400 Bad Request 반환")
         void whenCurrentPlanIdMissing_returns400() throws Exception {
-            mockMvc.perform(get("/api/v1/plans/compare").param("targetPlanId", "2"))
+            mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
         @DisplayName("실패: targetPlanId 누락 시 400 Bad Request 반환")
         void whenTargetPlanIdMissing_returns400() throws Exception {
-            mockMvc.perform(get("/api/v1/plans/compare").param("currentPlanId", "1"))
+            mockMvc.perform(get("/api/v1/customer/plans/compare").param("currentPlanId", "1"))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -392,7 +392,7 @@ class ProductControllerTest {
             when(productListResponseAssembler.assemble(result))
                     .thenReturn(new ProductListResponse(new PageMeta(0L, 0, 0, 20), List.of()));
 
-            mockMvc.perform(get("/api/v1/plans").param("category", "mobile"))
+            mockMvc.perform(get("/api/v1/customer/plans").param("category", "mobile"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").exists())
@@ -414,7 +414,7 @@ class ProductControllerTest {
             when(getProductDetailUseCase.execute(1L)).thenReturn(result);
             when(mapper.toDetailResponse(result)).thenReturn(detailResponse(1L, "상품", "MOBILE_PLAN"));
 
-            mockMvc.perform(get("/api/v1/plans/1"))
+            mockMvc.perform(get("/api/v1/customer/plans/1"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").exists())

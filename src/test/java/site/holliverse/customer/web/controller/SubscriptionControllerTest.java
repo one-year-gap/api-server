@@ -56,7 +56,7 @@ class SubscriptionControllerTest {
     private static final Long TARGET_PRODUCT_ID = 5L;
 
     @Nested
-    @DisplayName("POST /api/v1/plans/change 요금제 변경 / 신청")
+    @DisplayName("POST /api/v1/customer/plans/change 요금제 변경 / 신청")
     class ChangePlan {
 
         @Test
@@ -83,7 +83,7 @@ class SubscriptionControllerTest {
             given(changeProductResponseAssembler.assemble(useCaseResult)).willReturn(response);
 
             // when & then: API 응답은 sale_price, start_date 필드로 내려감
-            mockMvc.perform(post("/api/v1/plans/change")
+            mockMvc.perform(post("/api/v1/customer/plans/change")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -110,7 +110,7 @@ class SubscriptionControllerTest {
             given(changeProductResponseAssembler.assemble(useCaseResult))
                     .willReturn(new ChangeProductResponse(200L, 10L, "상품명", 9000, LocalDateTime.now()));
 
-            mockMvc.perform(post("/api/v1/plans/change")
+            mockMvc.perform(post("/api/v1/customer/plans/change")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());

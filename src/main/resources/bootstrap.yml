@@ -1,15 +1,12 @@
-aws:
-  secretsmanager:
-    prefix: /holliverse
-    defaultContext: api-server
-    profileSeparator: _
-    failFast: true
-    name: runtime
-    enabled: true
-
-cloud:
-  aws:
-    region:
-      static: ap-northeast-2
-    stack:
-      auto: false
+spring:
+  config:
+    import: "aws-secretsmanager:holliverse/api-server/runtime"
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      stack:
+        auto: false
+      secretsmanager:
+        enabled: true
+        fail-fast: true

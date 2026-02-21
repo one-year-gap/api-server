@@ -93,8 +93,8 @@ dependencies {
     implementation "com.amazonaws:aws-xray-recorder-sdk-aws-sdk"
 
     /* Spring Cloud */
-    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap:3.1.3'
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws-secrets-manager-config:2.2.6.RELEASE'
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap:4.1.3'
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager:3.1.1'
 }
 
 tasks.named('test') {

@@ -268,4 +268,26 @@ public class AdminMemberDao {
         query.addConditions(MEMBER.MEMBER_ID.eq(memberId));
         query.execute();
     }
+
+    // ==========================================
+    // 회원 상태 일괄 변경 (Bulk Update)
+    // ==========================================
+    /**
+     * 여러 명의 회원 상태를 한 번의 쿼리로 동시에 변경(정지 등)
+     * @param memberIds 변경할 대상 회원들의 ID 리스트
+     * @param targetStatus 변경할 목표 상태값 (Enum)
+     * @return 실제로 업데이트된 데이터의 행(Row) 개수
+     */
+    public int updateMembersStatus(List<Long> memberIds, MemberStatusType targetStatus) {
+        // 리스트가 비어있으면 쿼리를 날리지 않고 0을 반환 (DB 부하 방지)
+        if (CollectionUtils.isEmpty(memberIds)) {
+            return 0;
+        }
+
+        // SQL: UPDATE member SET status = 'BANNED' WHERE member_id IN (1, 2, 3);
+        return dsl.update(MEMBER)
+                .set(MEMBER.STATUS, targetStatus) // 무엇을 바꿀 것인가? (상태값)
+                .where(MEMBER.MEMBER_ID.in(memberIds)) // 누구를 바꿀 것인가? (ID 리스트)
+                .execute(); // 실행 -> 업데이트된 Row 개수 반환
+    }
 }

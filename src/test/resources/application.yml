@@ -1,0 +1,8 @@
+spring:
+  cloud:
+    bootstrap:
+      enabled: false
+
+aws:
+  secretsmanager:
+    enabled: false

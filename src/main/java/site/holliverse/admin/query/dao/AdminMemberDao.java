@@ -3,6 +3,7 @@ package site.holliverse.admin.query.dao;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.UpdateQuery;
 import org.jooq.impl.DSL;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
@@ -15,10 +16,15 @@ import site.holliverse.shared.util.EncryptionTool;
 import static site.holliverse.admin.query.jooq.Tables.MEMBER;
 import static site.holliverse.admin.query.jooq.Tables.PRODUCT;
 import static site.holliverse.admin.query.jooq.Tables.SUBSCRIPTION;
+import static site.holliverse.admin.query.jooq.Tables.ADDRESS;
+import static site.holliverse.admin.query.jooq.enums.ProductTypeEnum.MOBILE_PLAN;
+import site.holliverse.admin.query.jooq.enums.MemberStatusType;
+import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 관리자 회원 목록 조회를 위한 DAO.
@@ -91,6 +97,54 @@ public class AdminMemberDao {
         return totalCount != null ? totalCount : 0L; // null이면 0L(0)을 반환하고, 아니면 값을 반환
     }
 
+    /**
+     * 특정 회원의 상세 정보 조회 (4단 조인: MEMBER + ADDRESS + SUBSCRIPTION + PRODUCT)
+     * - 반환값이 없을 수 있으므로 Optional로 감싸서 반환
+     */
+    public Optional<MemberDetailRawData> findDetailById(Long memberId) {
+        return dsl.select(
+                        // 1. 회원 기본 정보
+                        MEMBER.NAME.as("encryptedName"),
+                        MEMBER.PHONE.as("encryptedPhone"),
+                        MEMBER.EMAIL,
+                        MEMBER.BIRTH_DATE,
+                        MEMBER.GENDER,
+                        MEMBER.MEMBERSHIP,
+                        MEMBER.JOIN_DATE,
+                        MEMBER.STATUS,
+
+                        // 2. 주소 정보
+                        ADDRESS.PROVINCE,
+                        ADDRESS.CITY,
+                        ADDRESS.STREET_ADDRESS,
+
+                        // 3. 모바일 요금제 정보
+                        PRODUCT.NAME.as("currentMobilePlan")
+                )
+                .from(MEMBER)
+
+                // [조인 1] 회원 -> 주소
+                .leftJoin(ADDRESS).on(MEMBER.ADDRESS_ID.eq(ADDRESS.ADDRESS_ID))
+
+                // [조인 2] 회원 -> 구독 (현재 활성화된 구독만)
+                .leftJoin(SUBSCRIPTION).on(
+                        MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
+                                .and(SUBSCRIPTION.STATUS.isTrue())
+                )
+
+                // [조인 3] 구독 -> 상품 (MOBILE_PLAN 만)
+                .leftJoin(PRODUCT).on(
+                        SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID)
+                                .and(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                )
+
+                // 검색 조건: 대상 회원의 ID
+                .where(MEMBER.MEMBER_ID.eq(memberId))
+
+                // 결과가 1건이거나 없으므로 Optional 반환
+                .fetchOptionalInto(MemberDetailRawData.class);
+    }
+
     // ==========================================
     // 동적 WHERE 절 생성 로직
     // ==========================================
@@ -161,5 +215,57 @@ public class AdminMemberDao {
         }
 
         return conditions;
+    }
+
+    // ==========================================
+    // 회원 존재 여부 확인
+    // ==========================================
+    public boolean existsById(Long memberId) {
+        return dsl.fetchExists(
+                dsl.selectFrom(MEMBER)
+                        .where(MEMBER.MEMBER_ID.eq(memberId))
+        );
+    }
+
+    // ==========================================
+    // 회원 정보 (부분) 수정
+    // ==========================================
+    public void updateMember(Long memberId, String encryptedName, String encryptedPhone, MemberStatusType status, MemberMembershipType membership) {
+
+        // 1. 동적 업데이트 쿼리 객체 생성
+        UpdateQuery<?> query = dsl.updateQuery(MEMBER);
+        boolean hasUpdate = false; // 수정할 데이터가 하나라도 있는지 체크하는 플래그
+
+        // 2. 값이 존재하는 필드만 SET 절에 추가 (동적 매핑)
+        if (StringUtils.hasText(encryptedName)) {
+            query.addValue(MEMBER.NAME, encryptedName);
+            hasUpdate = true;
+        }
+
+        if (StringUtils.hasText(encryptedPhone)) {
+            query.addValue(MEMBER.PHONE, encryptedPhone);
+            hasUpdate = true;
+        }
+
+        // StringUtils.hasText 대신 null 체크로 변경
+        if (status != null) {
+            query.addValue(MEMBER.STATUS, status);
+            hasUpdate = true;
+        }
+
+        // StringUtils.hasText 대신 null 체크로 변경
+        if (membership != null) {
+            query.addValue(MEMBER.MEMBERSHIP, membership);
+            hasUpdate = true;
+        }
+
+        // 3. 만약 프론트에서 아무 값도 안 보냈다면? 쿼리 실행 없이 종료
+        if (!hasUpdate) {
+            return;
+        }
+
+        // 4. WHERE 조건 달고 실행
+        query.addConditions(MEMBER.MEMBER_ID.eq(memberId));
+        query.execute();
     }
 }

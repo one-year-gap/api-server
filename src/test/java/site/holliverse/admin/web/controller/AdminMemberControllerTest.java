@@ -1,30 +1,42 @@
 package site.holliverse.admin.web.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase.RetrieveMemberResult;
+import site.holliverse.admin.application.usecase.UpdateMemberUseCase;
 import site.holliverse.admin.web.assembler.AdminMemberAssembler;
 import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
 import site.holliverse.admin.web.dto.member.AdminMemberListResponseDto;
+import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import site.holliverse.admin.application.usecase.GetMemberDetailUseCase;
+import site.holliverse.admin.web.dto.member.AdminMemberDetailResponseDto;
+import site.holliverse.admin.web.mapper.AdminMemberMapper;
+import site.holliverse.admin.query.dao.MemberDetailRawData;
+import java.time.LocalDate;
+import static org.mockito.BDDMockito.mock;
 
 @ActiveProfiles("admin")
 @WebMvcTest(AdminMemberController.class)
@@ -34,6 +46,9 @@ class AdminMemberControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
     private RetrieveMemberUseCase retrieveMemberUseCase;
 
@@ -42,6 +57,10 @@ class AdminMemberControllerTest {
 
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean private GetMemberDetailUseCase getMemberDetailUseCase;
+    @MockitoBean private AdminMemberMapper adminMemberMapper;
+    @MockitoBean private UpdateMemberUseCase updateMemberUseCase;
 
     @Test
     @DisplayName("회원 목록 조회 성공 시 ApiResponse 규격에 맞춰 데이터를 반환한다.")
@@ -83,5 +102,108 @@ class AdminMemberControllerTest {
                 // 내부 데이터 검증 (Pagination 등)
                 .andExpect(jsonPath("$.data.pagination.currentPage").value(1))
                 .andExpect(jsonPath("$.data.pagination.size").value(20));
+    }
+
+    @Test
+    @DisplayName("회원 상세 조회 성공 시 200 OK와 회원 상세 데이터를 반환한다.")
+    void getMemberDetail_success() throws Exception {
+        // given
+        Long memberId = 2L;
+
+        // UseCase와 Mapper가 주고받을 가짜 객체들
+        MemberDetailRawData mockRaw = mock(MemberDetailRawData.class);
+        AdminMemberDetailResponseDto mockResponse = new AdminMemberDetailResponseDto(
+                "김영현", 31, "VIP", "M", "경기도 구리시", "test@test.com",
+                LocalDate.of(1995, 1, 1), "5G 요금제", "010-1234-5678",
+                LocalDate.of(2024, 1, 1), 416L, "ACTIVE"
+        );
+
+        given(getMemberDetailUseCase.execute(memberId)).willReturn(mockRaw);
+        given(adminMemberMapper.toResponse(mockRaw)).willReturn(mockResponse);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/members/{memberId}", memberId))
+                .andDo(print())
+                .andExpect(status().isOk())
+
+                // ApiResponse 규격 검증
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("회원 상세 조회가 완료되었습니다."))
+
+                // 데이터 검증
+                .andExpect(jsonPath("$.data.name").value("김영현"))
+                .andExpect(jsonPath("$.data.currentMobilePlan").value("5G 요금제"))
+                .andExpect(jsonPath("$.data.phone").value("010-1234-5678"));
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 성공: 올바른 데이터가 들어오면 200 OK를 반환한다")
+    void updateMember_Success() throws Exception {
+        // given
+        Long memberId = 1L;
+        AdminMemberUpdateRequestDto requestDto = new AdminMemberUpdateRequestDto(
+                "김수정", "01012345678", "BANNED", "VIP"
+        );
+
+        // UseCase가 아무 일도 하지 않고 정상 종료되도록 설정 (Void 반환이므로 doNothing 사용)
+        doNothing().when(updateMemberUseCase).execute(eq(memberId), any(AdminMemberUpdateRequestDto.class));
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/{memberId}", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("회원 정보 수정이 완료되었습니다."));
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 실패: 전화번호에 하이픈(-)이 포함되면 400 Bad Request를 반환한다 (@Valid 검증)")
+    void updateMember_Fail_InvalidPhonePattern() throws Exception {
+        // given
+        Long memberId = 1L;
+        // 하이픈이 포함된 잘못된 전화번호 세팅
+        AdminMemberUpdateRequestDto requestDto = new AdminMemberUpdateRequestDto(
+                "김수정", "010-1234-5678", "BANNED", "VIP"
+        );
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/{memberId}", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 실패: 이름이 20자를 초과하면 400 에러가 발생한다 (@Size 검증)")
+    void updateMember_Fail_NameTooLong() throws Exception {
+        // given
+        Long memberId = 1L;
+        String longName = "이름이매우매우매우매우매우매우매우매우매우매우길어요"; // 20자 초과
+        AdminMemberUpdateRequestDto requestDto = new AdminMemberUpdateRequestDto(
+                longName, null, null, null
+        );
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/{memberId}", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("회원 정보 수정 실패: 유효하지 않은 상태값(Enum)이 들어오면 입구에서 막힌다 (@Pattern 검증)")
+    void updateMember_Fail_InvalidStatusPattern() throws Exception {
+        // given
+        Long memberId = 1L;
+        AdminMemberUpdateRequestDto requestDto = new AdminMemberUpdateRequestDto(
+                "김수정", null, "WEIRD_STATUS", null
+        );
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/{memberId}", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -2,12 +2,12 @@
   #AWS Secret Manager
   config:
     import: "optional:aws-secretsmanager:holliverse/api-server/runtime"
-    cloud:
-      aws:
-        region:
-          static: ap-northeast-2
-        stack:
-          auto: false
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      stack:
+        auto: false
 
   application:
     name: holliverse-api-server

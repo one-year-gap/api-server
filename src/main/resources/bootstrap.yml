@@ -1,0 +1,15 @@
+aws:
+  secretsmanager:
+    prefix: /holliverse
+    defaultContext: api-server
+    profileSeparator: _
+    failFast: true
+    name: runtime
+    enabled: true
+
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false

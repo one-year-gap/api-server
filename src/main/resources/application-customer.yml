@@ -2,17 +2,6 @@
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
-  #DataBase
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://127.0.0.1:5432/holliverse}
-    username: ${DB_USER_CUSTOMER:app_customer}
-    password: ${DB_PASS_CUSTOMER:app_customer_pw}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: ${DB_POOL_MAX:20}
-      minimum-idle: ${DB_POOL_MIN:5}
-      connection-timeout: 3000
-      validation-timeout: 1000
 
   flyway:
     user: ${DB_USER_MIGRATOR:db_migrator}

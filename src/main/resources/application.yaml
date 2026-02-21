@@ -5,6 +5,17 @@
   profiles:
     default: customer
 
+  #DataBase
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://127.0.0.1:5432/holliverse}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
+      connection-timeout: 3000
+      validation-timeout: 1000
   jpa:
     open-in-view: false
     hibernate:
@@ -42,7 +53,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      app: api-sever
+      profile: ${SPRING_PROFILES_ACTIVE:unknown}
+    export:
+      cloudwatch:
+        enabled: true
+        namespace: HSC/Spring
+        step: 1m
   endpoint:
     health:
       probes:

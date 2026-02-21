@@ -1,15 +1,4 @@
 ﻿spring:
-  # Database
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5435/holliverse}
-    username: ${DB_USER_ADMIN:postgres}
-    password: ${DB_PASS_ADMIN:postgres}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: ${DB_POOL_MAX:10}
-      minimum-idle: ${DB_POOL_MIN:2}
-      connection-timeout: 3000
-
   flyway:
     user: ${FLYWAY_USER:${spring.datasource.username}}
     password: ${FLYWAY_PASSWORD:${spring.datasource.password}}

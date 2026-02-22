@@ -1,6 +1,7 @@
 package site.holliverse.admin.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -10,6 +11,7 @@ import site.holliverse.admin.web.dto.member.AdminMemberBulkStatusUpdateRequestDt
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 
+@Profile("admin")
 @Service
 @RequiredArgsConstructor
 public class BulkUpdateMemberStatusUseCase {

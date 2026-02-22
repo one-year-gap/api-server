@@ -1,6 +1,7 @@
 package site.holliverse.admin.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -13,6 +14,7 @@ import site.holliverse.shared.util.EncryptionTool;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
 
+@Profile("admin")
 @Service
 @RequiredArgsConstructor
 public class UpdateMemberUseCase {

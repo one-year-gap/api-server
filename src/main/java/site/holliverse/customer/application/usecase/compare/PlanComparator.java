@@ -2,6 +2,7 @@ package site.holliverse.customer.application.usecase.compare;
 
 import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.Set;
  * - 일반 문자열: data_amount, benefit_voice_call, benefit_sms, tethering_sharing_data, benefit_signature_family_discount
  */
 @Component
+@Profile("customer")
 public class PlanComparator {
 
     private static final String NONE = "없음";

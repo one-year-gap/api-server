@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,11 +18,16 @@ import site.holliverse.customer.application.usecase.product.ChangeProductUseCase
 import site.holliverse.customer.web.assembler.ChangeProductResponseAssembler;
 import site.holliverse.customer.web.dto.product.change.ChangeProductRequest;
 import site.holliverse.customer.web.dto.product.change.ChangeProductResponse;
+import site.holliverse.shared.domain.model.MemberStatus;
+import site.holliverse.shared.security.CustomUserDetails;
 
 import java.time.LocalDateTime;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -56,19 +63,24 @@ class SubscriptionControllerTest {
     private static final Long TARGET_PRODUCT_ID = 5L;
 
     @Nested
-    @DisplayName("POST /api/v1/plans/change 요금제 변경 / 신청")
+    @DisplayName("POST /api/v1/customer/plans/change 요금제 변경 / 신청")
     class ChangePlan {
 
+        private Authentication authenticationWithMemberId(Long memberId) {
+            CustomUserDetails user = new CustomUserDetails(
+                    memberId, "test@test.com", null, "CUSTOMER", MemberStatus.ACTIVE);
+            return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        }
+
         @Test
-        @DisplayName("성공: memberId, targetProductId 전달 시 200과 ApiResponse 구조로 응답")
+        @DisplayName("성공: 인증 사용자 + targetProductId 전달 시 200과 ApiResponse 구조로 응답")
         void success_returns200WithResponse() throws Exception {
-            // given: ChangeProductResponse는 subscription_id, product_id, product_name, sale_price, start_date 로 직렬화됨
             ChangeProductResult useCaseResult = new ChangeProductResult(
                     5002L,
                     101L,
                     "5G 시그니처",
-                    97500,        // salePrice
-                    LocalDateTime.of(2026, 2, 13, 11, 15)  // startDate
+                    97500,
+                    LocalDateTime.of(2026, 2, 13, 11, 15)
             );
             ChangeProductResponse response = new ChangeProductResponse(
                     5002L,
@@ -77,13 +89,13 @@ class SubscriptionControllerTest {
                     97500,
                     LocalDateTime.of(2026, 2, 13, 11, 15)
             );
-            ChangeProductRequest request = new ChangeProductRequest(MEMBER_ID, TARGET_PRODUCT_ID);
+            ChangeProductRequest request = new ChangeProductRequest(TARGET_PRODUCT_ID);
 
-            given(changeProductUseCase.execute(MEMBER_ID, TARGET_PRODUCT_ID)).willReturn(useCaseResult);
+            given(changeProductUseCase.execute(any(), eq(TARGET_PRODUCT_ID))).willReturn(useCaseResult);
             given(changeProductResponseAssembler.assemble(useCaseResult)).willReturn(response);
 
-            // when & then: API 응답은 sale_price, start_date 필드로 내려감
-            mockMvc.perform(post("/api/v1/plans/change")
+            mockMvc.perform(post("/api/v1/customer/plans/change")
+                            .with(authentication(authenticationWithMemberId(MEMBER_ID)))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -96,26 +108,27 @@ class SubscriptionControllerTest {
                     .andExpect(jsonPath("$.timestamp").exists())
                     .andDo(print());
 
-            verify(changeProductUseCase).execute(MEMBER_ID, TARGET_PRODUCT_ID);
+            verify(changeProductUseCase).execute(any(), eq(TARGET_PRODUCT_ID));
             verify(changeProductResponseAssembler).assemble(useCaseResult);
         }
 
         @Test
-        @DisplayName("요청 body에 memberId, targetProductId가 포함되어 UseCase에 전달된다")
-        void requestBody_mapsToUseCaseArgs() throws Exception {
-            ChangeProductRequest request = new ChangeProductRequest(2L, 10L);
+        @DisplayName("인증 principal의 memberId와 body의 targetProductId가 UseCase에 전달된다")
+        void requestBody_and_principal_mapsToUseCaseArgs() throws Exception {
+            ChangeProductRequest request = new ChangeProductRequest(10L);
             ChangeProductResult useCaseResult = new ChangeProductResult(
                     200L, 10L, "상품명", 9000, LocalDateTime.now());
-            given(changeProductUseCase.execute(2L, 10L)).willReturn(useCaseResult);
+            given(changeProductUseCase.execute(any(), eq(10L))).willReturn(useCaseResult);
             given(changeProductResponseAssembler.assemble(useCaseResult))
                     .willReturn(new ChangeProductResponse(200L, 10L, "상품명", 9000, LocalDateTime.now()));
 
-            mockMvc.perform(post("/api/v1/plans/change")
+            mockMvc.perform(post("/api/v1/customer/plans/change")
+                            .with(authentication(authenticationWithMemberId(2L)))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(changeProductUseCase).execute(2L, 10L);
+            verify(changeProductUseCase).execute(any(), eq(10L));
         }
     }
 }

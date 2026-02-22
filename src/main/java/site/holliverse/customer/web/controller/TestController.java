@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Profile("customer")
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/customer")
 public class TestController {
     @GetMapping("test")
     public String testController() {

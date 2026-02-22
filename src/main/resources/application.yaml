@@ -75,6 +75,12 @@ management:
         namespace: HSC/Spring
         step: 1m
   endpoint:
+    prometheus:
+      access: read_only
+  prometheus:
+    metrics:
+      export:
+        enabled: true
     health:
       probes:
         enabled: true

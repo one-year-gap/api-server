@@ -10,13 +10,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import site.holliverse.admin.application.usecase.BulkUpdateMemberStatusUseCase;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase.RetrieveMemberResult;
 import site.holliverse.admin.application.usecase.UpdateMemberUseCase;
 import site.holliverse.admin.web.assembler.AdminMemberAssembler;
-import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
-import site.holliverse.admin.web.dto.member.AdminMemberListResponseDto;
-import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
+import site.holliverse.admin.web.dto.member.*;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 
 import java.util.Collections;
@@ -32,10 +31,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import site.holliverse.admin.application.usecase.GetMemberDetailUseCase;
-import site.holliverse.admin.web.dto.member.AdminMemberDetailResponseDto;
 import site.holliverse.admin.web.mapper.AdminMemberMapper;
 import site.holliverse.admin.query.dao.MemberDetailRawData;
 import java.time.LocalDate;
+import java.util.stream.LongStream;
+
 import static org.mockito.BDDMockito.mock;
 
 @ActiveProfiles("admin")
@@ -61,6 +61,7 @@ class AdminMemberControllerTest {
     @MockitoBean private GetMemberDetailUseCase getMemberDetailUseCase;
     @MockitoBean private AdminMemberMapper adminMemberMapper;
     @MockitoBean private UpdateMemberUseCase updateMemberUseCase;
+    @MockitoBean private BulkUpdateMemberStatusUseCase bulkUpdateMemberStatusUseCase;
 
     @Test
     @DisplayName("회원 목록 조회 성공 시 ApiResponse 규격에 맞춰 데이터를 반환한다.")
@@ -202,6 +203,71 @@ class AdminMemberControllerTest {
 
         // when & then
         mockMvc.perform(patch("/api/v1/admin/members/{memberId}", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("다중 상태 변경 성공: 올바른 ID 리스트와 상태값이면 200 OK와 처리 건수를 반환한다.")
+    void updateMembersStatus_Success() throws Exception {
+        // given
+        AdminMemberBulkStatusUpdateRequestDto requestDto =
+                new AdminMemberBulkStatusUpdateRequestDto(List.of(1L, 2L, 3L), "BANNED");
+
+        // UseCase가 3건을 업데이트했다고 가정
+        given(bulkUpdateMemberStatusUseCase.execute(any())).willReturn(3);
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("3명의 회원 상태가 변경되었습니다."))
+                .andExpect(jsonPath("$.data").value(3)); // 반환된 데이터가 3인지 확인
+    }
+
+    @Test
+    @DisplayName("다중 상태 변경 실패: ID 리스트가 비어있으면 400 에러가 발생한다 (@NotEmpty 검증)")
+    void updateMembersStatus_Fail_EmptyList() throws Exception {
+        // given (빈 배열 전달)
+        AdminMemberBulkStatusUpdateRequestDto requestDto =
+                new AdminMemberBulkStatusUpdateRequestDto(Collections.emptyList(), "BANNED");
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andDo(print())
+                .andExpect(status().isBadRequest()); // 400 에러 확인
+    }
+
+    @Test
+    @DisplayName("다중 상태 변경 실패: 한 번에 100명을 초과하여 요청하면 400 에러가 발생한다 (@Size 검증)")
+    void updateMembersStatus_Fail_ExceedMaxLimit() throws Exception {
+        // given (101개의 ID 리스트 생성)
+        List<Long> tooManyIds = LongStream.rangeClosed(1, 101).boxed().toList();
+        AdminMemberBulkStatusUpdateRequestDto requestDto =
+                new AdminMemberBulkStatusUpdateRequestDto(tooManyIds, "ACTIVE");
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("다중 상태 변경 실패: 유효하지 않은 상태값을 보내면 400 에러가 발생한다 (@Pattern 검증)")
+    void updateMembersStatus_Fail_InvalidStatus() throws Exception {
+        // given (이상한 상태값 전달)
+        AdminMemberBulkStatusUpdateRequestDto requestDto =
+                new AdminMemberBulkStatusUpdateRequestDto(List.of(1L, 2L), "STRANGE_STATUS");
+
+        // when & then
+        mockMvc.perform(patch("/api/v1/admin/members/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isBadRequest());

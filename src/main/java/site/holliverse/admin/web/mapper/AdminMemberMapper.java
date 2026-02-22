@@ -1,6 +1,7 @@
 package site.holliverse.admin.web.mapper;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import site.holliverse.admin.query.dao.MemberDetailRawData;
 import site.holliverse.admin.web.dto.member.AdminMemberDetailResponseDto;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 
+@Profile("admin")
 @Component
 @RequiredArgsConstructor
 public class AdminMemberMapper {

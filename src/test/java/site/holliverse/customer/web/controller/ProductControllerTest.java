@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
@@ -19,6 +21,7 @@ import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
 import site.holliverse.customer.application.usecase.compare.PlanComparator;
 import site.holliverse.customer.application.usecase.compare.PlanComparatorTestData;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
+import site.holliverse.customer.application.usecase.product.ChangeProductUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductListUseCase;
 import site.holliverse.customer.application.usecase.product.ProductDetailResult;
@@ -32,10 +35,18 @@ import site.holliverse.customer.web.dto.product.compare.ComparisonResponse;
 import site.holliverse.customer.web.dto.product.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductContent;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
+import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.domain.model.ProductType;
+import site.holliverse.shared.security.CustomUserDetails;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import site.holliverse.shared.config.web.GlobalExceptionHandler;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -45,15 +56,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(
-        controllers = ProductController.class,
-        excludeAutoConfiguration = {
-                org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientWebSecurityAutoConfiguration.class
-        }
-)
+@WebMvcTest(controllers = ProductController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("customer")
 class ProductControllerTest {
 
@@ -73,6 +78,8 @@ class ProductControllerTest {
     private PlanCompareResponseAssembler planCompareResponseAssembler;
     @MockitoBean
     private ProductResponseMapper mapper;
+    @MockitoBean
+    private ChangeProductUseCase changeProductUseCase;
     /** SecurityConfig 등 로드 시 필요. JWT 로직은 사용하지 않고 컨텍스트 기동용 목만 둠. */
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
@@ -307,10 +314,24 @@ class ProductControllerTest {
     @DisplayName("GET /api/v1/customer/plans/compare - 요금제 비교")
     class ComparePlans {
 
+        private Authentication authenticationWithMemberId(Long memberId) {
+            CustomUserDetails user = new CustomUserDetails(
+                    memberId, "test@test.com", null, "CUSTOMER", MemberStatus.ACTIVE);
+            return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        }
+
+        /** addFilters=false 환경에서 @AuthenticationPrincipal은 SecurityContextHolder에서 읽으므로, 인증 필요한 요청 전에 설정 */
+        private void setSecurityContextWithMember(Long memberId) {
+            SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+            ctx.setAuthentication(authenticationWithMemberId(memberId));
+            SecurityContextHolder.setContext(ctx);
+        }
+
         @Test
-        @DisplayName("성공: 200과 비교 결과를 반환한다 (Web 계층 오케스트레이션, Assembler/Mapper 미의존)")
+        @DisplayName("성공: 인증 회원의 현재 모바일 구독 vs targetPlanId 비교 시 200과 비교 결과 반환")
         void whenEssentialToPlus_returns200WithCompareResponse() throws Exception {
-            // Controller가 GetProductDetailUseCase 2회 호출 → 검증 → PlanComparator → Assembler
+            setSecurityContextWithMember(1L);
+            try {
             ProductDetailResult currentResult = new ProductDetailResult(
                     PlanComparatorTestData.essentialSummary(),
                     Optional.of(PlanComparatorTestData.essentialMobilePlan()),
@@ -321,6 +342,7 @@ class ProductControllerTest {
                     Optional.of(PlanComparatorTestData.plusMobilePlan()),
                     Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
             );
+            given(changeProductUseCase.findCurrentMobileProductId(any())).willReturn(Optional.of(1L));
             given(getProductDetailUseCase.execute(1L)).willReturn(currentResult);
             given(getProductDetailUseCase.execute(2L)).willReturn(targetResult);
             given(planComparator.compare(any(), any(), any(), any()))
@@ -337,9 +359,7 @@ class ProductControllerTest {
             given(planCompareResponseAssembler.assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class)))
                     .willReturn(mockResponse);
 
-            mockMvc.perform(get("/api/v1/customer/plans/compare")
-                            .param("currentPlanId", "1")
-                            .param("targetPlanId", "2"))
+            mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").value("success"))
@@ -351,24 +371,46 @@ class ProductControllerTest {
                     .andExpect(jsonPath("$.timestamp").exists())
                     .andDo(print());
 
+            verify(changeProductUseCase).findCurrentMobileProductId(any());
             verify(getProductDetailUseCase).execute(1L);
             verify(getProductDetailUseCase).execute(2L);
             verify(planComparator).compare(any(), any(), any(), any());
             verify(planCompareResponseAssembler).assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class));
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         @Test
-        @DisplayName("실패: currentPlanId 누락 시 400 Bad Request 반환")
-        void whenCurrentPlanIdMissing_returns400() throws Exception {
+        @DisplayName("실패: 인증 없이 호출 시 401 Unauthorized 반환")
+        void whenUnauthenticated_returns401() throws Exception {
             mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("실패: 모바일 요금제 미가입 회원이 비교 요청 시 400 Bad Request 반환")
+        void whenNoMobileSubscription_returns400() throws Exception {
+            given(changeProductUseCase.findCurrentMobileProductId(any())).willReturn(Optional.empty());
+            setSecurityContextWithMember(1L);
+            try {
+                mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))
+                        .andExpect(status().isBadRequest());
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         @Test
         @DisplayName("실패: targetPlanId 누락 시 400 Bad Request 반환")
         void whenTargetPlanIdMissing_returns400() throws Exception {
-            mockMvc.perform(get("/api/v1/customer/plans/compare").param("currentPlanId", "1"))
-                    .andExpect(status().isBadRequest());
+            setSecurityContextWithMember(1L);
+            try {
+                mockMvc.perform(get("/api/v1/customer/plans/compare"))
+                        .andExpect(status().isBadRequest());
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
     }
 

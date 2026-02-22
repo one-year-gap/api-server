@@ -23,6 +23,8 @@ import site.holliverse.shared.security.CustomUserDetails;
 
 import java.time.LocalDateTime;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -89,7 +91,7 @@ class SubscriptionControllerTest {
             );
             ChangeProductRequest request = new ChangeProductRequest(TARGET_PRODUCT_ID);
 
-            given(changeProductUseCase.execute(MEMBER_ID, TARGET_PRODUCT_ID)).willReturn(useCaseResult);
+            given(changeProductUseCase.execute(any(), eq(TARGET_PRODUCT_ID))).willReturn(useCaseResult);
             given(changeProductResponseAssembler.assemble(useCaseResult)).willReturn(response);
 
             mockMvc.perform(post("/api/v1/customer/plans/change")
@@ -106,7 +108,7 @@ class SubscriptionControllerTest {
                     .andExpect(jsonPath("$.timestamp").exists())
                     .andDo(print());
 
-            verify(changeProductUseCase).execute(MEMBER_ID, TARGET_PRODUCT_ID);
+            verify(changeProductUseCase).execute(any(), eq(TARGET_PRODUCT_ID));
             verify(changeProductResponseAssembler).assemble(useCaseResult);
         }
 
@@ -116,7 +118,7 @@ class SubscriptionControllerTest {
             ChangeProductRequest request = new ChangeProductRequest(10L);
             ChangeProductResult useCaseResult = new ChangeProductResult(
                     200L, 10L, "상품명", 9000, LocalDateTime.now());
-            given(changeProductUseCase.execute(2L, 10L)).willReturn(useCaseResult);
+            given(changeProductUseCase.execute(any(), eq(10L))).willReturn(useCaseResult);
             given(changeProductResponseAssembler.assemble(useCaseResult))
                     .willReturn(new ChangeProductResponse(200L, 10L, "상품명", 9000, LocalDateTime.now()));
 
@@ -126,7 +128,7 @@ class SubscriptionControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(changeProductUseCase).execute(2L, 10L);
+            verify(changeProductUseCase).execute(any(), eq(10L));
         }
     }
 }

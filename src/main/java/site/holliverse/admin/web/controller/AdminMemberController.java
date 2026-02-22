@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import site.holliverse.admin.application.usecase.UpdateMemberUseCase;
 import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
+import site.holliverse.admin.application.usecase.BulkUpdateMemberStatusUseCase;
+import site.holliverse.admin.web.dto.member.AdminMemberBulkStatusUpdateRequestDto;
 
 /**
  * 관리자 회원 관리 API 컨트롤러
@@ -38,6 +40,7 @@ public class AdminMemberController {
     private final GetMemberDetailUseCase getMemberDetailUseCase;
     private final AdminMemberMapper adminMemberMapper;
     private final UpdateMemberUseCase updateMemberUseCase;
+    private final BulkUpdateMemberStatusUseCase bulkUpdateMemberStatusUseCase;
 
     /**
      * 회원 목록 조회 API
@@ -92,5 +95,24 @@ public class AdminMemberController {
 
         // 2. 응답 반환: 데이터(Body) 없이 성공 메시지만 깔끔하게 전달
         return ResponseEntity.ok(ApiResponse.success("회원 정보 수정이 완료되었습니다.", null));
+    }
+
+    /**
+     * 회원 상태 일괄 변경 API (Bulk Update)
+     * @param requestDto 변경할 대상 회원 ID 배열과 상태값 (최대 100명)
+     */
+    @PatchMapping("/status")
+    public ResponseEntity<ApiResponse<Integer>> updateMembersStatus(
+            @Valid @RequestBody AdminMemberBulkStatusUpdateRequestDto requestDto
+    ) {
+
+        // 1. UseCase 호출: 검증 및 DB 일괄 업데이트 실행 후, 처리된 건수 반환
+        int updatedCount = bulkUpdateMemberStatusUseCase.execute(requestDto);
+
+        // 2. 응답 반환: 성공 메시지와 함께 업데이트된 회원 수를 data 영역에 담아 전달
+        return ResponseEntity.ok(ApiResponse.success(
+                updatedCount + "명의 회원 상태가 변경되었습니다.",
+                updatedCount
+        ));
     }
 }

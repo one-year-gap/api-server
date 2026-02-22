@@ -1,6 +1,7 @@
 package site.holliverse.admin.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles({"admin", "test"})
 @SpringBootTest
 @AutoConfigureMockMvc
+@Disabled("CI 환경에 PostgreSQL 도커가 없으므로 빌드 시 제외, 로컬에서만 수동 실행")
 class AdminMemberIntegrationTest {
 
     @Autowired

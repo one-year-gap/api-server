@@ -290,4 +290,19 @@ public class AdminMemberDao {
                 .where(MEMBER.MEMBER_ID.in(memberIds)) // 누구를 바꿀 것인가? (ID 리스트)
                 .execute(); // 실행 -> 업데이트된 Row 개수 반환
     }
+
+    // ==========================================
+    // 통합 테스트 검증용 유틸 메서드
+    // ==========================================
+    /**
+     * 특정 ID를 가진 회원이 특정 상태(Status)인지 확인
+     * 통합 테스트에서 업데이트가 잘 되었는지 검증할 때 사용
+     */
+    public boolean existsByIdAndStatus(Long memberId, MemberStatusType status) {
+        return dsl.fetchExists(
+                dsl.selectFrom(MEMBER)
+                        .where(MEMBER.MEMBER_ID.eq(memberId))
+                        .and(MEMBER.STATUS.eq(status))
+        );
+    }
 }

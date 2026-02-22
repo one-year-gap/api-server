@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
@@ -15,8 +17,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import site.holliverse.auth.jwt.JwtTokenProvider;
+import site.holliverse.customer.application.usecase.compare.ComparePlansResult;
+import site.holliverse.customer.application.usecase.compare.ComparePlansUseCase;
 import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
-import site.holliverse.customer.application.usecase.compare.PlanComparator;
 import site.holliverse.customer.application.usecase.compare.PlanComparatorTestData;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
@@ -32,10 +35,20 @@ import site.holliverse.customer.web.dto.product.compare.ComparisonResponse;
 import site.holliverse.customer.web.dto.product.compare.PlanCompareResponse;
 import site.holliverse.customer.web.dto.product.ProductContent;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
+import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.domain.model.ProductType;
+import site.holliverse.shared.security.CustomUserDetails;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
+import site.holliverse.shared.config.web.GlobalExceptionHandler;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -45,15 +58,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(
-        controllers = ProductController.class,
-        excludeAutoConfiguration = {
-                org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration.class,
-                org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientWebSecurityAutoConfiguration.class
-        }
-)
+@WebMvcTest(controllers = ProductController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("customer")
 class ProductControllerTest {
 
@@ -66,13 +73,13 @@ class ProductControllerTest {
     @MockitoBean
     private GetProductDetailUseCase getProductDetailUseCase;
     @MockitoBean
-    private PlanComparator planComparator;
-    @MockitoBean
     private ProductListResponseAssembler productListResponseAssembler;
     @MockitoBean
     private PlanCompareResponseAssembler planCompareResponseAssembler;
     @MockitoBean
     private ProductResponseMapper mapper;
+    @MockitoBean
+    private ComparePlansUseCase comparePlansUseCase;
     /** SecurityConfig 등 로드 시 필요. JWT 로직은 사용하지 않고 컨텍스트 기동용 목만 둠. */
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
@@ -105,7 +112,7 @@ class ProductControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/v1/plans - 카테고리별 상품 목록")
+    @DisplayName("GET /api/v1/customer/plans - 카테고리별 상품 목록")
     class GetPlanList {
 
         @Test
@@ -131,7 +138,7 @@ class ProductControllerTest {
 
 
             //when & then
-            mockMvc.perform(get("/api/v1/plans").param("category", "mobile"))
+            mockMvc.perform(get("/api/v1/customer/plans").param("category", "mobile"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").value("success"))
@@ -161,7 +168,7 @@ class ProductControllerTest {
             when(getProductListUseCase.execute(eq("internet"), eq(0), eq(10), eq(0))).thenReturn(result);
             when(productListResponseAssembler.assemble(result)).thenReturn(listResponse);
 
-            mockMvc.perform(get("/api/v1/plans")
+            mockMvc.perform(get("/api/v1/customer/plans")
                             .param("category", "internet")
                             .param("page", "0")
                             .param("size", "10"))
@@ -195,7 +202,7 @@ class ProductControllerTest {
                                                                                                    List.of()));
 
             //when & then
-            mockMvc.perform(get("/api/v1/plans").param("category", category))
+            mockMvc.perform(get("/api/v1/customer/plans").param("category", category))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("success"));
         }
@@ -203,7 +210,7 @@ class ProductControllerTest {
         @Test
         @DisplayName("실패: 카테고리 파라미터 누락되면 400 Bad Request 반환")
         void whenCategoryMissing_returns400() throws Exception {
-            mockMvc.perform(get("/api/v1/plans"))
+            mockMvc.perform(get("/api/v1/customer/plans"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -222,7 +229,7 @@ class ProductControllerTest {
             when(getProductListUseCase.execute(eq("mobile"), eq(0), eq(20), eq(5))).thenReturn(result);
             when(productListResponseAssembler.assemble(result)).thenReturn(new ProductListResponse(new PageMeta(0L, 0, 0, 20), List.of()));
 
-            mockMvc.perform(get("/api/v1/plans")
+            mockMvc.perform(get("/api/v1/customer/plans")
                             .param("category", "mobile")
                             .param("bestCount", "5"))
                     .andExpect(status().isOk())
@@ -234,7 +241,7 @@ class ProductControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/v1/plans/{planId} - 특정 상품 스펙 조회")
+    @DisplayName("GET /api/v1/customer/plans/{planId} - 특정 상품 스펙 조회")
     class GetPlanDetail {
 
         @Test
@@ -255,7 +262,7 @@ class ProductControllerTest {
             given(mapper.toDetailResponse(result)).willReturn(response);
 
             //when & then
-            mockMvc.perform(get("/api/v1/plans/{planId}", planId))
+            mockMvc.perform(get("/api/v1/customer/plans/{planId}", planId))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").value("success"))
@@ -286,7 +293,7 @@ class ProductControllerTest {
             given(mapper.toDetailResponse(result)).willReturn(response);
 
             //when & then
-            mockMvc.perform(get("/api/v1/plans/{planId}", planId))
+            mockMvc.perform(get("/api/v1/customer/plans/{planId}", planId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("success"))
                     .andExpect(jsonPath("$.data.productId").value(99));
@@ -298,77 +305,109 @@ class ProductControllerTest {
         @DisplayName("실패: planId가 숫자가 아니면 400 Bad Request 반환")
         void whenPlanIdNotNumeric_returns400() throws Exception {
             //when & then
-            mockMvc.perform(get("/api/v1/plans/abc"))
+            mockMvc.perform(get("/api/v1/customer/plans/abc"))
                     .andExpect(status().isBadRequest());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/v1/plans/compare - 요금제 비교")
+    @DisplayName("GET /api/v1/customer/plans/compare - 요금제 비교")
     class ComparePlans {
 
-        @Test
-        @DisplayName("성공: 200과 비교 결과를 반환한다 (Web 계층 오케스트레이션, Assembler/Mapper 미의존)")
-        void whenEssentialToPlus_returns200WithCompareResponse() throws Exception {
-            // Controller가 GetProductDetailUseCase 2회 호출 → 검증 → PlanComparator → Assembler
-            ProductDetailResult currentResult = new ProductDetailResult(
-                    PlanComparatorTestData.essentialSummary(),
-                    Optional.of(PlanComparatorTestData.essentialMobilePlan()),
-                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
-            );
-            ProductDetailResult targetResult = new ProductDetailResult(
-                    PlanComparatorTestData.plusSummary(),
-                    Optional.of(PlanComparatorTestData.plusMobilePlan()),
-                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
-            );
-            given(getProductDetailUseCase.execute(1L)).willReturn(currentResult);
-            given(getProductDetailUseCase.execute(2L)).willReturn(targetResult);
-            given(planComparator.compare(any(), any(), any(), any()))
-                    .willReturn(new ComparisonResultDto(15_000, "+15,000원", List.of()));
+        private Authentication authenticationWithMemberId(Long memberId) {
+            CustomUserDetails user = new CustomUserDetails(
+                    memberId, "test@test.com", null, "CUSTOMER", MemberStatus.ACTIVE);
+            return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        }
 
-            ProductDetailResponse currentPlanDto = new ProductDetailResponse(
-                    1L, "5G 프리미어 에센셜", "MOBILE_PLAN", 59_000, 49_500, "할인", "CODE", null, false);
-            ProductDetailResponse targetPlanDto = new ProductDetailResponse(
-                    2L, "5G 프리미어 플러스", "MOBILE_PLAN", 74_000, 62_000, "할인", "CODE", null, false);
-            PlanCompareResponse mockResponse = new PlanCompareResponse(
-                    currentPlanDto, targetPlanDto,
-                    new ComparisonResponse(15_000, "+15,000원", List.of())
-            );
-            given(planCompareResponseAssembler.assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class)))
-                    .willReturn(mockResponse);
-
-            mockMvc.perform(get("/api/v1/plans/compare")
-                            .param("currentPlanId", "1")
-                            .param("targetPlanId", "2"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.status").value("success"))
-                    .andExpect(jsonPath("$.data.current_plan.name").value("5G 프리미어 에센셜"))
-                    .andExpect(jsonPath("$.data.target_plan.name").value("5G 프리미어 플러스"))
-                    .andExpect(jsonPath("$.data.comparison.price_diff").value(15000))
-                    .andExpect(jsonPath("$.data.comparison.message").value("+15,000원"))
-                    .andExpect(jsonPath("$.data.comparison.benefit_changes").isArray())
-                    .andExpect(jsonPath("$.timestamp").exists())
-                    .andDo(print());
-
-            verify(getProductDetailUseCase).execute(1L);
-            verify(getProductDetailUseCase).execute(2L);
-            verify(planComparator).compare(any(), any(), any(), any());
-            verify(planCompareResponseAssembler).assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class));
+        /** addFilters=false 환경에서 @AuthenticationPrincipal은 SecurityContextHolder에서 읽으므로, 인증 필요한 요청 전에 설정 */
+        private void setSecurityContextWithMember(Long memberId) {
+            SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+            ctx.setAuthentication(authenticationWithMemberId(memberId));
+            SecurityContextHolder.setContext(ctx);
         }
 
         @Test
-        @DisplayName("실패: currentPlanId 누락 시 400 Bad Request 반환")
-        void whenCurrentPlanIdMissing_returns400() throws Exception {
-            mockMvc.perform(get("/api/v1/plans/compare").param("targetPlanId", "2"))
-                    .andExpect(status().isBadRequest());
+        @DisplayName("성공: 인증 회원의 현재 모바일 구독 vs targetPlanId 비교 시 200과 비교 결과 반환")
+        void whenEssentialToPlus_returns200WithCompareResponse() throws Exception {
+            setSecurityContextWithMember(1L);
+            try {
+                ProductDetailResult currentResult = new ProductDetailResult(
+                        PlanComparatorTestData.essentialSummary(),
+                        Optional.of(PlanComparatorTestData.essentialMobilePlan()),
+                        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+                );
+                ProductDetailResult targetResult = new ProductDetailResult(
+                        PlanComparatorTestData.plusSummary(),
+                        Optional.of(PlanComparatorTestData.plusMobilePlan()),
+                        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
+                );
+                ComparisonResultDto comparison = new ComparisonResultDto(15_000, "+15,000원", List.of());
+                given(comparePlansUseCase.execute(eq(1L), eq(2L)))
+                        .willReturn(new ComparePlansResult(currentResult, targetResult, comparison));
+
+                ProductDetailResponse currentPlanDto = new ProductDetailResponse(
+                        1L, "5G 프리미어 에센셜", "MOBILE_PLAN", 59_000, 49_500, "할인", "CODE", null, false);
+                ProductDetailResponse targetPlanDto = new ProductDetailResponse(
+                        2L, "5G 프리미어 플러스", "MOBILE_PLAN", 74_000, 62_000, "할인", "CODE", null, false);
+                PlanCompareResponse mockResponse = new PlanCompareResponse(
+                        currentPlanDto, targetPlanDto,
+                        new ComparisonResponse(15_000, "+15,000원", List.of())
+                );
+                given(planCompareResponseAssembler.assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class)))
+                        .willReturn(mockResponse);
+
+                mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(jsonPath("$.status").value("success"))
+                        .andExpect(jsonPath("$.data.current_plan.name").value("5G 프리미어 에센셜"))
+                        .andExpect(jsonPath("$.data.target_plan.name").value("5G 프리미어 플러스"))
+                        .andExpect(jsonPath("$.data.comparison.price_diff").value(15000))
+                        .andExpect(jsonPath("$.data.comparison.message").value("+15,000원"))
+                        .andExpect(jsonPath("$.data.comparison.benefit_changes").isArray())
+                        .andExpect(jsonPath("$.timestamp").exists())
+                        .andDo(print());
+
+                verify(comparePlansUseCase).execute(eq(1L), eq(2L));
+                verify(planCompareResponseAssembler).assemble(any(ProductDetailResult.class), any(ProductDetailResult.class), any(ComparisonResultDto.class));
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
+        }
+
+        @Test
+        @DisplayName("실패: 인증 없이 호출 시 401 Unauthorized 반환")
+        void whenUnauthenticated_returns401() throws Exception {
+            mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("실패: 모바일 요금제 미가입 회원이 비교 요청 시 400 Bad Request 반환")
+        void whenNoMobileSubscription_returns400() throws Exception {
+            given(comparePlansUseCase.execute(eq(1L), eq(2L)))
+                    .willThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "비교하려면 모바일 요금제를 먼저 가입해 주세요."));
+            setSecurityContextWithMember(1L);
+            try {
+                mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))
+                        .andExpect(status().isBadRequest());
+                verify(comparePlansUseCase).execute(eq(1L), eq(2L));
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         @Test
         @DisplayName("실패: targetPlanId 누락 시 400 Bad Request 반환")
         void whenTargetPlanIdMissing_returns400() throws Exception {
-            mockMvc.perform(get("/api/v1/plans/compare").param("currentPlanId", "1"))
-                    .andExpect(status().isBadRequest());
+            setSecurityContextWithMember(1L);
+            try {
+                mockMvc.perform(get("/api/v1/customer/plans/compare"))
+                        .andExpect(status().isBadRequest());
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
     }
 
@@ -392,7 +431,7 @@ class ProductControllerTest {
             when(productListResponseAssembler.assemble(result))
                     .thenReturn(new ProductListResponse(new PageMeta(0L, 0, 0, 20), List.of()));
 
-            mockMvc.perform(get("/api/v1/plans").param("category", "mobile"))
+            mockMvc.perform(get("/api/v1/customer/plans").param("category", "mobile"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").exists())
@@ -414,7 +453,7 @@ class ProductControllerTest {
             when(getProductDetailUseCase.execute(1L)).thenReturn(result);
             when(mapper.toDetailResponse(result)).thenReturn(detailResponse(1L, "상품", "MOBILE_PLAN"));
 
-            mockMvc.perform(get("/api/v1/plans/1"))
+            mockMvc.perform(get("/api/v1/customer/plans/1"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.status").exists())

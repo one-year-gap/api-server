@@ -2,14 +2,16 @@ package site.holliverse.customer.web.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
-import site.holliverse.customer.application.usecase.compare.PlanComparator;
+import org.springframework.web.server.ResponseStatusException;
+import site.holliverse.shared.security.CustomUserDetails;
+import site.holliverse.customer.application.usecase.compare.ComparePlansUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductListUseCase;
 import site.holliverse.customer.application.usecase.product.ProductDetailResult;
@@ -25,41 +27,32 @@ import site.holliverse.customer.web.mapper.ProductResponseMapper;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/v1/plans")
+@RequestMapping("/api/v1/customer/plans")
 @Profile("customer")
 @RequiredArgsConstructor
 public class ProductController {
 
     private final GetProductListUseCase getProductListUseCase;
     private final GetProductDetailUseCase getProductDetailUseCase;
-    private final PlanComparator planComparator;
     private final ProductListResponseAssembler productListResponseAssembler;
     private final PlanCompareResponseAssembler planCompareResponseAssembler;
     private final ProductResponseMapper mapper;
+    private final ComparePlansUseCase comparePlansUseCase;
 
     /**
-     * 요금제 비교. 오케스트레이션·DTO 조립은 Web 계층에서 수행 (UseCase 간 호출·트랜잭션 중첩 방지).
+     * 요금제 비교: "현재 멤버의 모바일 구독 상품" vs "대상 상품(targetPlanId)".
+     * (비교는 현재 모바일만 지원)
      */
     @GetMapping("/compare")
     public ApiResponse<PlanCompareResponse> comparePlans(
-            @RequestParam Long currentPlanId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long targetPlanId) {
-        ProductDetailResult currentResult = getProductDetailUseCase.execute(currentPlanId);
-        ProductDetailResult targetResult = getProductDetailUseCase.execute(targetPlanId);
-
-        if (currentResult.product().productType() != targetResult.product().productType()) {
-            throw new IllegalArgumentException("현재 요금제와 비교 대상의 타입이 같아야 합니다.");
+        if (customUserDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
         }
-        var currentPlan = currentResult.mobilePlan()
-                .orElseThrow(() -> new IllegalArgumentException("현재 요금제의 모바일 상세 정보를 찾을 수 없습니다: " + currentPlanId));
-        var targetPlan = targetResult.mobilePlan()
-                .orElseThrow(() -> new IllegalArgumentException("비교 대상 요금제의 모바일 상세 정보를 찾을 수 없습니다: " + targetPlanId));
-
-        ComparisonResultDto comparison = planComparator.compare(
-                currentResult.product(), currentPlan,
-                targetResult.product(), targetPlan);
-
-        PlanCompareResponse response = planCompareResponseAssembler.assemble(currentResult, targetResult, comparison);
+        var result = comparePlansUseCase.execute(customUserDetails.getMemberId(), targetPlanId);
+        PlanCompareResponse response = planCompareResponseAssembler.assemble(
+                result.currentResult(), result.targetResult(), result.comparison());
         return new ApiResponse<>("success", response, LocalDateTime.now());
     }
 

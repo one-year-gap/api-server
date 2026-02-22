@@ -1,5 +1,6 @@
 package site.holliverse.customer.domain.policy;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
@@ -10,6 +11,7 @@ import java.util.Objects;
  * 구독 변경 규칙만 담당. 엔티티 조작은 하지 않으며, 의사결정 결과만 반환한다.
  */
 @Component
+@Profile("customer")
 public class SubscriptionChangePolicy {
 
     /**

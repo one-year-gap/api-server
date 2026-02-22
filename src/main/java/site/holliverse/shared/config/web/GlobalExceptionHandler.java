@@ -11,6 +11,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.web.response.ApiErrorDetail;
@@ -116,6 +117,19 @@ public class GlobalExceptionHandler {
                 new ApiErrorDetail(ErrorCode.FORBIDDEN.code(), null, ex.getMessage())
         );
         return ResponseEntity.status(ErrorCode.FORBIDDEN.httpStatus()).body(body);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    // 컨트롤러에서 던진 HTTP 상태 전용 예외(401, 400 등)를 그대로 반영
+    public ResponseEntity<ApiErrorResponse> handleResponseStatus(ResponseStatusException ex) {
+        String message = ex.getReason() != null ? ex.getReason() : ex.getStatusCode().toString();
+        ApiErrorDetail detail = new ApiErrorDetail(
+                ex.getStatusCode().toString(),
+                null,
+                message
+        );
+        ApiErrorResponse body = ApiErrorResponse.error(message, detail);
+        return ResponseEntity.status(ex.getStatusCode()).body(body);
     }
 
     @ExceptionHandler(Exception.class)

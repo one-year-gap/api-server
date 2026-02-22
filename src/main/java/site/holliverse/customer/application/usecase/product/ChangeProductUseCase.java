@@ -10,9 +10,12 @@ import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.repository.MemberRepository;
+import site.holliverse.shared.domain.model.ProductType;
 import org.springframework.context.annotation.Profile;
+
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Profile("customer")
@@ -61,5 +64,16 @@ public class ChangeProductUseCase {
         var newSubscription = Subscription.createActive(member, targetProduct, now);
         subscriptionRepository.save(newSubscription);
         return ChangeProductResult.from(newSubscription, targetProduct);
+    }
+
+    /**
+     * 비교 API용: 회원이 현재 구독 중인 모바일 요금제 상품 ID.
+     * (비교는 현재 모바일만 지원)
+     */
+    @Transactional(readOnly = true)
+    public Optional<Long> findCurrentMobileProductId(Long memberId) {
+        return subscriptionRepository
+                .findActiveByMemberIdAndProductType(memberId, ProductType.MOBILE_PLAN)
+                .map(s -> s.getProduct().getProductId());
     }
 }

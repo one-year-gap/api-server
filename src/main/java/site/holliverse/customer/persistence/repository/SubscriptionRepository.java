@@ -1,5 +1,6 @@
 package site.holliverse.customer.persistence.repository;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,7 @@ import java.util.Optional;
  * 구독(subscription) 엔티티 저장소.
  * 신규 가입/요금제 변경 UseCase에서 활성 구독 조회·저장에 사용.
  */
+@Profile("customer")
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
 
     /**

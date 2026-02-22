@@ -66,14 +66,21 @@ management:
         include: health,info,prometheus,metrics
   metrics:
     tags:
-      app: api-sever
+      app: api-server
       profile: ${SPRING_PROFILES_ACTIVE:unknown}
+      application: ${spring.application.name}-${SPRING_PROFILES_ACTIVE:unknown}
     export:
       cloudwatch:
         enabled: true
         namespace: HSC/Spring
         step: 1m
   endpoint:
+    prometheus:
+      access: read_only
+  prometheus:
+    metrics:
+      export:
+        enabled: true
     health:
       probes:
         enabled: true

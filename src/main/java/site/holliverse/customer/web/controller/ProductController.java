@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import site.holliverse.shared.security.CustomUserDetails;
-import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
-import site.holliverse.customer.application.usecase.product.ChangeProductUseCase;
-import site.holliverse.customer.application.usecase.compare.PlanComparator;
+import site.holliverse.customer.application.usecase.compare.ComparePlansUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductListUseCase;
 import site.holliverse.customer.application.usecase.product.ProductDetailResult;
@@ -36,11 +34,10 @@ public class ProductController {
 
     private final GetProductListUseCase getProductListUseCase;
     private final GetProductDetailUseCase getProductDetailUseCase;
-    private final PlanComparator planComparator;
     private final ProductListResponseAssembler productListResponseAssembler;
     private final PlanCompareResponseAssembler planCompareResponseAssembler;
     private final ProductResponseMapper mapper;
-    private final ChangeProductUseCase changeProductUseCase;
+    private final ComparePlansUseCase comparePlansUseCase;
 
     /**
      * 요금제 비교: "현재 멤버의 모바일 구독 상품" vs "대상 상품(targetPlanId)".
@@ -53,27 +50,9 @@ public class ProductController {
         if (customUserDetails == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
         }
-        Long memberId = customUserDetails.getMemberId();
-
-        Long currentPlanId = changeProductUseCase.findCurrentMobileProductId(memberId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "비교하려면 모바일 요금제를 먼저 가입해 주세요."));
-
-        ProductDetailResult currentResult = getProductDetailUseCase.execute(currentPlanId);
-        ProductDetailResult targetResult = getProductDetailUseCase.execute(targetPlanId);
-
-        if (currentResult.product().productType() != targetResult.product().productType()) {
-            throw new IllegalArgumentException("현재 요금제와 비교 대상의 타입이 같아야 합니다.");
-        }
-        var currentPlan = currentResult.mobilePlan()
-                .orElseThrow(() -> new IllegalArgumentException("현재 요금제의 모바일 상세 정보를 찾을 수 없습니다: " + currentPlanId));
-        var targetPlan = targetResult.mobilePlan()
-                .orElseThrow(() -> new IllegalArgumentException("비교 대상 요금제의 모바일 상세 정보를 찾을 수 없습니다: " + targetPlanId));
-
-        ComparisonResultDto comparison = planComparator.compare(
-                currentResult.product(), currentPlan,
-                targetResult.product(), targetPlan);
-
-        PlanCompareResponse response = planCompareResponseAssembler.assemble(currentResult, targetResult, comparison);
+        var result = comparePlansUseCase.execute(customUserDetails.getMemberId(), targetPlanId);
+        PlanCompareResponse response = planCompareResponseAssembler.assemble(
+                result.currentResult(), result.targetResult(), result.comparison());
         return new ApiResponse<>("success", response, LocalDateTime.now());
     }
 

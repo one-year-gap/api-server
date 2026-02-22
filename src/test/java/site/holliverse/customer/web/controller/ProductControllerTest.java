@@ -342,7 +342,7 @@ class ProductControllerTest {
                     Optional.of(PlanComparatorTestData.plusMobilePlan()),
                     Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()
             );
-            given(changeProductUseCase.findCurrentMobileProductId(any())).willReturn(Optional.of(1L));
+            given(changeProductUseCase.findCurrentMobileProductId(eq(1L))).willReturn(Optional.of(1L));
             given(getProductDetailUseCase.execute(1L)).willReturn(currentResult);
             given(getProductDetailUseCase.execute(2L)).willReturn(targetResult);
             given(planComparator.compare(any(), any(), any(), any()))
@@ -371,7 +371,7 @@ class ProductControllerTest {
                     .andExpect(jsonPath("$.timestamp").exists())
                     .andDo(print());
 
-            verify(changeProductUseCase).findCurrentMobileProductId(any());
+            verify(changeProductUseCase).findCurrentMobileProductId(eq(1L));
             verify(getProductDetailUseCase).execute(1L);
             verify(getProductDetailUseCase).execute(2L);
             verify(planComparator).compare(any(), any(), any(), any());
@@ -391,7 +391,7 @@ class ProductControllerTest {
         @Test
         @DisplayName("실패: 모바일 요금제 미가입 회원이 비교 요청 시 400 Bad Request 반환")
         void whenNoMobileSubscription_returns400() throws Exception {
-            given(changeProductUseCase.findCurrentMobileProductId(any())).willReturn(Optional.empty());
+            given(changeProductUseCase.findCurrentMobileProductId(eq(1L))).willReturn(Optional.empty());
             setSecurityContextWithMember(1L);
             try {
                 mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))

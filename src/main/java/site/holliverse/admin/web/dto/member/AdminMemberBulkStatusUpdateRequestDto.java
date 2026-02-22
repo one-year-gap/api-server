@@ -9,7 +9,7 @@ import java.util.List;
 public record AdminMemberBulkStatusUpdateRequestDto(
 
         // 1. 빈 배열([])이나 null이 들어오는 것을 방지
-        // 2. 한 번에 너무 많은 ID가 들어와서 DB에 무리를 주는 것을 방지 (예: 최대 100개 제한)
+        // 2. 한 번에 너무 많은 ID가 들어와서 DB에 무리를 주는 것을 방지 (최대 100개 제한)
         @NotEmpty(message = "상태를 변경할 회원 ID 목록은 비어있을 수 없습니다.")
         @Size(max = 100, message = "한 번에 최대 100명까지만 상태를 변경할 수 있습니다.")
         List<Long> memberIds,

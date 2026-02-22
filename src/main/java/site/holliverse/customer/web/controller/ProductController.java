@@ -2,13 +2,17 @@ package site.holliverse.customer.web.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.server.ResponseStatusException;
+import site.holliverse.shared.security.CustomUserDetails;
 import site.holliverse.customer.application.usecase.compare.ComparisonResultDto;
+import site.holliverse.customer.application.usecase.product.ChangeProductUseCase;
 import site.holliverse.customer.application.usecase.compare.PlanComparator;
 import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductListUseCase;
@@ -36,14 +40,24 @@ public class ProductController {
     private final ProductListResponseAssembler productListResponseAssembler;
     private final PlanCompareResponseAssembler planCompareResponseAssembler;
     private final ProductResponseMapper mapper;
+    private final ChangeProductUseCase changeProductUseCase;
 
     /**
-     * 요금제 비교. 오케스트레이션·DTO 조립은 Web 계층에서 수행 (UseCase 간 호출·트랜잭션 중첩 방지).
+     * 요금제 비교: "현재 멤버의 모바일 구독 상품" vs "대상 상품(targetPlanId)".
+     * (비교는 현재 모바일만 지원)
      */
     @GetMapping("/compare")
     public ApiResponse<PlanCompareResponse> comparePlans(
-            @RequestParam Long currentPlanId,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long targetPlanId) {
+        if (customUserDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
+        }
+        Long memberId = customUserDetails.getMemberId();
+
+        Long currentPlanId = changeProductUseCase.findCurrentMobileProductId(memberId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "비교하려면 모바일 요금제를 먼저 가입해 주세요."));
+
         ProductDetailResult currentResult = getProductDetailUseCase.execute(currentPlanId);
         ProductDetailResult targetResult = getProductDetailUseCase.execute(targetPlanId);
 

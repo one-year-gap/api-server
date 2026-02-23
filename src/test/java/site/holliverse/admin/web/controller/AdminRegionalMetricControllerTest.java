@@ -57,7 +57,7 @@ class AdminRegionalMetricControllerTest {
                 new RegionalMetricRawData("SEOUL", BigDecimal.valueOf(45454), BigDecimal.valueOf(9876))
         );
         AdminRegionalMetricResponseDto response = new AdminRegionalMetricResponseDto(
-                List.of(new AdminRegionalMetricResponseDto.RegionMetricDto("SEOUL", 45454, 9876)),
+                List.of(new AdminRegionalMetricResponseDto.RegionMetricDto("R001", "SEOUL", 45454, 9876)),
                 new AdminRegionalMetricResponseDto.AxisMaxDto(50000, 10000),
                 new AdminRegionalMetricResponseDto.MaxRegionDto("SEOUL", "SEOUL")
         );
@@ -85,6 +85,7 @@ class AdminRegionalMetricControllerTest {
         AdminRegionalTopPlanResponseDto response = new AdminRegionalTopPlanResponseDto(
                 List.of(
                         new AdminRegionalTopPlanResponseDto.RegionTopPlanDto(
+                                "R001",
                                 "SEOUL",
                                 500L,
                                 List.of(

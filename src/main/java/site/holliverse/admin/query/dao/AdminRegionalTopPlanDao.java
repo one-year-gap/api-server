@@ -18,7 +18,10 @@ import static site.holliverse.admin.query.jooq.Tables.SUBSCRIPTION;
 /**
  * 지역별 Top 요금제/가입자 수 집계를 담당하는 DAO.
  * - 전지역 단위로 한 번에 집계한다.
- * - 기준 데이터는 활성 구독(status=true)만 사용한다.
+ * - 기준 데이터는 활성 구독만 사용한다.
+ * @author nonstop
+ * @version 1.0.0
+ * @since 2026-02-23
  */
 @Profile("admin")
 @Repository

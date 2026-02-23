@@ -32,7 +32,7 @@ public class AdminRegionalMetricController {
     private final AdminRegionalTopPlanAssembler adminRegionalTopPlanAssembler;
 
     /**
-     * 지역별 평균 매출(ARPU) / 평균 데이터 사용량 조회.
+     * 지역별 평균 매출 / 평균 데이터 사용량 조회.
      * yyyymm 파라미터 기준으로 집계한다.
      */
     @GetMapping("/arpu")
@@ -47,11 +47,7 @@ public class AdminRegionalMetricController {
 
     /**
      * 지도 hover용 전지역 요약 조회.
-     *
-     * 응답:
-     * - 지역명
-     * - 지역 총 가입자 수
-     * - 해당 지역 Top3 요금제
+     * 지역명, 지역 총 가입자 수, 해당지역 Top3 요금제
      */
     @GetMapping("/plans/top3")
     public ResponseEntity<ApiResponse<AdminRegionalTopPlanResponseDto>> getTopPlansByAllRegions() {

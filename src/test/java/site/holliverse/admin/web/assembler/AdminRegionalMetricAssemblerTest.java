@@ -18,7 +18,7 @@ class AdminRegionalMetricAssemblerTest {
     @DisplayName("지역별 응답 생성 시 축 최대값을 자리수 올림 처리한다.")
     void toResponse_roundUpAxisMax_success() {
         List<RegionalMetricRawData> rawData = List.of(
-                new RegionalMetricRawData("서울", BigDecimal.valueOf(45454), BigDecimal.valueOf(9876)),
+                new RegionalMetricRawData("서울특별시", BigDecimal.valueOf(45454), BigDecimal.valueOf(9876)),
                 new RegionalMetricRawData("부산광역시", BigDecimal.valueOf(32000), BigDecimal.valueOf(12345))
         );
 
@@ -27,7 +27,7 @@ class AdminRegionalMetricAssemblerTest {
         assertThat(result.regions()).hasSize(17);
         assertThat(result.axisMax().salesAxisMax()).isEqualTo(50000L);
         assertThat(result.axisMax().dataUsageAxisMaxGb()).isEqualTo(20000L);
-        assertThat(result.maxRegion().salesRegion()).isEqualTo("서울");
+        assertThat(result.maxRegion().salesRegion()).isEqualTo("서울특별시");
         assertThat(result.maxRegion().dataUsageRegion()).isEqualTo("부산광역시");
     }
 }

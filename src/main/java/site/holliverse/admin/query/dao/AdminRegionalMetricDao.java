@@ -17,6 +17,25 @@ import static site.holliverse.admin.query.jooq.Tables.PRODUCT;
 import static site.holliverse.admin.query.jooq.Tables.SUBSCRIPTION;
 import static site.holliverse.admin.query.jooq.Tables.USAGE_MONTHLY;
 
+
+/**
+ * 지역별 평균 매출/평균 데이터 사용량을 조회한다.
+ *
+ * 계산 정의:
+ * - avgSales: 지역의 총 매출(sale_price 합계) / 지역의 고유 가입자 수
+ * - avgDataUsageGb: 지역의 총 데이터 사용량(data_gb 합계) / 지역의 고유 가입자 수
+ *
+ * 처리 규칙:
+ * - 구독은 활성(status = true)만 집계한다.
+ * - 데이터 사용량은 요청 월(yyyymm)만 집계한다.
+ * - 해당 월 사용량 데이터가 없는 구독자는 데이터 합계에서 0으로 처리한다.
+ * - 분모가 0인 경우 nullif/coalesce로 0을 반환해 0 나눗셈을 방지한다.
+ * @author nonstop
+ * @version 1.0.0
+ * @since 2026-02-23
+ */
+
+
 @Profile("admin")
 @Repository
 @RequiredArgsConstructor
@@ -25,19 +44,7 @@ public class AdminRegionalMetricDao {
     // jOOQ 쿼리를 실행하는 핵심 객체
     private final DSLContext dsl;
 
-    /**
-     * 지역별 평균 매출/평균 데이터 사용량을 조회한다.
-     *
-     * 계산 정의:
-     * - avgSales: 지역의 총 매출(sale_price 합계) / 지역의 고유 가입자 수
-     * - avgDataUsageGb: 지역의 총 데이터 사용량(data_gb 합계) / 지역의 고유 가입자 수
-     *
-     * 처리 규칙:
-     * - 구독은 활성(status = true)만 집계한다.
-     * - 데이터 사용량은 요청 월(yyyymm)만 집계한다.
-     * - 해당 월 사용량 데이터가 없는 구독자는 데이터 합계에서 0으로 처리한다.
-     * - 분모가 0인 경우 nullif/coalesce로 0을 반환해 0 나눗셈을 방지한다.
-     */
+    //yyyymm 해당년월
     public List<RegionalMetricRawData> findRegionalAverages(String yyyymm) {
         // 지역별 매출 합계(분자)
         Field<BigDecimal> totalRevenue = DSL.sum(PRODUCT.SALE_PRICE.cast(BigDecimal.class));

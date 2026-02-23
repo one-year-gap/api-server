@@ -41,12 +41,10 @@ public class AdminRegionalTopPlanDao {
     public List<RegionalTopPlanRawData> findTopPlansByAllProvinces(int limit) {
         Field<String> province = ADDRESS.PROVINCE.as("province");
         Field<String> planName = PRODUCT.NAME.as("planName");
-        Field<Integer> planSubscriberCount = DSL.countDistinct(MEMBER.MEMBER_ID).as("planSubscriberCount");
-
         // 지역별 순위를 만들기 위한 윈도우 함수(row_number)
         Field<Integer> rankNo = DSL.rowNumber().over(
                 DSL.partitionBy(ADDRESS.PROVINCE)
-                        .orderBy(planSubscriberCount.desc(), PRODUCT.NAME.asc())
+                        .orderBy(DSL.countDistinct(MEMBER.MEMBER_ID).desc(), PRODUCT.NAME.asc())
         ).as("rankNo");
 
         // 1단계: (지역, 요금제)별 가입자 수를 집계하고 지역 내부 순위를 계산
@@ -60,21 +58,25 @@ public class AdminRegionalTopPlanDao {
                 .groupBy(ADDRESS.PROVINCE, PRODUCT.NAME)
                 .asTable("ranked");
 
+        Field<String> rankedProvince = ranked.field(province);
+        Field<String> rankedPlanName = ranked.field(planName);
+        Field<Integer> rankedRankNo = ranked.field(rankNo);
+
         // 2단계: 지역별 순위가 limit 이하인 데이터만 추출
         return dsl
                 .select(
-                        ranked.field("province", String.class),
-                        ranked.field("planName", String.class)
+                        rankedProvince,
+                        rankedPlanName
                 )
                 .from(ranked)
-                .where(ranked.field("rankNo", Integer.class).le(limit))
+                .where(rankedRankNo.le(limit))
                 .orderBy(
-                        ranked.field("province", String.class).asc(),
-                        ranked.field("rankNo", Integer.class).asc()
+                        rankedProvince.asc(),
+                        rankedRankNo.asc()
                 )
                 .fetch(r -> new RegionalTopPlanRawData(
-                        r.get("province", String.class),
-                        r.get("planName", String.class)
+                        r.get(rankedProvince),
+                        r.get(rankedPlanName)
                 ));
     }
 
@@ -98,7 +100,7 @@ public class AdminRegionalTopPlanDao {
                 .orderBy(ADDRESS.PROVINCE.asc())
                 .fetch(r -> new RegionalSubscriberCountRawData(
                         r.get("province", String.class),
-                        toLong(r.get("subscriberCount", Integer.class))
+                        toLong(r.get(subscriberCount))
                 ));
     }
 

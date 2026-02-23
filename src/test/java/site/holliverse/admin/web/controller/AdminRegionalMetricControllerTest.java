@@ -9,10 +9,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import site.holliverse.admin.application.usecase.RetrieveRegionalMetricUseCase;
+import site.holliverse.admin.application.usecase.RetrieveRegionalTopPlanUseCase;
 import site.holliverse.admin.query.dao.RegionalMetricRawData;
 import site.holliverse.admin.web.assembler.AdminRegionalMetricAssembler;
+import site.holliverse.admin.web.assembler.AdminRegionalTopPlanAssembler;
 import site.holliverse.admin.web.dto.analytics.AdminRegionalMetricRequestDto;
 import site.holliverse.admin.web.dto.analytics.AdminRegionalMetricResponseDto;
+import site.holliverse.admin.web.dto.analytics.AdminRegionalTopPlanResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 
 import java.math.BigDecimal;
@@ -39,18 +42,24 @@ class AdminRegionalMetricControllerTest {
     private AdminRegionalMetricAssembler adminRegionalMetricAssembler;
 
     @MockitoBean
+    private RetrieveRegionalTopPlanUseCase retrieveRegionalTopPlanUseCase;
+
+    @MockitoBean
+    private AdminRegionalTopPlanAssembler adminRegionalTopPlanAssembler;
+
+    @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
 
     @Test
-    @DisplayName("지역별 평균 매출/데이터 사용량 API가 응답 규격에 맞게 반환된다.")
+    @DisplayName("Regional ARPU API returns expected schema.")
     void getRegionalMetrics_success() throws Exception {
         List<RegionalMetricRawData> raw = List.of(
-                new RegionalMetricRawData("서울", BigDecimal.valueOf(45454), BigDecimal.valueOf(9876))
+                new RegionalMetricRawData("SEOUL", BigDecimal.valueOf(45454), BigDecimal.valueOf(9876))
         );
         AdminRegionalMetricResponseDto response = new AdminRegionalMetricResponseDto(
-                List.of(new AdminRegionalMetricResponseDto.RegionMetricDto("서울", 45454, 9876)),
+                List.of(new AdminRegionalMetricResponseDto.RegionMetricDto("SEOUL", 45454, 9876)),
                 new AdminRegionalMetricResponseDto.AxisMaxDto(50000, 10000),
-                new AdminRegionalMetricResponseDto.MaxRegionDto("서울", "서울")
+                new AdminRegionalMetricResponseDto.MaxRegionDto("SEOUL", "SEOUL")
         );
 
         given(retrieveRegionalMetricUseCase.execute(any(AdminRegionalMetricRequestDto.class))).willReturn(raw);
@@ -60,6 +69,41 @@ class AdminRegionalMetricControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.data.axisMax.salesAxisMax").value(50000))
-                .andExpect(jsonPath("$.data.maxRegion.salesRegion").value("서울"));
+                .andExpect(jsonPath("$.data.maxRegion.salesRegion").value("SEOUL"));
+    }
+
+    @Test
+    @DisplayName("전지역 Top3 요금제 API가 응답 규격에 맞게 반환된다.")
+    void getTopPlansByAllRegions_success() throws Exception {
+        List<RetrieveRegionalTopPlanUseCase.RegionalTopPlanSummary> summaries = List.of(
+                new RetrieveRegionalTopPlanUseCase.RegionalTopPlanSummary(
+                        "SEOUL",
+                        500L,
+                        List.of("PLAN_A", "PLAN_B", "PLAN_C")
+                )
+        );
+        AdminRegionalTopPlanResponseDto response = new AdminRegionalTopPlanResponseDto(
+                List.of(
+                        new AdminRegionalTopPlanResponseDto.RegionTopPlanDto(
+                                "SEOUL",
+                                500L,
+                                List.of(
+                                        new AdminRegionalTopPlanResponseDto.TopPlanDto("PLAN_A"),
+                                        new AdminRegionalTopPlanResponseDto.TopPlanDto("PLAN_B"),
+                                        new AdminRegionalTopPlanResponseDto.TopPlanDto("PLAN_C")
+                                )
+                        )
+                )
+        );
+
+        given(retrieveRegionalTopPlanUseCase.execute()).willReturn(summaries);
+        given(adminRegionalTopPlanAssembler.toResponse(summaries)).willReturn(response);
+
+        mockMvc.perform(get("/api/v1/admin/analytics/regions/plans/top3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.regions[0].region").value("SEOUL"))
+                .andExpect(jsonPath("$.data.regions[0].regionalSubscriberCount").value(500))
+                .andExpect(jsonPath("$.data.regions[0].topPlans[0].planName").value("PLAN_A"));
     }
 }

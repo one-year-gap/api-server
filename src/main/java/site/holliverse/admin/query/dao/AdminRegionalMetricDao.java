@@ -22,56 +22,59 @@ import static site.holliverse.admin.query.jooq.Tables.USAGE_MONTHLY;
 @RequiredArgsConstructor
 public class AdminRegionalMetricDao {
 
+    // jOOQ 쿼리를 실행하는 핵심 객체
     private final DSLContext dsl;
 
-    /*
-     * 지역별 월간 지표를 조회한다.
+    /**
+     * 지역별 평균 매출/평균 데이터 사용량을 조회한다.
      *
-     * 지표 정의(현재 비즈니스 기준):
-     * - avgSales: 지역 매출 총합 / 지역 유니크 가입자 수
-     * - avgDataUsageGb: 지역 데이터 사용량 총합(GB) / 지역 유니크 가입자 수
+     * 계산 정의:
+     * - avgSales: 지역의 총 매출(sale_price 합계) / 지역의 고유 가입자 수
+     * - avgDataUsageGb: 지역의 총 데이터 사용량(data_gb 합계) / 지역의 고유 가입자 수
+     *
+     * 처리 규칙:
+     * - 구독은 활성(status = true)만 집계한다.
+     * - 데이터 사용량은 요청 월(yyyymm)만 집계한다.
+     * - 해당 월 사용량 데이터가 없는 구독자는 데이터 합계에서 0으로 처리한다.
+     * - 분모가 0인 경우 nullif/coalesce로 0을 반환해 0 나눗셈을 방지한다.
      */
     public List<RegionalMetricRawData> findRegionalAverages(String yyyymm) {
-        // 지역 내 활성 구독의 월 매출 총합 분자
+        // 지역별 매출 합계(분자)
         Field<BigDecimal> totalRevenue = DSL.sum(PRODUCT.SALE_PRICE.cast(BigDecimal.class));
 
-        // usage_details(JSONB)에서 data_gb 값을 GB 단위 numeric으로 추출
+        // usage_details(JSONB)에서 data_gb 값을 numeric으로 안전하게 추출
+        // 값이 빈 문자열이면 NULL 처리하여 캐스팅 오류를 방지한다.
         Field<BigDecimal> dataUsageGb = DSL.field(
                 "NULLIF({0} ->> 'data_gb', '')::numeric",
                 BigDecimal.class,
                 USAGE_MONTHLY.USAGE_DETAILS
         );
 
-        // 지역 내 월 데이터 사용량 총합 분자
-        // - 데이터가 없으면 0으로 간주
+        // 지역별 데이터 사용량 합계(분자)
+        // data_gb가 NULL인 레코드는 0으로 간주한다.
         Field<BigDecimal> totalDataUsage = DSL.sum(DSL.coalesce(dataUsageGb, BigDecimal.ZERO));
 
-        // 지역 내 유니크 가입자 수 분모
-        // - 구독 기준이 아니라 member_id distinct 기준
+        // 지역별 고유 가입자 수(분모)
+        // 동일 회원의 중복 구독/조인 중복 영향을 막기 위해 distinct(member_id) 사용
         Field<BigDecimal> subscriberCount = DSL.countDistinct(MEMBER.MEMBER_ID).cast(BigDecimal.class);
 
-        // 평균 매출(ARPU 성격): totalRevenue / subscriberCount
-        // - 0으로 나누는 경우를 막기 위해 nullif + coalesce 사용
+        // 평균 매출 = 총매출 / 가입자수
         Field<BigDecimal> avgSales = DSL.coalesce(
                 totalRevenue.div(DSL.nullif(subscriberCount, BigDecimal.ZERO)),
                 BigDecimal.ZERO
         ).as("avgSales");
 
-        // 평균 데이터 사용량: totalDataUsage / subscriberCount
+        // 평균 데이터 사용량 = 총데이터사용량 / 가입자수
         Field<BigDecimal> avgDataUsageGb = DSL.coalesce(
                 totalDataUsage.div(DSL.nullif(subscriberCount, BigDecimal.ZERO)),
                 BigDecimal.ZERO
         ).as("avgDataUsageGb");
 
-        /*
-         * 조인 경로:
-         * subscription -> member -> address(지역) -> product(요금)
-         *                                \-> usage_monthly(해당 yyyymm만)
-         *
-         * 필터:
-         * - subscription.status = true (활성 구독만)
-         * - usage_monthly는 left join + yyyymm 조건 (해당 월 사용량 없으면 0 처리)
-         */
+        // 조인 경로
+        // subscription -> member -> address
+        //              -> product
+        //              -> usage_monthly(해당 월만, left join)
+        //
         return dsl
                 .select(
                         ADDRESS.PROVINCE.as("province"),
@@ -91,7 +94,7 @@ public class AdminRegionalMetricDao {
                 .fetch(this::toRawData);
     }
 
-    // select alias(province, avgSales, avgDataUsageGb)를 record DTO로 매핑
+    // select 결과를 record DTO로 변환
     private RegionalMetricRawData toRawData(Record3<String, BigDecimal, BigDecimal> r) {
         return new RegionalMetricRawData(
                 r.get("province", String.class),

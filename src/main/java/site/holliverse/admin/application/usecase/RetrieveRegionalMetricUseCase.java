@@ -15,8 +15,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RetrieveRegionalMetricUseCase {
 
+    // 지역 통계 조회 DAO
     private final AdminRegionalMetricDao adminRegionalMetricDao;
 
+    // 요청 yyyymm 기준으로 쿼리 작성
     @Transactional(readOnly = true)
     public List<RegionalMetricRawData> execute(AdminRegionalMetricRequestDto requestDto) {
         return adminRegionalMetricDao.findRegionalAverages(requestDto.yyyymm());

@@ -15,14 +15,14 @@ import java.util.Map;
 @Component
 public class AdminRegionalMetricAssembler {
 
-    /*
+    /**
      * 표/차트 렌더링 순서를 고정하기 위한 표준 지역 목록.
      * - DB 결과에 일부 지역이 빠져도 응답은 항상 이 순서/개수(17개)를 유지한다.
      * - 프론트가 인덱스 기반으로 series를 묶는 경우에도 깨지지 않는다.
      */
     private static final List<String> REGIONS = List.of(
-            "서울",
-            "인천",
+            "서울특별시",
+            "인천광역시",
             "경기도",
             "강원도",
             "충청남도",
@@ -40,7 +40,8 @@ public class AdminRegionalMetricAssembler {
             "제주특별자치도"
     );
 
-    /*
+    /**
+     *
      * DAO raw 데이터를 화면 응답 DTO로 변환한다.
      *
      * 처리 순서:
@@ -97,7 +98,7 @@ public class AdminRegionalMetricAssembler {
         );
     }
 
-    /*
+    /**
      * raw 리스트를 정규화된 지역명 기준 맵으로 변환.
      * - key: normalize(province)
      * - value: 해당 지역 raw row
@@ -127,11 +128,9 @@ public class AdminRegionalMetricAssembler {
         return value.setScale(0, RoundingMode.HALF_UP).longValue();
     }
 
-    /*
+    /**
      * 값의 가장 높은 자릿수 단위로 올림한다.
      * - 45,454 -> 50,000
-     * - 9,876  -> 10,000
-     * - 1,234,567 -> 2,000,000
      * 차트 축 상한을 사람이 읽기 쉬운 값으로 맞추기 위한 유틸.
      */
     private long roundUpByMagnitude(long value) {

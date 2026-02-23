@@ -16,12 +16,16 @@ import site.holliverse.admin.application.usecase.RetrieveMemberUseCase.RetrieveM
 import site.holliverse.admin.application.usecase.UpdateMemberUseCase;
 import site.holliverse.admin.web.assembler.AdminMemberAssembler;
 import site.holliverse.admin.web.dto.member.*;
+import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
+import site.holliverse.admin.web.dto.member.AdminMemberListResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 
 import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

@@ -13,6 +13,8 @@ import org.jooq.impl.SchemaImpl;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.Category;
+import site.holliverse.admin.query.jooq.tables.CategoryGroup;
 import site.holliverse.admin.query.jooq.tables.Coupon;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
@@ -23,6 +25,7 @@ import site.holliverse.admin.query.jooq.tables.Product;
 import site.holliverse.admin.query.jooq.tables.ProductViewHistory;
 import site.holliverse.admin.query.jooq.tables.RefreshToken;
 import site.holliverse.admin.query.jooq.tables.Subscription;
+import site.holliverse.admin.query.jooq.tables.SupportCase;
 import site.holliverse.admin.query.jooq.tables.TabWatchPlan;
 import site.holliverse.admin.query.jooq.tables.UsageMonthly;
 
@@ -49,6 +52,16 @@ public class Public extends SchemaImpl {
      * The table <code>public.address</code>.
      */
     public final Address ADDRESS = Address.ADDRESS;
+
+    /**
+     * The table <code>public.category</code>.
+     */
+    public final Category CATEGORY = Category.CATEGORY;
+
+    /**
+     * The table <code>public.category_group</code>.
+     */
+    public final CategoryGroup CATEGORY_GROUP = CategoryGroup.CATEGORY_GROUP;
 
     /**
      * The table <code>public.coupon</code>.
@@ -101,6 +114,11 @@ public class Public extends SchemaImpl {
     public final Subscription SUBSCRIPTION = Subscription.SUBSCRIPTION;
 
     /**
+     * The table <code>public.support_case</code>.
+     */
+    public final SupportCase SUPPORT_CASE = SupportCase.SUPPORT_CASE;
+
+    /**
      * The table <code>public.tab_watch_plan</code>.
      */
     public final TabWatchPlan TAB_WATCH_PLAN = TabWatchPlan.TAB_WATCH_PLAN;
@@ -128,6 +146,8 @@ public class Public extends SchemaImpl {
         return Arrays.asList(
             AddonService.ADDON_SERVICE,
             Address.ADDRESS,
+            Category.CATEGORY,
+            CategoryGroup.CATEGORY_GROUP,
             Coupon.COUPON,
             Internet.INTERNET,
             Iptv.IPTV,
@@ -138,6 +158,7 @@ public class Public extends SchemaImpl {
             ProductViewHistory.PRODUCT_VIEW_HISTORY,
             RefreshToken.REFRESH_TOKEN,
             Subscription.SUBSCRIPTION,
+            SupportCase.SUPPORT_CASE,
             TabWatchPlan.TAB_WATCH_PLAN,
             UsageMonthly.USAGE_MONTHLY
         );

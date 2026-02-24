@@ -1,5 +1,6 @@
 HELP.md
 .gradle
+.gradle-user-home/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -41,4 +42,5 @@ out/
 node_modules/
 .node_modules/*
 # Querydsl generated sources
-#src/main/generated/
+src/main/generated/**/Q*.java
+src/main/generated/**/Q*.kt

@@ -45,6 +45,7 @@ import site.holliverse.admin.query.jooq.tables.MemberCoupon.MemberCouponPath;
 import site.holliverse.admin.query.jooq.tables.ProductViewHistory.ProductViewHistoryPath;
 import site.holliverse.admin.query.jooq.tables.RefreshToken.RefreshTokenPath;
 import site.holliverse.admin.query.jooq.tables.Subscription.SubscriptionPath;
+import site.holliverse.admin.query.jooq.tables.SupportCase.SupportCasePath;
 import site.holliverse.admin.query.jooq.tables.records.MemberRecord;
 
 
@@ -303,6 +304,34 @@ public class Member extends TableImpl<MemberRecord> {
             _subscription = new SubscriptionPath(this, null, Keys.SUBSCRIPTION__FK_SUBSCRIPTION_TO_MEMBER.getInverseKey());
 
         return _subscription;
+    }
+
+    private transient SupportCasePath _fkSupportCaseToCounselor;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.support_case</code> table, via the
+     * <code>fk_support_case_to_counselor</code> key
+     */
+    public SupportCasePath fkSupportCaseToCounselor() {
+        if (_fkSupportCaseToCounselor == null)
+            _fkSupportCaseToCounselor = new SupportCasePath(this, null, Keys.SUPPORT_CASE__FK_SUPPORT_CASE_TO_COUNSELOR.getInverseKey());
+
+        return _fkSupportCaseToCounselor;
+    }
+
+    private transient SupportCasePath _fkSupportCaseToMember;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.support_case</code> table, via the
+     * <code>fk_support_case_to_member</code> key
+     */
+    public SupportCasePath fkSupportCaseToMember() {
+        if (_fkSupportCaseToMember == null)
+            _fkSupportCaseToMember = new SupportCasePath(this, null, Keys.SUPPORT_CASE__FK_SUPPORT_CASE_TO_MEMBER.getInverseKey());
+
+        return _fkSupportCaseToMember;
     }
 
     @Override

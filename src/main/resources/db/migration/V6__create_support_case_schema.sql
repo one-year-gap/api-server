@@ -62,7 +62,7 @@ INSERT INTO category_group (category_group_code, category_name) VALUES
 ('CG_INT', '국제전화/부가전화'),
 ('CG_WEB', '홈페이지'),
 ('CG_MEM', '멤버십'),
-('CG_PRV', '개인정보보호침해신고');
+('CG_PRV', '개인정보침해신고');
 
 -- [2] 소분류 데이터 적재
 -- 1. 모바일 하위 (MOB_xxx)

@@ -109,7 +109,7 @@ public class AdminRegionalTopPlanAssembler {
         return value == null ? "" : value.replaceAll("\\s+", "");
     }
 
-    // 고정 지역코드를 반환한다. 예외 지역명은 방어적으로 R000 처리.
+    // 고정 지역코드를 반환한다. 예외 지역명은 R000 처리.
     private String toRegionCode(String region) {
         return REGION_CODE_MAP.getOrDefault(region, "R000");
     }

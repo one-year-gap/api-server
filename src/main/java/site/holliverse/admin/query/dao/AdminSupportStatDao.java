@@ -12,11 +12,13 @@ import static org.jooq.impl.DSL.count;
  * 전체 상담 처리 현황 통계를 조회하는 DAO
  */
 @Profile("admin")
-@Repository
-@RequiredArgsConstructor
 public class AdminSupportStatDao {
 
     private final DSLContext dsl;
+
+    public AdminSupportStatDao(DSLContext dsl) {
+        this.dsl = dsl;
+    }
 
     public AdminSupportStatRawData getSupportStatusStats() {
         return dsl.select(

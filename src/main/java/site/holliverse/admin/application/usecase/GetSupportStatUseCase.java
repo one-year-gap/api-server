@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.AdminSupportStatDao;
-import site.holliverse.admin.query.dao.AdminSupportStatRowData;
+import site.holliverse.admin.query.dao.AdminSupportStatRawData;
 
 @Service
 @RequiredArgsConstructor
@@ -13,7 +13,7 @@ public class GetSupportStatUseCase {
 
     private final AdminSupportStatDao adminSupportStatDao;
 
-    public AdminSupportStatRowData execute() {
+    public AdminSupportStatRawData execute() {
         return adminSupportStatDao.getSupportStatusStats();
     }
 }

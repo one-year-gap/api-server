@@ -17,7 +17,7 @@ public class AdminSupportStatDao {
 
     private final DSLContext dsl;
 
-    public AdminSupportStatRowData getSupportStatusStats() {
+    public AdminSupportStatRawData getSupportStatusStats() {
         return dsl.select(
                         // 1. 총 상담 건수
                         count().as("totalCount"),
@@ -32,6 +32,6 @@ public class AdminSupportStatDao {
                         count().filterWhere(SUPPORT_CASE.STATUS.eq(SupportStatus.CLOSED)).as("closedCount")
                 )
                 .from(SUPPORT_CASE)
-                .fetchOneInto(AdminSupportStatRowData.class);
+                .fetchOneInto(AdminSupportStatRawData.class);
     }
 }

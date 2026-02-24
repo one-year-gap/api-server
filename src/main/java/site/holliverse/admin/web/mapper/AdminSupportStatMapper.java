@@ -1,9 +1,11 @@
 package site.holliverse.admin.web.mapper;
 
 import org.mapstruct.Mapper;
+import org.springframework.context.annotation.Profile;
 import site.holliverse.admin.query.dao.AdminSupportStatRawData;
 import site.holliverse.admin.web.dto.support.AdminSupportStatResponseDto;
 
+@Profile("admin")
 @Mapper(componentModel = "spring") // 스프링 빈으로 등록되어 Controller에서 의존성 주입 가능
 public interface AdminSupportStatMapper {
 

@@ -1,4 +1,4 @@
-﻿spring:
+spring:
   #AWS Secret Manager
   config:
     import: "optional:aws-secretsmanager:holliverse/api-server/runtime"
@@ -97,7 +97,7 @@ app:
     redirect-uri: ${APP_OAUTH2_REDIRECT_URI:http://localhost:8080/test/callback}
   jwt:
     secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}
-    access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:3600000}
+    access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:604800000}
     refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:1209600000}
 
 # =================================================================

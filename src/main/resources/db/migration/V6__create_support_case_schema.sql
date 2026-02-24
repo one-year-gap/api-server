@@ -46,7 +46,7 @@ CREATE TABLE support_case (
     CONSTRAINT ck_support_case_score CHECK (satisfaction_score >= 0 AND satisfaction_score <= 5),
 
     -- FK
-    CONSTRAINT fk_support_case_to_member FOREIGN KEY (member_id) REFERENCES member(member_id) ON DELETE CASCADE,
+    CONSTRAINT fk_support_case_to_member FOREIGN KEY (member_id) REFERENCES member(member_id),
     CONSTRAINT fk_support_case_to_counselor FOREIGN KEY (counselor_id) REFERENCES member(member_id),
     CONSTRAINT fk_support_case_to_category FOREIGN KEY (category_code) REFERENCES category(category_code)
 );

@@ -33,9 +33,9 @@ public class CounselTrafficUseCase {
 
         int[] countsByHour = new int[24];
         for (CounselTrafficDailyRawData row : rawData) {
-            Integer hour = row.hour();
-            if (hour != null && hour >= 0 && hour < 24) {
-                countsByHour[hour] = row.count() == null ? 0 : row.count();
+            int hour = row.hour();
+            if (hour >= 0 && hour < 24) {
+                countsByHour[hour] = row.count();
             }
         }
 
@@ -62,9 +62,9 @@ public class CounselTrafficUseCase {
         int[] countsByDay = new int[lastDay + 1];
 
         for (CounselTrafficMonthlyRawData row : rawData) {
-            Integer day = row.day();
-            if (day != null && day >= 1 && day <= lastDay) {
-                countsByDay[day] = row.count() == null ? 0 : row.count();
+            int day = row.day();
+            if (day >= 1 && day <= lastDay) {
+                countsByDay[day] = row.count();
             }
         }
 

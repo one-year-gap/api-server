@@ -3,8 +3,7 @@ package site.holliverse.admin.query.dao;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
-
+import org.springframework.stereotype.Repository;
 import site.holliverse.admin.query.jooq.enums.SupportStatus;
 import static site.holliverse.admin.query.jooq.Tables.SUPPORT_CASE;
 import static org.jooq.impl.DSL.count;
@@ -13,7 +12,7 @@ import static org.jooq.impl.DSL.count;
  * 전체 상담 처리 현황 통계를 조회하는 DAO
  */
 @Profile("admin")
-@Component
+@Repository
 @RequiredArgsConstructor
 public class AdminSupportStatDao {
 

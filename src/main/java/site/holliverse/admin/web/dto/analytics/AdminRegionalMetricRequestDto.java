@@ -1,5 +1,8 @@
 package site.holliverse.admin.web.dto.analytics;
 
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
+
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 
@@ -15,18 +18,25 @@ public record AdminRegionalMetricRequestDto(
 ) {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
 
-    public AdminRegionalMetricRequestDto {
+    public AdminRegionalMetricRequestDto(String yyyymm) {
         if (yyyymm == null || yyyymm.isBlank()) {
             yyyymm = YearMonth.now().format(FORMATTER);
         }
 
         if (!yyyymm.matches("\\d{6}")) {
-            throw new IllegalArgumentException("yyyymm must be formatted as yyyyMM.");
+            throw new CustomException(
+                    ErrorCode.INVALID_INPUT,
+                    "yyyymm"
+            );
         }
 
         int month = Integer.parseInt(yyyymm.substring(4, 6));
         if (month < 1 || month > 12) {
-            throw new IllegalArgumentException("yyyymm month must be between 01 and 12.");
+            throw new CustomException(
+                    ErrorCode.INVALID_INPUT,
+                    "yyyymm"
+            );
         }
+        this.yyyymm = yyyymm;
     }
 }

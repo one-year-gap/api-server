@@ -4,7 +4,7 @@ CREATE TYPE support_status AS ENUM ('OPEN', 'SUPPORTING', 'CLOSED');
 -- [1] 상담 카테고리(대분류) 마스터 테이블
 CREATE TABLE category_group (
     category_group_code VARCHAR(20) NOT NULL,       -- 예: CG_MOB
-    category_name VARCHAR(50) NOT NULL,      -- 예: 모바일
+    category_name VARCHAR(50) NOT NULL,             -- 예: 모바일
 
     CONSTRAINT pk_category_group PRIMARY KEY (category_group_code),
     CONSTRAINT uk_category_group_category_name UNIQUE (category_name)

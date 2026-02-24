@@ -132,6 +132,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatusCode()).body(body);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    // UseCase 등에서 던진 비즈니스 규칙/입력 오류 → 400으로 응답 (500이 아닌 클라이언트 오류로 분류)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        ApiErrorResponse body = ApiErrorResponse.error(
+                ErrorCode.INVALID_INPUT.defaultMessage(),
+                new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), null, ex.getMessage())
+        );
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     // 미처 분류되지 않은 예외를 최종적으로 500으로 처리
     public ResponseEntity<ApiErrorResponse> handleUnknown(Exception ex) {

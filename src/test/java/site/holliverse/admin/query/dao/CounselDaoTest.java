@@ -33,6 +33,7 @@ import static site.holliverse.admin.query.jooq.tables.SupportCase.SUPPORT_CASE;
 
 @ActiveProfiles({"admin", "test"})
 @JooqTest
+@Import(CounselDao.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CounselDaoTest {
 

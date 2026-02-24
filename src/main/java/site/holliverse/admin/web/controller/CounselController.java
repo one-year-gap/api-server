@@ -11,16 +11,14 @@ import org.springframework.web.bind.annotation.RestController;
 import site.holliverse.admin.application.usecase.CounselTrafficUseCase;
 import site.holliverse.admin.query.dao.CounselTrafficDailyRawData;
 import site.holliverse.admin.query.dao.CounselTrafficMonthlyRawData;
+import site.holliverse.admin.web.dto.counsel.CounselTrafficDailyResponseDto;
 import site.holliverse.admin.web.dto.counsel.CounselTrafficMonthResponseDto;
-import site.holliverse.admin.web.dto.counsel.CounselTrafficTDailyResponseDto;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+
 import site.holliverse.shared.web.response.ApiResponse;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+
 import java.util.List;
 
 @RestController
@@ -35,13 +33,13 @@ public class CounselController {
      * @param date 'yyyy-MM-dd'
      */
     @GetMapping("/daily")
-    public ResponseEntity<ApiResponse<CounselTrafficTDailyResponseDto>> getDailyTraffic(
+    public ResponseEntity<ApiResponse<CounselTrafficDailyResponseDto>> getDailyTraffic(
              @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         List<CounselTrafficDailyRawData> data = useCase.getHourlyTraffic(date);
         return ResponseEntity.ok(ApiResponse.success(
                 "상담 트래픽 조회가 완료되었습니다. (일/시간 기준)",
-                CounselTrafficTDailyResponseDto.of(data)
+                CounselTrafficDailyResponseDto.of(data)
         ));
     }
 

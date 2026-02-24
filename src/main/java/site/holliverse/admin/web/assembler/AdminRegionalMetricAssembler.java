@@ -137,7 +137,7 @@ public class AdminRegionalMetricAssembler {
     }
 
     private String normalize(String value) {
-        return value.replaceAll("\\s+", "");
+        return value == null ? "" : value.replaceAll("\\s+", "");
     }
 
     // BigDecimal -> long 변환. null은 0, 소수점은 HALF_UP 반올림.

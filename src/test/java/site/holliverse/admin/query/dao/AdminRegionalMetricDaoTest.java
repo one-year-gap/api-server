@@ -5,6 +5,7 @@ import org.jooq.JSONB;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DefaultDSLContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,7 @@ import static site.holliverse.admin.query.jooq.tables.UsageMonthly.USAGE_MONTHLY
  * - 요청 월(yyyymm)에 해당하는 usage_monthly만 반영되는지
  * - 지역별 평균 매출/평균 데이터 사용량 계산이 기대값과 일치하는지
  */
+@Disabled("CI 환경에서는 PostgreSQL DB 연결이 불가능하므로 임시 비활성화")
 @ActiveProfiles("admin")
 @JooqTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)

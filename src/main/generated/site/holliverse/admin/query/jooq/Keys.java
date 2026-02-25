@@ -12,6 +12,8 @@ import org.jooq.impl.Internal;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.Category;
+import site.holliverse.admin.query.jooq.tables.CategoryGroup;
 import site.holliverse.admin.query.jooq.tables.Coupon;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
@@ -22,10 +24,13 @@ import site.holliverse.admin.query.jooq.tables.Product;
 import site.holliverse.admin.query.jooq.tables.ProductViewHistory;
 import site.holliverse.admin.query.jooq.tables.RefreshToken;
 import site.holliverse.admin.query.jooq.tables.Subscription;
+import site.holliverse.admin.query.jooq.tables.SupportCase;
 import site.holliverse.admin.query.jooq.tables.TabWatchPlan;
 import site.holliverse.admin.query.jooq.tables.UsageMonthly;
 import site.holliverse.admin.query.jooq.tables.records.AddonServiceRecord;
 import site.holliverse.admin.query.jooq.tables.records.AddressRecord;
+import site.holliverse.admin.query.jooq.tables.records.CategoryGroupRecord;
+import site.holliverse.admin.query.jooq.tables.records.CategoryRecord;
 import site.holliverse.admin.query.jooq.tables.records.CouponRecord;
 import site.holliverse.admin.query.jooq.tables.records.InternetRecord;
 import site.holliverse.admin.query.jooq.tables.records.IptvRecord;
@@ -36,6 +41,7 @@ import site.holliverse.admin.query.jooq.tables.records.ProductRecord;
 import site.holliverse.admin.query.jooq.tables.records.ProductViewHistoryRecord;
 import site.holliverse.admin.query.jooq.tables.records.RefreshTokenRecord;
 import site.holliverse.admin.query.jooq.tables.records.SubscriptionRecord;
+import site.holliverse.admin.query.jooq.tables.records.SupportCaseRecord;
 import site.holliverse.admin.query.jooq.tables.records.TabWatchPlanRecord;
 import site.holliverse.admin.query.jooq.tables.records.UsageMonthlyRecord;
 
@@ -54,6 +60,9 @@ public class Keys {
     public static final UniqueKey<AddonServiceRecord> PK_ADDON_SERVICE = Internal.createUniqueKey(AddonService.ADDON_SERVICE, DSL.name("pk_addon_service"), new TableField[] { AddonService.ADDON_SERVICE.PRODUCT_ID }, true);
     public static final UniqueKey<AddressRecord> PK_ADDRESS = Internal.createUniqueKey(Address.ADDRESS, DSL.name("pk_address"), new TableField[] { Address.ADDRESS.ADDRESS_ID }, true);
     public static final UniqueKey<AddressRecord> UK_ADDRESS_UNIQUE = Internal.createUniqueKey(Address.ADDRESS, DSL.name("uk_address_unique"), new TableField[] { Address.ADDRESS.PROVINCE, Address.ADDRESS.CITY, Address.ADDRESS.STREET_ADDRESS }, true);
+    public static final UniqueKey<CategoryRecord> PK_CATEGORY = Internal.createUniqueKey(Category.CATEGORY, DSL.name("pk_category"), new TableField[] { Category.CATEGORY.CATEGORY_CODE }, true);
+    public static final UniqueKey<CategoryGroupRecord> PK_CATEGORY_GROUP = Internal.createUniqueKey(CategoryGroup.CATEGORY_GROUP, DSL.name("pk_category_group"), new TableField[] { CategoryGroup.CATEGORY_GROUP.CATEGORY_GROUP_CODE }, true);
+    public static final UniqueKey<CategoryGroupRecord> UK_CATEGORY_GROUP_CATEGORY_NAME = Internal.createUniqueKey(CategoryGroup.CATEGORY_GROUP, DSL.name("uk_category_group_category_name"), new TableField[] { CategoryGroup.CATEGORY_GROUP.CATEGORY_NAME }, true);
     public static final UniqueKey<CouponRecord> PK_COUPON = Internal.createUniqueKey(Coupon.COUPON, DSL.name("pk_coupon"), new TableField[] { Coupon.COUPON.COUPON_ID }, true);
     public static final UniqueKey<InternetRecord> PK_INTERNET = Internal.createUniqueKey(Internet.INTERNET, DSL.name("pk_internet"), new TableField[] { Internet.INTERNET.PRODUCT_ID }, true);
     public static final UniqueKey<IptvRecord> PK_IPTV = Internal.createUniqueKey(Iptv.IPTV, DSL.name("pk_iptv"), new TableField[] { Iptv.IPTV.PRODUCT_ID }, true);
@@ -68,6 +77,7 @@ public class Keys {
     public static final UniqueKey<RefreshTokenRecord> REFRESH_TOKEN_PKEY = Internal.createUniqueKey(RefreshToken.REFRESH_TOKEN, DSL.name("refresh_token_pkey"), new TableField[] { RefreshToken.REFRESH_TOKEN.REFRESH_TOKEN_ID }, true);
     public static final UniqueKey<RefreshTokenRecord> UK_REFRESH_TOKEN_HASH = Internal.createUniqueKey(RefreshToken.REFRESH_TOKEN, DSL.name("uk_refresh_token_hash"), new TableField[] { RefreshToken.REFRESH_TOKEN.TOKEN_HASH }, true);
     public static final UniqueKey<SubscriptionRecord> PK_SUBSCRIPTION = Internal.createUniqueKey(Subscription.SUBSCRIPTION, DSL.name("pk_subscription"), new TableField[] { Subscription.SUBSCRIPTION.SUBSCRIPTION_ID }, true);
+    public static final UniqueKey<SupportCaseRecord> PK_SUPPORT_CASE = Internal.createUniqueKey(SupportCase.SUPPORT_CASE, DSL.name("pk_support_case"), new TableField[] { SupportCase.SUPPORT_CASE.CASE_ID }, true);
     public static final UniqueKey<TabWatchPlanRecord> PK_TAB_WATCH_PLAN = Internal.createUniqueKey(TabWatchPlan.TAB_WATCH_PLAN, DSL.name("pk_tab_watch_plan"), new TableField[] { TabWatchPlan.TAB_WATCH_PLAN.PRODUCT_ID }, true);
     public static final UniqueKey<UsageMonthlyRecord> PK_USAGE_MONTHLY = Internal.createUniqueKey(UsageMonthly.USAGE_MONTHLY, DSL.name("pk_usage_monthly"), new TableField[] { UsageMonthly.USAGE_MONTHLY.USAGE_ID }, true);
 
@@ -76,6 +86,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final ForeignKey<AddonServiceRecord, ProductRecord> ADDON_SERVICE__FK_ADDON_SERVICE_TO_PRODUCT = Internal.createForeignKey(AddonService.ADDON_SERVICE, DSL.name("fk_addon_service_to_product"), new TableField[] { AddonService.ADDON_SERVICE.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
+    public static final ForeignKey<CategoryRecord, CategoryGroupRecord> CATEGORY__FK_CATEGORY_TO_GROUP = Internal.createForeignKey(Category.CATEGORY, DSL.name("fk_category_to_group"), new TableField[] { Category.CATEGORY.CATEGORY_GROUP_CODE }, Keys.PK_CATEGORY_GROUP, new TableField[] { CategoryGroup.CATEGORY_GROUP.CATEGORY_GROUP_CODE }, true);
     public static final ForeignKey<InternetRecord, ProductRecord> INTERNET__FK_INTERNET_TO_PRODUCT = Internal.createForeignKey(Internet.INTERNET, DSL.name("fk_internet_to_product"), new TableField[] { Internet.INTERNET.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
     public static final ForeignKey<IptvRecord, ProductRecord> IPTV__FK_IPTV_TO_PRODUCT = Internal.createForeignKey(Iptv.IPTV, DSL.name("fk_iptv_to_product"), new TableField[] { Iptv.IPTV.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
     public static final ForeignKey<MemberRecord, AddressRecord> MEMBER__FK_MEMBER_TO_ADDRESS = Internal.createForeignKey(Member.MEMBER, DSL.name("fk_member_to_address"), new TableField[] { Member.MEMBER.ADDRESS_ID }, Keys.PK_ADDRESS, new TableField[] { Address.ADDRESS.ADDRESS_ID }, true);
@@ -87,6 +98,9 @@ public class Keys {
     public static final ForeignKey<RefreshTokenRecord, MemberRecord> REFRESH_TOKEN__FK_REFRESH_TOKEN_MEMBER = Internal.createForeignKey(RefreshToken.REFRESH_TOKEN, DSL.name("fk_refresh_token_member"), new TableField[] { RefreshToken.REFRESH_TOKEN.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
     public static final ForeignKey<SubscriptionRecord, MemberRecord> SUBSCRIPTION__FK_SUBSCRIPTION_TO_MEMBER = Internal.createForeignKey(Subscription.SUBSCRIPTION, DSL.name("fk_subscription_to_member"), new TableField[] { Subscription.SUBSCRIPTION.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
     public static final ForeignKey<SubscriptionRecord, ProductRecord> SUBSCRIPTION__FK_SUBSCRIPTION_TO_PRODUCT = Internal.createForeignKey(Subscription.SUBSCRIPTION, DSL.name("fk_subscription_to_product"), new TableField[] { Subscription.SUBSCRIPTION.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
+    public static final ForeignKey<SupportCaseRecord, CategoryRecord> SUPPORT_CASE__FK_SUPPORT_CASE_TO_CATEGORY = Internal.createForeignKey(SupportCase.SUPPORT_CASE, DSL.name("fk_support_case_to_category"), new TableField[] { SupportCase.SUPPORT_CASE.CATEGORY_CODE }, Keys.PK_CATEGORY, new TableField[] { Category.CATEGORY.CATEGORY_CODE }, true);
+    public static final ForeignKey<SupportCaseRecord, MemberRecord> SUPPORT_CASE__FK_SUPPORT_CASE_TO_COUNSELOR = Internal.createForeignKey(SupportCase.SUPPORT_CASE, DSL.name("fk_support_case_to_counselor"), new TableField[] { SupportCase.SUPPORT_CASE.COUNSELOR_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
+    public static final ForeignKey<SupportCaseRecord, MemberRecord> SUPPORT_CASE__FK_SUPPORT_CASE_TO_MEMBER = Internal.createForeignKey(SupportCase.SUPPORT_CASE, DSL.name("fk_support_case_to_member"), new TableField[] { SupportCase.SUPPORT_CASE.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
     public static final ForeignKey<TabWatchPlanRecord, ProductRecord> TAB_WATCH_PLAN__FK_TAB_WATCH_PLAN_TO_PRODUCT = Internal.createForeignKey(TabWatchPlan.TAB_WATCH_PLAN, DSL.name("fk_tab_watch_plan_to_product"), new TableField[] { TabWatchPlan.TAB_WATCH_PLAN.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
     public static final ForeignKey<UsageMonthlyRecord, SubscriptionRecord> USAGE_MONTHLY__FK_USAGE_MONTHLY_TO_SUBSCRIPTION = Internal.createForeignKey(UsageMonthly.USAGE_MONTHLY, DSL.name("fk_usage_monthly_to_subscription"), new TableField[] { UsageMonthly.USAGE_MONTHLY.SUBSCRIPTION_ID }, Keys.PK_SUBSCRIPTION, new TableField[] { Subscription.SUBSCRIPTION.SUBSCRIPTION_ID }, true);
 }

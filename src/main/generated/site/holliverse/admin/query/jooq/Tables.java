@@ -6,6 +6,8 @@ package site.holliverse.admin.query.jooq;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.Category;
+import site.holliverse.admin.query.jooq.tables.CategoryGroup;
 import site.holliverse.admin.query.jooq.tables.Coupon;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
@@ -16,6 +18,7 @@ import site.holliverse.admin.query.jooq.tables.Product;
 import site.holliverse.admin.query.jooq.tables.ProductViewHistory;
 import site.holliverse.admin.query.jooq.tables.RefreshToken;
 import site.holliverse.admin.query.jooq.tables.Subscription;
+import site.holliverse.admin.query.jooq.tables.SupportCase;
 import site.holliverse.admin.query.jooq.tables.TabWatchPlan;
 import site.holliverse.admin.query.jooq.tables.UsageMonthly;
 
@@ -35,6 +38,16 @@ public class Tables {
      * The table <code>public.address</code>.
      */
     public static final Address ADDRESS = Address.ADDRESS;
+
+    /**
+     * The table <code>public.category</code>.
+     */
+    public static final Category CATEGORY = Category.CATEGORY;
+
+    /**
+     * The table <code>public.category_group</code>.
+     */
+    public static final CategoryGroup CATEGORY_GROUP = CategoryGroup.CATEGORY_GROUP;
 
     /**
      * The table <code>public.coupon</code>.
@@ -85,6 +98,11 @@ public class Tables {
      * The table <code>public.subscription</code>.
      */
     public static final Subscription SUBSCRIPTION = Subscription.SUBSCRIPTION;
+
+    /**
+     * The table <code>public.support_case</code>.
+     */
+    public static final SupportCase SUPPORT_CASE = SupportCase.SUPPORT_CASE;
 
     /**
      * The table <code>public.tab_watch_plan</code>.

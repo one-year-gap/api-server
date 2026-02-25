@@ -48,25 +48,25 @@ public class RefreshTokenUseCase {
     public TokenRefreshResponseDto refresh(String rawRefreshToken) {
         // 1) JWT 서명/만료/토큰타입 검증
         if (!jwtTokenProvider.isValid(rawRefreshToken) || !jwtTokenProvider.isRefreshToken(rawRefreshToken)) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, null);
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN, null);
         }
 
         Long memberId = jwtTokenProvider.getMemberId(rawRefreshToken);
         String tokenHash = refreshTokenHashService.hash(rawRefreshToken);
 
-        // 2) 활성 상태의 해시 토큰 조회
+        // 2) 활성 상태의 해시 토큰 조회를 하였을때 폐기된 토큰아니면 성공 아니면 예외처리
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHashAndRevokedFalse(tokenHash)
-                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, null));
+                .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_REVOKED, null));
 
-        // 3) 토큰 소유자 일치 여부 확인
+        // 3) 토큰 소유자 일치 여부 확인을한다.
         if (!refreshToken.getMemberId().equals(memberId)) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, null);
+            throw new CustomException(ErrorCode.REFRESH_TOKEN_OWNER_MISMATCH, null);
         }
 
         // 4) 만료 토큰은 폐기 후 차단
         if (refreshToken.isExpired()) {
             refreshToken.revoke();
-            throw new CustomException(ErrorCode.TOKEN_EXPIRED, null);
+            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED, null);
         }
 
         // 5) 회원 상태 검증

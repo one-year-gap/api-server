@@ -46,7 +46,7 @@ public class RefreshTokenUseCase {
      */
     @Transactional
     public TokenRefreshResponseDto refresh(String rawRefreshToken) {
-        // 1) JWT 서명/만료/토큰타입 검증
+        // 1) JWT 서명/만료/토큰타입 검증을한다음 검증 실패하면 예외처리
         if (!jwtTokenProvider.isValid(rawRefreshToken) || !jwtTokenProvider.isRefreshToken(rawRefreshToken)) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN, null);
         }
@@ -71,7 +71,7 @@ public class RefreshTokenUseCase {
 
         // 5) 회원 상태 검증
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "memberId"));
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND, "memberId"));
 
         if (member.getStatus() != MemberStatus.ACTIVE) {
             throw new CustomException(

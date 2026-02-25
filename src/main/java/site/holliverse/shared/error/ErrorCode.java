@@ -16,6 +16,7 @@ public enum ErrorCode {
     REFRESH_TOKEN_REVOKED(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_REVOKED", "폐기된 리프레시 토큰입니다."),
     REFRESH_TOKEN_OWNER_MISMATCH(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_OWNER_MISMATCH", "토큰 소유자가 일치하지 않습니다."),
     REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_EXPIRED", "만료된 리프레시 토큰입니다."),
+    REFRESH_TOKEN_MISSING(HttpStatus.UNAUTHORIZED,"REFRESH_TOKEN_MISSING","리프레시 토큰이 없습니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않습니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", "토큰이 만료되었습니다."),
     OAUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "OAUTH_UNAUTHORIZED", "OAuth 인증에 실패했습니다."),
@@ -25,6 +26,7 @@ public enum ErrorCode {
 
     // 404
     NOT_FOUND(HttpStatus.NOT_FOUND, "NOT_FOUND", "요청한 리소스를 찾을 수 없습니다."),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"MEMBER_NOT_FOUND","멤버를 찾을수가 없습니다."),
 
     // 409
     DUPLICATED_EMAIL(HttpStatus.CONFLICT, "DUPLICATED_EMAIL", "이미 사용 중인 이메일입니다."),

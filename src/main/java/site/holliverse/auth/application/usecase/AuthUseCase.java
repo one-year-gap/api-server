@@ -73,18 +73,20 @@ public class AuthUseCase {
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new CustomException(
                     ErrorCode.DUPLICATED_EMAIL,
-                    "email",
-                    "동일한 이메일이 존재합니다."
+                    "email"
             );
         }
         if (memberRepository.existsByPhone(encryptedPhone)) {
             throw new CustomException(
                     ErrorCode.DUPLICATED_PHONE,
-                    "phone",
-                    "동일한 전화번호가 존재합니다."
+                    "phone"
             );
         }
 
+
+        /**
+         * 주소를 찾고 주소 없으면 추가
+         */
         SignUpRequestDto.AddressRequest addressRequest = request.getAddress();
         Address address = addressRepository
                 .findByProvinceAndCityAndStreetAddress(
@@ -100,6 +102,10 @@ public class AuthUseCase {
                                 .postalCode(addressRequest.getPostalCode())
                                 .build()
                 ));
+
+        /**
+         * 회원 가입
+         */
 
         Member member = Member.builder()
                 .address(address)

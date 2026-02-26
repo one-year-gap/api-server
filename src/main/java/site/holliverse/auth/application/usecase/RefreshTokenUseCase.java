@@ -30,15 +30,18 @@ public class RefreshTokenUseCase {
     private final RefreshTokenHashService refreshTokenHashService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
+    private final TokenRevoker tokenRevoker;
 
     public RefreshTokenUseCase(JwtTokenProvider jwtTokenProvider,
                                RefreshTokenHashService refreshTokenHashService,
                                RefreshTokenRepository refreshTokenRepository,
-                               MemberRepository memberRepository) {
+                               MemberRepository memberRepository,
+                               TokenRevoker tokenRevoker) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenHashService = refreshTokenHashService;
         this.refreshTokenRepository = refreshTokenRepository;
         this.memberRepository = memberRepository;
+        this.tokenRevoker = tokenRevoker;
     }
 
     /**
@@ -65,7 +68,7 @@ public class RefreshTokenUseCase {
 
         // 4) 만료 토큰은 폐기 후 차단
         if (refreshToken.isExpired()) {
-            refreshToken.revoke();
+            tokenRevoker.revokeById(refreshToken.getId());
             throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED, null);
         }
 

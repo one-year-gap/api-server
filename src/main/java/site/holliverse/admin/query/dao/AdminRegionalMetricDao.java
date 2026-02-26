@@ -112,7 +112,7 @@ public class AdminRegionalMetricDao {
         return new RegionalMetricRawData(
                 r.get("province", String.class),
                 r.get("avgSales", BigDecimal.class),
-                rawDataUsage != null ? rawDataUsage.setScale(1, RoundingMode.HALF_UP) : BigDecimal.ZERO
+                r.get("avgDataUsageGb", BigDecimal.class)
         );
     }
 }

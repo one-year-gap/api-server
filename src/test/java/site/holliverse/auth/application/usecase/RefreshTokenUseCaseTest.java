@@ -103,7 +103,7 @@ class RefreshTokenUseCaseTest {
                 .isInstanceOf(CustomException.class)
                 .satisfies(ex -> {
                     CustomException custom = (CustomException) ex;
-                    assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED);
+                    assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
                 });
 
         verifyNoInteractions(refreshTokenRepository, memberRepository);
@@ -135,7 +135,7 @@ class RefreshTokenUseCaseTest {
                 .isInstanceOf(CustomException.class)
                 .satisfies(ex -> {
                     CustomException custom = (CustomException) ex;
-                    assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.TOKEN_EXPIRED);
+                    assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.REFRESH_TOKEN_EXPIRED);
                 });
 
         assertThat(expiredToken.isRevoked()).isTrue();

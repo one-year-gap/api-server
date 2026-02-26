@@ -81,7 +81,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/v1/auth/refresh"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("UNAUTHORIZED"));
+                .andExpect(jsonPath("$.errorDetail.code").value("REFRESH_TOKEN_MISSING"));
     }
 
     @Test

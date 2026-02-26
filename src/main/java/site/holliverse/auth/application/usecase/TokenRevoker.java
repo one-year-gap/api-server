@@ -3,6 +3,8 @@ package site.holliverse.auth.application.usecase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.RefreshToken;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
 
@@ -31,7 +33,7 @@ public class TokenRevoker {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void revokeById(Long refreshTokenId) {
         RefreshToken refreshToken = refreshTokenRepository.findById(refreshTokenId)
-                .orElseThrow(() -> new IllegalArgumentException("refresh token not found: " + refreshTokenId));
+                .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_REVOKED,"refreshId"));
         refreshToken.revoke();
     }
 }

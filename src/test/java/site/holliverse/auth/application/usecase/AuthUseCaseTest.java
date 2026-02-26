@@ -241,7 +241,6 @@ class AuthUseCaseTest {
         ReflectionTestUtils.setField(request, "phone", "01012345678");
         ReflectionTestUtils.setField(request, "birthDate", LocalDate.of(1999, 1, 1));
         ReflectionTestUtils.setField(request, "gender", "M");
-        ReflectionTestUtils.setField(request, "membership", MemberMembership.BASIC);
 
         SignUpRequestDto.AddressRequest address = new SignUpRequestDto.AddressRequest();
         ReflectionTestUtils.setField(address, "province", "seoul");

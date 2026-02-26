@@ -73,7 +73,8 @@ public class RefreshTokenUseCase {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "memberId"));
 
-        if (member.getStatus() != MemberStatus.ACTIVE) {
+        if ((member.getStatus() != MemberStatus.ACTIVE
+                && member.getStatus() != MemberStatus.PROCESSING)) {
             throw new CustomException(
                     ErrorCode.FORBIDDEN,
                     "memberStatus"

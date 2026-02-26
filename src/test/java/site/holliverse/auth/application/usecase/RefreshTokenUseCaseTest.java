@@ -38,6 +38,8 @@ class RefreshTokenUseCaseTest {
     private RefreshTokenRepository refreshTokenRepository;
     @Mock
     private MemberRepository memberRepository;
+    @Mock
+    private TokenRevoker tokenRevoker;
 
     @InjectMocks
     private RefreshTokenUseCase refreshTokenUseCase;
@@ -138,7 +140,7 @@ class RefreshTokenUseCaseTest {
                     assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.REFRESH_TOKEN_EXPIRED);
                 });
 
-        assertThat(expiredToken.isRevoked()).isTrue();
+        verify(tokenRevoker).revokeById(expiredToken.getId());
     }
 
     @Test

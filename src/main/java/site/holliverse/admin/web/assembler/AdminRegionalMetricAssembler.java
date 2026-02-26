@@ -72,7 +72,7 @@ public class AdminRegionalMetricAssembler {
         Map<String, RegionalMetricRawData> normalizedMap = toNormalizedMap(rawData);
 
         long maxSales = 0L;
-        long maxDataUsageGb = 0L;
+        double maxDataUsageGb = 0L;
 
         //일단 최대 지역을 서울로 초기화
         String maxSalesRegion = REGIONS.get(0);
@@ -86,7 +86,7 @@ public class AdminRegionalMetricAssembler {
                     // 사용량도 0 처리
                     //값이 있다면 그냥 값 주입
                     long avgSales = toLong(data == null ? null : data.avgSales());
-                    long avgDataUsage = toLong(data == null ? null : data.avgDataUsageGb());
+                    double avgDataUsage = toDouble(data == null ? null : data.avgDataUsageGb());
 
                     //지역을 dto 로 만든다.
                     return new AdminRegionalMetricResponseDto.RegionMetricDto(
@@ -115,7 +115,7 @@ public class AdminRegionalMetricAssembler {
                 regions,
                 new AdminRegionalMetricResponseDto.AxisMaxDto(
                         roundUpByMagnitude(maxSales),
-                        roundUpByMagnitude(maxDataUsageGb)
+                        roundUpByMagnitude((long) Math.ceil(maxDataUsageGb))
                 ),
                 new AdminRegionalMetricResponseDto.MaxRegionDto(maxSalesRegion, maxDataUsageRegion)
         );
@@ -146,6 +146,13 @@ public class AdminRegionalMetricAssembler {
             return 0L;
         }
         return value.setScale(0, RoundingMode.HALF_UP).longValue();
+    }
+
+    private double toDouble(BigDecimal value) {
+        if (value == null) {
+            return 0.0;
+        }
+        return value.setScale(1, RoundingMode.HALF_UP).doubleValue();
     }
 
     // 차트 축 최대값을 자리수 기준 올림한다.

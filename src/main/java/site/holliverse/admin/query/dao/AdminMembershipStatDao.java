@@ -15,7 +15,6 @@ import static org.jooq.impl.DSL.count;
 import static site.holliverse.admin.query.jooq.Tables.MEMBER;
 
 @Profile("admin")
-
 @RequiredArgsConstructor
 public class AdminMembershipStatDao {
 

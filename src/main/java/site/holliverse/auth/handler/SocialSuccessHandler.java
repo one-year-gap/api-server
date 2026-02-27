@@ -30,7 +30,7 @@ public class SocialSuccessHandler implements AuthenticationSuccessHandler {
     private String redirectUri;
 
     // 처음 소셜 로그인이라면 추가 온보딩 페이지로 이동
-    @Value("${app.oauth2.redirect-uri:http://localhost:8080/test/callback}")
+    @Value("${app.oauth2.onboarding-redirect-uri:http://localhost:8080/test/onboarding}")
     private String onboardingRedirectUri;
 
     @Override

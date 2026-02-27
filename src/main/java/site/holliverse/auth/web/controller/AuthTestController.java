@@ -12,4 +12,9 @@ public class AuthTestController {
     public String ok() {
         return "OAUTH OK";
     }
+
+    @GetMapping("/test/onboarding")
+    public String onboarding() {
+        return "Onboarding OK";
+    }
 }

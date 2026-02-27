@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import site.holliverse.shared.domain.model.MemberMembership;
 
 import java.time.LocalDate;
 
@@ -46,9 +45,7 @@ public class SignUpRequestDto {
     @Pattern(regexp = "M|F", message = "성별은 M 또는 F만 입력 가능합니다.")
     private String gender;
 
-    /** 멤버십 등급. */
-    @NotNull(message = "필수 입력값입니다.")
-    private MemberMembership membership;
+
 
     /** 중첩 주소 정보(@Valid 재귀 검증). */
     @Valid

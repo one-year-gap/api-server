@@ -65,7 +65,7 @@ public class AuthController {
             HttpServletResponse response
     ) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, null, "리프레시 토큰이 없습니다");
+            throw new CustomException(ErrorCode.REFRESH_TOKEN_MISSING,"refresh");
         }
 
         TokenRefreshResponseDto data = refreshTokenUseCase.refresh(refreshToken);

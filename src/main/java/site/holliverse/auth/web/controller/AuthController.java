@@ -4,21 +4,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 import site.holliverse.auth.application.usecase.AuthUseCase;
 import site.holliverse.auth.application.usecase.RefreshTokenUseCase;
 import site.holliverse.auth.cookie.RefreshTokenCookieUtil;
-import site.holliverse.auth.dto.AuthTokenResponseDto;
-import site.holliverse.auth.dto.SignUpDataResponseDto;
-import site.holliverse.auth.dto.SignUpRequestDto;
-import site.holliverse.auth.dto.TokenRefreshResponseDto;
+import site.holliverse.auth.dto.*;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.security.CustomUserDetails;
 import site.holliverse.shared.web.response.ApiResponse;
 
 /**
@@ -96,5 +90,23 @@ public class AuthController {
         authUseCase.logout(refreshToken);
         RefreshTokenCookieUtil.clearRefreshTokenCookie(response, request.isSecure());
         return ApiResponse.success("로그아웃 성공", null);
+    }
+
+    @GetMapping("/v1/auth/onboarding/me")
+    public ApiResponse<OnboardingPrefillResponseDto> onboardingMe(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails
+            ){
+            Long memberId = customUserDetails.getMemberId();
+        OnboardingPrefillResponseDto data = authUseCase.getOnboardingPrefill(memberId);
+        return ApiResponse.success("온보딩 프리필 조회 성공",data);
+    }
+
+    @PostMapping("/v1/auth/onboarding/complete")
+    public ApiResponse<Void> onboardingComplete(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @Valid @RequestBody OnboardingCompleteRequestDto requestDto
+    ){
+        authUseCase.completeOnboarding(customUserDetails.getMemberId(), requestDto);
+        return ApiResponse.success("온보딩 완료", null);
     }
 }

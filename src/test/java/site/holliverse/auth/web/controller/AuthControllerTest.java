@@ -55,7 +55,6 @@ class AuthControllerTest {
                   "phone": "01012345678",
                   "birthDate": "1999-01-01",
                   "gender": "M",
-                  "membership": "BASIC",
                   "address": {
                     "province": "seoul",
                     "city": "gangnam",

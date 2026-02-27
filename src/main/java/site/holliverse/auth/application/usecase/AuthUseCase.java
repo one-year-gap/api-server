@@ -3,9 +3,12 @@ package site.holliverse.auth.application.usecase;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.auth.dto.OnboardingCompleteRequestDto;
+import site.holliverse.auth.dto.OnboardingPrefillResponseDto;
 import site.holliverse.auth.dto.SignUpRequestDto;
 import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberSignupType;
 import site.holliverse.shared.domain.model.MemberStatus;
@@ -115,7 +118,7 @@ public class AuthUseCase {
                 .phone(encryptedPhone)
                 .birthDate(request.getBirthDate())
                 .gender(request.getGender())
-                .membership(request.getMembership())
+                .membership(MemberMembership.BASIC)
                 .type(MemberSignupType.FORM)
                 .status(MemberStatus.ACTIVE)
                 .role(MemberRole.CUSTOMER)
@@ -139,5 +142,60 @@ public class AuthUseCase {
         String tokenHash = refreshTokenHashService.hash(rawRefreshToken);
         refreshTokenRepository.findByTokenHashAndRevokedFalse(tokenHash)
                 .ifPresent(refreshToken -> refreshToken.revoke());
+    }
+
+
+    /**
+     * 구글 처음 로그인 할시 추가 회원정보에 이메일과 이름은 띄워주기 위한 메서드
+     */
+    @Transactional(readOnly = true)
+    public OnboardingPrefillResponseDto getOnboardingPrefill(Long memberId){
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()->new CustomException(ErrorCode.MEMBER_NOT_FOUND,"memberId"));
+        return new OnboardingPrefillResponseDto(member.getEmail(),member.getName());
+    }
+
+    /**
+     * 구글 나머지 정보 입력 받는 메서드
+     */
+
+    @Transactional
+    public void completeOnboarding(Long memberId, OnboardingCompleteRequestDto request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND, "memberId"));
+
+        if (member.getStatus() != MemberStatus.PROCESSING) {
+            throw new CustomException(ErrorCode.INVALID_INPUT, "memberStatus");
+        }
+
+        String encryptedPhone = encryptionTool.encrypt(request.phone());
+        if (memberRepository.existsByPhone(encryptedPhone)) {
+            throw new CustomException(
+                    ErrorCode.DUPLICATED_PHONE,
+                    "phone"
+            );
+        }
+
+        // request.address()에서 온보딩 요청의 주소 객체를 꺼낸다음 주소가 있으면 사용하고 없으면 새로운 주소 만들어서 쓴다.
+
+        OnboardingCompleteRequestDto.AddressRequest addressRequest = request.address();
+        Address address = addressRepository.findByProvinceAndCityAndStreetAddress(
+                addressRequest.province(),
+                addressRequest.city(),
+                addressRequest.streetAddress()
+        ).orElseGet(() -> addressRepository.save(Address.builder()
+                .province(addressRequest.province())
+                .city(addressRequest.city())
+                .streetAddress(addressRequest.streetAddress())
+                .postalCode(addressRequest.postalCode())
+                .build()));
+
+        member.completeOnboarding(
+                address,
+                encryptedPhone,
+                request.birthDate(),
+                request.gender(),
+                request.membership()
+        );
     }
 }

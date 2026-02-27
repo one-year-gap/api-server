@@ -1,8 +1,11 @@
 package site.holliverse.admin.web.dto.member;
 
-public record TotalMembershipResponseDto(
-        Integer totalNumber,
-        Integer VVIPCount,
+import java.math.BigDecimal;
 
+public record TotalMembershipResponseDto(
+        BigDecimal totalInK,
+        BigDecimal vvipRate,
+        BigDecimal vipRate,
+        BigDecimal goldRate
 ) {
 }

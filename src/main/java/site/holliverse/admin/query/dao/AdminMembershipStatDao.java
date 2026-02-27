@@ -29,7 +29,7 @@ public class AdminMembershipStatDao {
     public AdminMembershipStatRawData getMembershipStats() {
         AdminMembershipStatRawData raw = dsl.select(
                         count().as("totalCount"),
-                        count().filterWhere(MEMBER.MEMBERSHIP.eq(MemberMembershipType.VVIP)).as("vvipCunt"),
+                        count().filterWhere(MEMBER.MEMBERSHIP.eq(MemberMembershipType.VVIP)).as("vvipCount"),
                         count().filterWhere(MEMBER.MEMBERSHIP.eq(MemberMembershipType.VIP)).as("vipCount"),
                         count().filterWhere(MEMBER.MEMBERSHIP.eq(MemberMembershipType.GOLD)).as("goldCount")
                 )

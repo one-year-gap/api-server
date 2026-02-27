@@ -112,7 +112,7 @@ class AuthUseCaseTest {
             assertThat(savedMember.getRole()).isEqualTo(MemberRole.CUSTOMER);
             assertThat(savedMember.getStatus()).isEqualTo(MemberStatus.ACTIVE);
             assertThat(savedMember.getType()).isEqualTo(MemberSignupType.FORM);
-            assertThat(savedMember.getMembership()).isEqualTo(MemberMembership.BASIC);
+            assertThat(savedMember.getMembership()).isEqualTo(MemberMembership.GOLD);
         }
 
         @Test

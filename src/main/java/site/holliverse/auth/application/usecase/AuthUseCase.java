@@ -194,8 +194,7 @@ public class AuthUseCase {
                 address,
                 encryptedPhone,
                 request.birthDate(),
-                request.gender(),
-                request.membership()
+                request.gender()
         );
     }
 }

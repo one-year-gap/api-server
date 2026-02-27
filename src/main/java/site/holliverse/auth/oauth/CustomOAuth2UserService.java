@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberSignupType;
 import site.holliverse.shared.domain.model.MemberStatus;

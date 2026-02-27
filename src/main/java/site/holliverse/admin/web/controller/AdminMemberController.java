@@ -109,9 +109,9 @@ public class AdminMemberController {
      * 회원 총 수, 등급별 인원수 반환
      */
     @GetMapping("/membership")
-    public ApiResponse<TotalMembershipResponseDto> totalMemberships() {
+    public ResponseEntity<ApiResponse<TotalMembershipResponseDto>> totalMemberships() {
 
         TotalMembershipResponseDto data = getMembershipCountUseCase.execute();
-        return ApiResponse.success("멤버십 통계 조회가 완료되었습니다.", data);
+        return ResponseEntity.ok(ApiResponse.success("멤버십 통계 조회가 완료되었습니다.", data));
     }
 }

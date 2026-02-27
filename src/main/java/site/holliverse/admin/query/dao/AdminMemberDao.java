@@ -20,6 +20,7 @@ import static site.holliverse.admin.query.jooq.Tables.ADDRESS;
 import static site.holliverse.admin.query.jooq.enums.ProductTypeEnum.MOBILE_PLAN;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
+import static site.holliverse.admin.query.jooq.Tables.SUPPORT_CASE;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -119,7 +120,22 @@ public class AdminMemberDao {
                         ADDRESS.STREET_ADDRESS,
 
                         // 3. 모바일 요금제 정보
-                        PRODUCT.NAME.as("currentMobilePlan")
+                        PRODUCT.NAME.as("currentMobilePlan"),
+
+                        // 4. 약정 정보 추가
+                        SUBSCRIPTION.CONTRACT_MONTHS,
+                        SUBSCRIPTION.CONTRACT_END_DATE,
+
+                        // 5. 상담 이력 통계
+                        DSL.selectCount()
+                                .from(SUPPORT_CASE)
+                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                                .asField("totalSupportCount"),
+
+                        DSL.select(DSL.max(SUPPORT_CASE.CREATED_AT))
+                                .from(SUPPORT_CASE)
+                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                                .asField("lastSupportDate")
                 )
                 .from(MEMBER)
 

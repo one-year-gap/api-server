@@ -1,6 +1,7 @@
 package site.holliverse.admin.query.dao;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * jOOQ 쿼리 결과를 담는 순수 데이터 객체
@@ -21,6 +22,12 @@ public record MemberDetailRawData(
         String streetAddress,
 
         // 요금제 (product 테이블 조인 결과)
-        String currentMobilePlan
+        String currentMobilePlan,
+
+        Integer contractMonths, // 약정 개월 수
+        LocalDateTime contractEndDate, // 약정 만료일
+
+        Long totalSupportCount, // 총 상담 횟수
+        LocalDateTime lastSupportDate // 최근 상담 일자
 ) {
 }

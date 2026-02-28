@@ -7,6 +7,7 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
+import site.holliverse.admin.query.jooq.enums.ProductTypeEnum;
 
 import java.util.List;
 
@@ -58,6 +59,7 @@ public class AdminRegionalTopPlanDao {
                 .join(ADDRESS).on(ADDRESS.ADDRESS_ID.eq(MEMBER.ADDRESS_ID))
                 .join(PRODUCT).on(PRODUCT.PRODUCT_ID.eq(SUBSCRIPTION.PRODUCT_ID))
                 .where(SUBSCRIPTION.STATUS.isTrue())
+                .and(PRODUCT.PRODUCT_TYPE.eq(ProductTypeEnum.MOBILE_PLAN))
                 .groupBy(ADDRESS.PROVINCE, PRODUCT.NAME)
                 .asTable("ranked");
 

@@ -106,6 +106,21 @@ class AdminMemberControllerTest {
     }
 
     @Test
+    @DisplayName("회원 목록 조회 실패: 유효하지 않은 연령대(ages) 필터값 전달 시 400 에러를 반환한다.")
+    void getMemberList_fail_invalidAge() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/members")
+                        .param("ages", "Tdd"))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("유효성 검증에 실패했습니다."))
+                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.field").value("ages[0]"));
+    }
+
+    @Test
     @DisplayName("회원 상세 조회 성공 시 200 OK와 회원 상세 데이터를 반환한다.")
     void getMemberDetail_success() throws Exception {
         // given

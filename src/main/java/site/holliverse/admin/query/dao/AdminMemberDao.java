@@ -67,7 +67,12 @@ public class AdminMemberDao {
                 // (INNER JOIN을 쓰면 구독 안 한 회원은 목록에서 아예 사라짐)
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
-                                .and(SUBSCRIPTION.STATUS.isTrue()) // status = TRUE (해지 안 한 구독만)
+                                .and(SUBSCRIPTION.STATUS.isTrue())
+                                .and(SUBSCRIPTION.PRODUCT_ID.in(
+                                        DSL.select(PRODUCT.PRODUCT_ID)
+                                                .from(PRODUCT)
+                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                                ))
                 )
 
                 // [조인 2] 구독 -> 상품 (요금제 이름을 가져오기 위해 연결)
@@ -91,6 +96,11 @@ public class AdminMemberDao {
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
                                 .and(SUBSCRIPTION.STATUS.isTrue())
+                                .and(SUBSCRIPTION.PRODUCT_ID.in(
+                                        DSL.select(PRODUCT.PRODUCT_ID)
+                                                .from(PRODUCT)
+                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                                ))
                 )
                 .leftJoin(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
                 .where(createConditions(req))
@@ -176,6 +186,8 @@ public class AdminMemberDao {
         // 조건 장바구니
         List<Condition> conditions = new ArrayList<>(); // Condition = SQL의 조건식
 
+        LocalDate today = LocalDate.now();
+
         // 1. 검색어 (암호화 일치 검색)
         if (StringUtils.hasText(req.keyword())) {
             String encryptedKeyword = encryptionTool.encrypt(req.keyword());
@@ -200,42 +212,100 @@ public class AdminMemberDao {
         // 4. 요금제명 (다중 선택 가능)
         // MEMBER 테이블에는 요금제 이름이 없어서, 위에서 조인한 PRODUCT 테이블 컬럼을 사용해야 함
         if (!CollectionUtils.isEmpty(req.planNames())) {
-            conditions.add(PRODUCT.NAME.in(req.planNames()));
+            // 프론트에서 넘어온 배열(예: ["기가 인터넷", "U+ tv"])을 하나씩 꺼내서 검사
+            for (String planName : req.planNames()) {
+                conditions.add(
+                        DSL.exists(
+                                DSL.selectOne()
+                                        .from(SUBSCRIPTION)
+                                        .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
+                                        .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                                        .and(SUBSCRIPTION.STATUS.isTrue())
+                                        .and(PRODUCT.NAME.eq(planName))
+                        )
+                );
+            }
         }
 
-        // 5. 가입일 범위 검색 (기간 조회)
-        if (req.joinDateStart() != null) {
-            // 가입일이 시작일보다 크거나 같음 (>=)
-            conditions.add(MEMBER.JOIN_DATE.ge(req.joinDateStart()));
-        }
+        // 5. 가입 기간 다중 필터링
+        if (!CollectionUtils.isEmpty(req.durations())) {
+            Condition durationCondition = DSL.noCondition();
 
-        if (req.joinDateEnd() != null) {
-            // 가입일이 종료일보다 작거나 같음 (<=)
-            conditions.add(MEMBER.JOIN_DATE.le(req.joinDateEnd()));
+            for (String durationStr : req.durations()) {
+                Condition currentCondition = null;
+                switch (durationStr) {
+                    case "UNDER_3_MONTHS":
+                        currentCondition = MEMBER.JOIN_DATE.gt(today.minusMonths(3));
+                        break;
+                    case "MONTHS_3_TO_12":
+                        currentCondition = MEMBER.JOIN_DATE.le(today.minusMonths(3)).and(MEMBER.JOIN_DATE.gt(today.minusYears(1)));
+                        break;
+                    case "YEARS_1_TO_2":
+                        currentCondition = MEMBER.JOIN_DATE.le(today.minusYears(1)).and(MEMBER.JOIN_DATE.gt(today.minusYears(2)));
+                        break;
+                    case "YEARS_2_TO_5":
+                        currentCondition = MEMBER.JOIN_DATE.le(today.minusYears(2)).and(MEMBER.JOIN_DATE.gt(today.minusYears(5)));
+                        break;
+                    case "YEARS_5_TO_10":
+                        currentCondition = MEMBER.JOIN_DATE.le(today.minusYears(5)).and(MEMBER.JOIN_DATE.gt(today.minusYears(10)));
+                        break;
+                    case "OVER_10_YEARS":
+                        currentCondition = MEMBER.JOIN_DATE.le(today.minusYears(10));
+                        break;
+                }
+
+                if (currentCondition != null) {
+                    durationCondition = durationCondition.or(currentCondition);
+                }
+            }
+            conditions.add(durationCondition);
         }
 
         // 6. 연령대 다중 필터링
-        // 요청: [20, 40] (20대 또는 40대인 사람을 찾아줘)
-        // 논리: (20대 조건) OR (40대 조건)
-        if (!CollectionUtils.isEmpty(req.ageGroups())) {
-            Condition ageCondition = DSL.noCondition(); // 빈 조건으로 시작해서 OR로 붙여나감
-            LocalDate today = LocalDate.now();
+        if (!CollectionUtils.isEmpty(req.ages())) {
+            Condition ageCondition = DSL.noCondition();
 
-            for (Integer ageStart : req.ageGroups()) {
-                // 예: ageStart = 20 (20대 검색)
-                // 만 나이 계산법 역산:
-                // - 가장 늦게 태어난 사람(제일 어린 20세): 오늘 날짜 - 20년
-                // - 가장 일찍 태어난 사람(제일 많은 29세): 오늘 날짜 - 30년 + 1일
+            for (String ageStr : req.ages()) {
+                Condition currentCondition = null;
+                // 나이 계산 역산: N살 = 생일이 오늘로부터 N년 전 ~ N+1년 전 사이
+                switch (ageStr) {
+                    case "UNDER_10":
+                        currentCondition = MEMBER.BIRTH_DATE.gt(today.minusYears(10));
+                        break;
+                    case "TEENS":
+                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(10)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(20)));
+                        break;
+                    case "TWENTIES":
+                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(20)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(30)));
+                        break;
+                    case "THIRTIES":
+                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(30)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(40)));
+                        break;
+                    case "FORTIES":
+                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(40)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(50)));
+                        break;
+                    case "FIFTIES":
+                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(50)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(60)));
+                        break;
+                    case "SIXTIES_EARLY":
+                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(60)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(65)));
+                        break;
+                    case "OVER_65":
+                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(65));
+                        break;
+                }
 
-                LocalDate maxBirth = today.minusYears(ageStart);
-                LocalDate minBirth = today.minusYears(ageStart + 10).plusDays(1);
-
-                // OR 조건으로 계속 연결: (20대 범위) OR (40대 범위) OR ...
-                ageCondition = ageCondition.or(MEMBER.BIRTH_DATE.between(minBirth, maxBirth));
+                // 생성된 조건을 OR로 계속 이어 붙임
+                if (currentCondition != null) {
+                    ageCondition = ageCondition.or(currentCondition);
+                }
             }
-
-            // 완성된 연령대 조건 덩어리를 전체 검색 조건에 추가 (괄호로 감싸짐)
             conditions.add(ageCondition);
+        }
+
+        // 7. 회원 상태 다중 선택
+        if (!CollectionUtils.isEmpty(req.statuses())) {
+            conditions.add(MEMBER.STATUS.in(req.statuses()));
         }
 
         return conditions;

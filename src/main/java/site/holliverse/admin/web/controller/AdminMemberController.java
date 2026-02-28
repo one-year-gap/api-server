@@ -47,7 +47,7 @@ public class AdminMemberController {
      * @param requestDto 페이징 및 검색 조건
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<AdminMemberListResponseDto>> getMemberList(AdminMemberListRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<AdminMemberListResponseDto>> getMemberList(@Valid AdminMemberListRequestDto requestDto) {
 
         // 1. UseCase 호출: DB에서 Raw 데이터(암호문 상태) 수집
         RetrieveMemberResult result = retrieveMemberUseCase.execute(requestDto);

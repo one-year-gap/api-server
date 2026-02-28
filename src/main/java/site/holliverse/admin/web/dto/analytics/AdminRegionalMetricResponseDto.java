@@ -27,7 +27,7 @@ public record AdminRegionalMetricResponseDto(
             String regionCode,
             String region,
             long averageSales,
-            long averageDataUsageGb
+            double averageDataUsageGb
     ) {
     }
 

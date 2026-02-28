@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.math.RoundingMode;
 
 import static site.holliverse.admin.query.jooq.Tables.ADDRESS;
 import static site.holliverse.admin.query.jooq.Tables.MEMBER;
@@ -72,9 +73,12 @@ public class AdminRegionalMetricDao {
         ).as("avgSales");
 
         // 평균 데이터 사용량 = 총데이터사용량 / 가입자수
-        Field<BigDecimal> avgDataUsageGb = DSL.coalesce(
-                totalDataUsage.div(DSL.nullif(subscriberCount, BigDecimal.ZERO)),
-                BigDecimal.ZERO
+        Field<BigDecimal> avgDataUsageGb = DSL.round(
+                DSL.coalesce(
+                        totalDataUsage.div(DSL.nullif(subscriberCount, BigDecimal.ZERO)),
+                        BigDecimal.ZERO
+                ),
+                1
         ).as("avgDataUsageGb");
 
         // 조인 경로
@@ -103,6 +107,8 @@ public class AdminRegionalMetricDao {
 
     // select 결과를 record DTO로 변환
     private RegionalMetricRawData toRawData(Record3<String, BigDecimal, BigDecimal> r) {
+        BigDecimal rawDataUsage = r.get("avgDataUsageGb", BigDecimal.class);
+
         return new RegionalMetricRawData(
                 r.get("province", String.class),
                 r.get("avgSales", BigDecimal.class),

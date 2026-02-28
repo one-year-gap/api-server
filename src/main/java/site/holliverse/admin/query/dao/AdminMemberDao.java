@@ -123,6 +123,7 @@ public class AdminMemberDao {
                         PRODUCT.NAME.as("currentMobilePlan"),
 
                         // 4. 약정 정보 추가
+                        SUBSCRIPTION.START_DATE.as("contractStartDate"),
                         SUBSCRIPTION.CONTRACT_MONTHS,
                         SUBSCRIPTION.CONTRACT_END_DATE,
 
@@ -143,15 +144,22 @@ public class AdminMemberDao {
                 .leftJoin(ADDRESS).on(MEMBER.ADDRESS_ID.eq(ADDRESS.ADDRESS_ID))
 
                 // [조인 2] 회원 -> 구독 (현재 활성화된 구독만)
+                // 무조건 활성화된 구독을 다 가져오는 게 아니라, '모바일 요금제(MOBILE_PLAN)'인 것만 가져오도록 제한
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
                                 .and(SUBSCRIPTION.STATUS.isTrue())
+                                .and(SUBSCRIPTION.PRODUCT_ID.in(
+                                        // 서브쿼리: PRODUCT 테이블에서 타입이 MOBILE_PLAN인 상품 ID들만 추출
+                                        DSL.select(PRODUCT.PRODUCT_ID)
+                                                .from(PRODUCT)
+                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                                ))
                 )
 
                 // [조인 3] 구독 -> 상품 (MOBILE_PLAN 만)
+                // 이미 위에서 모바일 요금제만 걸러냈으므로, 여기서는 단순히 ID만 매핑
                 .leftJoin(PRODUCT).on(
                         SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID)
-                                .and(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
                 )
 
                 // 검색 조건: 대상 회원의 ID

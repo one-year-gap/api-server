@@ -12,6 +12,7 @@ import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,7 +35,12 @@ class GetMemberDetailUseCaseTest {
         Long memberId = 1L;
         MemberDetailRawData mockRaw = new MemberDetailRawData(
                 "enc_name", "enc_phone", "test@test.com", LocalDate.of(1995, 1, 1),
-                "M", "VIP", LocalDate.now(), "ACTIVE", "Province", "City", "Street", "5G 요금제"
+                "M", "VIP", LocalDate.now(), "ACTIVE", "Province", "City", "Street", "5G 요금제",
+                LocalDateTime.now().minusMonths(12), // contractStartDate (1년 전 가입)
+                24,                                  // contractMonths (24개월 약정)
+                LocalDateTime.now().plusMonths(12),  // contractEndDate (1년 뒤 만료)
+                5L,                                  // totalSupportCount (총 상담 5번)
+                LocalDateTime.now().minusDays(3)     // lastSupportDate (3일 전 마지막 상담)
         );
         given(adminMemberDao.findDetailById(memberId)).willReturn(Optional.of(mockRaw));
 
@@ -43,6 +49,8 @@ class GetMemberDetailUseCaseTest {
 
         // then
         assertThat(result.email()).isEqualTo("test@test.com");
+        assertThat(result.contractMonths()).isEqualTo(24);
+        assertThat(result.totalSupportCount()).isEqualTo(5L);
         verify(adminMemberDao, times(1)).findDetailById(memberId);
     }
 

@@ -26,6 +26,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 관리자 회원 목록 조회를 위한 DAO.
@@ -38,6 +41,30 @@ public class AdminMemberDao {
 
     private final DSLContext dsl;           // jOOQ의 핵심 도구 (쿼리 실행기)
     private final EncryptionTool encryptionTool; // 이름/전화번호 검색 시 암호화 비교를 위해 필요
+
+    // 조건 사전 (Map) 세팅
+    private static final Map<String, Function<LocalDate, Condition>> DURATION_CONDITIONS = new LinkedHashMap<>();
+    private static final Map<String, Function<LocalDate, Condition>> AGE_CONDITIONS = new LinkedHashMap<>();
+
+    static {
+        // 1. 가입 기간 조건 사전
+        DURATION_CONDITIONS.put("UNDER_3_MONTHS", today -> MEMBER.JOIN_DATE.gt(today.minusMonths(3)));
+        DURATION_CONDITIONS.put("MONTHS_3_TO_12", today -> MEMBER.JOIN_DATE.le(today.minusMonths(3)).and(MEMBER.JOIN_DATE.gt(today.minusYears(1))));
+        DURATION_CONDITIONS.put("YEARS_1_TO_2",   today -> MEMBER.JOIN_DATE.le(today.minusYears(1)).and(MEMBER.JOIN_DATE.gt(today.minusYears(2))));
+        DURATION_CONDITIONS.put("YEARS_2_TO_5",   today -> MEMBER.JOIN_DATE.le(today.minusYears(2)).and(MEMBER.JOIN_DATE.gt(today.minusYears(5))));
+        DURATION_CONDITIONS.put("YEARS_5_TO_10",  today -> MEMBER.JOIN_DATE.le(today.minusYears(5)).and(MEMBER.JOIN_DATE.gt(today.minusYears(10))));
+        DURATION_CONDITIONS.put("OVER_10_YEARS",  today -> MEMBER.JOIN_DATE.le(today.minusYears(10)));
+
+        // 2. 연령대 조건 사전
+        AGE_CONDITIONS.put("UNDER_10", today -> MEMBER.BIRTH_DATE.gt(today.minusYears(10)));
+        AGE_CONDITIONS.put("TEENS", today -> MEMBER.BIRTH_DATE.le(today.minusYears(10)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(20))));
+        AGE_CONDITIONS.put("TWENTIES", today -> MEMBER.BIRTH_DATE.le(today.minusYears(20)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(30))));
+        AGE_CONDITIONS.put("THIRTIES", today -> MEMBER.BIRTH_DATE.le(today.minusYears(30)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(40))));
+        AGE_CONDITIONS.put("FORTIES", today -> MEMBER.BIRTH_DATE.le(today.minusYears(40)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(50))));
+        AGE_CONDITIONS.put("FIFTIES", today -> MEMBER.BIRTH_DATE.le(today.minusYears(50)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(60))));
+        AGE_CONDITIONS.put("SIXTIES_EARLY", today -> MEMBER.BIRTH_DATE.le(today.minusYears(60)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(65))));
+        AGE_CONDITIONS.put("OVER_65", today -> MEMBER.BIRTH_DATE.le(today.minusYears(65)));
+    }
 
     /**
      * 조건에 맞는 회원 목록을 조회하여 반환.
@@ -228,77 +255,21 @@ public class AdminMemberDao {
 
         // 5. 가입 기간 다중 필터링
         if (!CollectionUtils.isEmpty(req.durations())) {
-            Condition durationCondition = DSL.noCondition();
+            Condition durationCondition = req.durations().stream()
+                    // 단어장에서 공식을 찾고, 오늘 날짜(today)를 넣어서 조건식을 만든다
+                    .map(durationStr -> DURATION_CONDITIONS.getOrDefault(durationStr, t -> DSL.noCondition()).apply(today))
+                    // 만들어진 조건식들을 전부 OR(.or())로 이어 붙인다
+                    .reduce(DSL.noCondition(), Condition::or);
 
-            for (String durationStr : req.durations()) {
-                Condition currentCondition = null;
-                switch (durationStr) {
-                    case "UNDER_3_MONTHS":
-                        currentCondition = MEMBER.JOIN_DATE.gt(today.minusMonths(3));
-                        break;
-                    case "MONTHS_3_TO_12":
-                        currentCondition = MEMBER.JOIN_DATE.le(today.minusMonths(3)).and(MEMBER.JOIN_DATE.gt(today.minusYears(1)));
-                        break;
-                    case "YEARS_1_TO_2":
-                        currentCondition = MEMBER.JOIN_DATE.le(today.minusYears(1)).and(MEMBER.JOIN_DATE.gt(today.minusYears(2)));
-                        break;
-                    case "YEARS_2_TO_5":
-                        currentCondition = MEMBER.JOIN_DATE.le(today.minusYears(2)).and(MEMBER.JOIN_DATE.gt(today.minusYears(5)));
-                        break;
-                    case "YEARS_5_TO_10":
-                        currentCondition = MEMBER.JOIN_DATE.le(today.minusYears(5)).and(MEMBER.JOIN_DATE.gt(today.minusYears(10)));
-                        break;
-                    case "OVER_10_YEARS":
-                        currentCondition = MEMBER.JOIN_DATE.le(today.minusYears(10));
-                        break;
-                }
-
-                if (currentCondition != null) {
-                    durationCondition = durationCondition.or(currentCondition);
-                }
-            }
             conditions.add(durationCondition);
         }
 
         // 6. 연령대 다중 필터링
         if (!CollectionUtils.isEmpty(req.ages())) {
-            Condition ageCondition = DSL.noCondition();
+            Condition ageCondition = req.ages().stream()
+                    .map(ageStr -> AGE_CONDITIONS.getOrDefault(ageStr, t -> DSL.noCondition()).apply(today))
+                    .reduce(DSL.noCondition(), Condition::or);
 
-            for (String ageStr : req.ages()) {
-                Condition currentCondition = null;
-                // 나이 계산 역산: N살 = 생일이 오늘로부터 N년 전 ~ N+1년 전 사이
-                switch (ageStr) {
-                    case "UNDER_10":
-                        currentCondition = MEMBER.BIRTH_DATE.gt(today.minusYears(10));
-                        break;
-                    case "TEENS":
-                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(10)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(20)));
-                        break;
-                    case "TWENTIES":
-                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(20)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(30)));
-                        break;
-                    case "THIRTIES":
-                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(30)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(40)));
-                        break;
-                    case "FORTIES":
-                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(40)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(50)));
-                        break;
-                    case "FIFTIES":
-                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(50)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(60)));
-                        break;
-                    case "SIXTIES_EARLY":
-                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(60)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(65)));
-                        break;
-                    case "OVER_65":
-                        currentCondition = MEMBER.BIRTH_DATE.le(today.minusYears(65));
-                        break;
-                }
-
-                // 생성된 조건을 OR로 계속 이어 붙임
-                if (currentCondition != null) {
-                    ageCondition = ageCondition.or(currentCondition);
-                }
-            }
             conditions.add(ageCondition);
         }
 

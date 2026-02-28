@@ -27,5 +27,8 @@ public record AdminMemberDto (
     String email,
 
     // 8. 이용 요금제
-    String planName
+    String planName,
+
+    // 9. 회원 상태
+    String status
 ) {}

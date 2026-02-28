@@ -108,6 +108,21 @@ class AdminMemberControllerTest {
     }
 
     @Test
+    @DisplayName("회원 목록 조회 실패: 유효하지 않은 연령대(ages) 필터값 전달 시 400 에러를 반환한다.")
+    void getMemberList_fail_invalidAge() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/members")
+                        .param("ages", "Tdd"))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("유효성 검증에 실패했습니다."))
+                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.field").value("ages[0]"));
+    }
+
+    @Test
     @DisplayName("회원 상세 조회 성공 시 200 OK와 회원 상세 데이터를 반환한다.")
     void getMemberDetail_success() throws Exception {
         // given
@@ -116,9 +131,28 @@ class AdminMemberControllerTest {
         // UseCase와 Mapper가 주고받을 가짜 객체들
         MemberDetailRawData mockRaw = mock(MemberDetailRawData.class);
         AdminMemberDetailResponseDto mockResponse = new AdminMemberDetailResponseDto(
-                "김영현", 31, "VIP", "M", "경기도 구리시", "test@test.com",
-                LocalDate.of(1995, 1, 1), "5G 요금제", "010-1234-5678",
-                LocalDate.of(2024, 1, 1), 416L, "ACTIVE"
+                "김영현",
+                31,
+                "VIP",
+                "M",
+                "경기도 구리시",
+                "test@test.com",
+                LocalDate.of(1995, 1, 1),
+                "5G 요금제",
+                "010-1234-5678",
+                LocalDate.of(2024, 1, 1),
+                "2년 1개월",
+                "ACTIVE",
+
+                // --- 새로 추가된 약정 및 상담 데이터 ---
+                true,
+                24,
+                LocalDate.now().minusMonths(12),
+                LocalDate.now().plusMonths(12),
+                365,
+                false,
+                10L,
+                LocalDate.now().minusDays(5)
         );
 
         given(getMemberDetailUseCase.execute(memberId)).willReturn(mockRaw);
@@ -136,7 +170,9 @@ class AdminMemberControllerTest {
                 // 데이터 검증
                 .andExpect(jsonPath("$.data.name").value("김영현"))
                 .andExpect(jsonPath("$.data.currentMobilePlan").value("5G 요금제"))
-                .andExpect(jsonPath("$.data.phone").value("010-1234-5678"));
+                .andExpect(jsonPath("$.data.phone").value("010-1234-5678"))
+                .andExpect(jsonPath("$.data.isContracted").value(true))
+                .andExpect(jsonPath("$.data.joinDurationText").value("2년 1개월"));;
     }
 
     @Test

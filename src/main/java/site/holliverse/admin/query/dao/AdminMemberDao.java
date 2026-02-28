@@ -20,11 +20,15 @@ import static site.holliverse.admin.query.jooq.Tables.ADDRESS;
 import static site.holliverse.admin.query.jooq.enums.ProductTypeEnum.MOBILE_PLAN;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
+import static site.holliverse.admin.query.jooq.Tables.SUPPORT_CASE;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 관리자 회원 목록 조회를 위한 DAO.
@@ -37,6 +41,30 @@ public class AdminMemberDao {
 
     private final DSLContext dsl;           // jOOQ의 핵심 도구 (쿼리 실행기)
     private final EncryptionTool encryptionTool; // 이름/전화번호 검색 시 암호화 비교를 위해 필요
+
+    // 조건 사전 (Map) 세팅
+    private static final Map<String, Function<LocalDate, Condition>> DURATION_CONDITIONS = new LinkedHashMap<>();
+    private static final Map<String, Function<LocalDate, Condition>> AGE_CONDITIONS = new LinkedHashMap<>();
+
+    static {
+        // 1. 가입 기간 조건 사전
+        DURATION_CONDITIONS.put("UNDER_3_MONTHS", today -> MEMBER.JOIN_DATE.gt(today.minusMonths(3)));
+        DURATION_CONDITIONS.put("MONTHS_3_TO_12", today -> MEMBER.JOIN_DATE.le(today.minusMonths(3)).and(MEMBER.JOIN_DATE.gt(today.minusYears(1))));
+        DURATION_CONDITIONS.put("YEARS_1_TO_2",   today -> MEMBER.JOIN_DATE.le(today.minusYears(1)).and(MEMBER.JOIN_DATE.gt(today.minusYears(2))));
+        DURATION_CONDITIONS.put("YEARS_2_TO_5",   today -> MEMBER.JOIN_DATE.le(today.minusYears(2)).and(MEMBER.JOIN_DATE.gt(today.minusYears(5))));
+        DURATION_CONDITIONS.put("YEARS_5_TO_10",  today -> MEMBER.JOIN_DATE.le(today.minusYears(5)).and(MEMBER.JOIN_DATE.gt(today.minusYears(10))));
+        DURATION_CONDITIONS.put("OVER_10_YEARS",  today -> MEMBER.JOIN_DATE.le(today.minusYears(10)));
+
+        // 2. 연령대 조건 사전
+        AGE_CONDITIONS.put("UNDER_10", today -> MEMBER.BIRTH_DATE.gt(today.minusYears(10)));
+        AGE_CONDITIONS.put("TEENS", today -> MEMBER.BIRTH_DATE.le(today.minusYears(10)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(20))));
+        AGE_CONDITIONS.put("TWENTIES", today -> MEMBER.BIRTH_DATE.le(today.minusYears(20)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(30))));
+        AGE_CONDITIONS.put("THIRTIES", today -> MEMBER.BIRTH_DATE.le(today.minusYears(30)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(40))));
+        AGE_CONDITIONS.put("FORTIES", today -> MEMBER.BIRTH_DATE.le(today.minusYears(40)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(50))));
+        AGE_CONDITIONS.put("FIFTIES", today -> MEMBER.BIRTH_DATE.le(today.minusYears(50)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(60))));
+        AGE_CONDITIONS.put("SIXTIES_EARLY", today -> MEMBER.BIRTH_DATE.le(today.minusYears(60)).and(MEMBER.BIRTH_DATE.gt(today.minusYears(65))));
+        AGE_CONDITIONS.put("OVER_65", today -> MEMBER.BIRTH_DATE.le(today.minusYears(65)));
+    }
 
     /**
      * 조건에 맞는 회원 목록을 조회하여 반환.
@@ -66,7 +94,12 @@ public class AdminMemberDao {
                 // (INNER JOIN을 쓰면 구독 안 한 회원은 목록에서 아예 사라짐)
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
-                                .and(SUBSCRIPTION.STATUS.isTrue()) // status = TRUE (해지 안 한 구독만)
+                                .and(SUBSCRIPTION.STATUS.isTrue())
+                                .and(SUBSCRIPTION.PRODUCT_ID.in(
+                                        DSL.select(PRODUCT.PRODUCT_ID)
+                                                .from(PRODUCT)
+                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                                ))
                 )
 
                 // [조인 2] 구독 -> 상품 (요금제 이름을 가져오기 위해 연결)
@@ -90,6 +123,11 @@ public class AdminMemberDao {
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
                                 .and(SUBSCRIPTION.STATUS.isTrue())
+                                .and(SUBSCRIPTION.PRODUCT_ID.in(
+                                        DSL.select(PRODUCT.PRODUCT_ID)
+                                                .from(PRODUCT)
+                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                                ))
                 )
                 .leftJoin(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
                 .where(createConditions(req))
@@ -119,7 +157,23 @@ public class AdminMemberDao {
                         ADDRESS.STREET_ADDRESS,
 
                         // 3. 모바일 요금제 정보
-                        PRODUCT.NAME.as("currentMobilePlan")
+                        PRODUCT.NAME.as("currentMobilePlan"),
+
+                        // 4. 약정 정보 추가
+                        SUBSCRIPTION.START_DATE.as("contractStartDate"),
+                        SUBSCRIPTION.CONTRACT_MONTHS,
+                        SUBSCRIPTION.CONTRACT_END_DATE,
+
+                        // 5. 상담 이력 통계
+                        DSL.selectCount()
+                                .from(SUPPORT_CASE)
+                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                                .asField("totalSupportCount"),
+
+                        DSL.select(DSL.max(SUPPORT_CASE.CREATED_AT))
+                                .from(SUPPORT_CASE)
+                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                                .asField("lastSupportDate")
                 )
                 .from(MEMBER)
 
@@ -127,15 +181,22 @@ public class AdminMemberDao {
                 .leftJoin(ADDRESS).on(MEMBER.ADDRESS_ID.eq(ADDRESS.ADDRESS_ID))
 
                 // [조인 2] 회원 -> 구독 (현재 활성화된 구독만)
+                // 무조건 활성화된 구독을 다 가져오는 게 아니라, '모바일 요금제(MOBILE_PLAN)'인 것만 가져오도록 제한
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
                                 .and(SUBSCRIPTION.STATUS.isTrue())
+                                .and(SUBSCRIPTION.PRODUCT_ID.in(
+                                        // 서브쿼리: PRODUCT 테이블에서 타입이 MOBILE_PLAN인 상품 ID들만 추출
+                                        DSL.select(PRODUCT.PRODUCT_ID)
+                                                .from(PRODUCT)
+                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                                ))
                 )
 
                 // [조인 3] 구독 -> 상품 (MOBILE_PLAN 만)
+                // 이미 위에서 모바일 요금제만 걸러냈으므로, 여기서는 단순히 ID만 매핑
                 .leftJoin(PRODUCT).on(
                         SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID)
-                                .and(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
                 )
 
                 // 검색 조건: 대상 회원의 ID
@@ -151,6 +212,8 @@ public class AdminMemberDao {
     private List<Condition> createConditions(AdminMemberListRequestDto req) {
         // 조건 장바구니
         List<Condition> conditions = new ArrayList<>(); // Condition = SQL의 조건식
+
+        LocalDate today = LocalDate.now();
 
         // 1. 검색어 (암호화 일치 검색)
         if (StringUtils.hasText(req.keyword())) {
@@ -176,42 +239,43 @@ public class AdminMemberDao {
         // 4. 요금제명 (다중 선택 가능)
         // MEMBER 테이블에는 요금제 이름이 없어서, 위에서 조인한 PRODUCT 테이블 컬럼을 사용해야 함
         if (!CollectionUtils.isEmpty(req.planNames())) {
-            conditions.add(PRODUCT.NAME.in(req.planNames()));
+            // 프론트에서 넘어온 요금제 배열에 포함된 회원의 '구독 요금제 개수'를 세서,
+            // 그 개수가 프론트에서 넘긴 배열의 크기(size)와 완벽히 일치하는 사람만 찾음
+            conditions.add(
+                    DSL.select(DSL.countDistinct(PRODUCT.NAME))
+                            .from(SUBSCRIPTION)
+                            .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
+                            .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                            .and(SUBSCRIPTION.STATUS.isTrue())
+                            .and(PRODUCT.NAME.in(req.planNames())) // 프론트에서 보낸 요금제 목록(IN)
+                            .asField()
+                            .eq(req.planNames().size()) // 보낸 배열의 길이와 똑같은지 비교
+            );
         }
 
-        // 5. 가입일 범위 검색 (기간 조회)
-        if (req.joinDateStart() != null) {
-            // 가입일이 시작일보다 크거나 같음 (>=)
-            conditions.add(MEMBER.JOIN_DATE.ge(req.joinDateStart()));
-        }
+        // 5. 가입 기간 다중 필터링
+        if (!CollectionUtils.isEmpty(req.durations())) {
+            Condition durationCondition = req.durations().stream()
+                    // 단어장에서 공식을 찾고, 오늘 날짜(today)를 넣어서 조건식을 만든다
+                    .map(durationStr -> DURATION_CONDITIONS.getOrDefault(durationStr, t -> DSL.noCondition()).apply(today))
+                    // 만들어진 조건식들을 전부 OR(.or())로 이어 붙인다
+                    .reduce(DSL.noCondition(), Condition::or);
 
-        if (req.joinDateEnd() != null) {
-            // 가입일이 종료일보다 작거나 같음 (<=)
-            conditions.add(MEMBER.JOIN_DATE.le(req.joinDateEnd()));
+            conditions.add(durationCondition);
         }
 
         // 6. 연령대 다중 필터링
-        // 요청: [20, 40] (20대 또는 40대인 사람을 찾아줘)
-        // 논리: (20대 조건) OR (40대 조건)
-        if (!CollectionUtils.isEmpty(req.ageGroups())) {
-            Condition ageCondition = DSL.noCondition(); // 빈 조건으로 시작해서 OR로 붙여나감
-            LocalDate today = LocalDate.now();
+        if (!CollectionUtils.isEmpty(req.ages())) {
+            Condition ageCondition = req.ages().stream()
+                    .map(ageStr -> AGE_CONDITIONS.getOrDefault(ageStr, t -> DSL.noCondition()).apply(today))
+                    .reduce(DSL.noCondition(), Condition::or);
 
-            for (Integer ageStart : req.ageGroups()) {
-                // 예: ageStart = 20 (20대 검색)
-                // 만 나이 계산법 역산:
-                // - 가장 늦게 태어난 사람(제일 어린 20세): 오늘 날짜 - 20년
-                // - 가장 일찍 태어난 사람(제일 많은 29세): 오늘 날짜 - 30년 + 1일
-
-                LocalDate maxBirth = today.minusYears(ageStart);
-                LocalDate minBirth = today.minusYears(ageStart + 10).plusDays(1);
-
-                // OR 조건으로 계속 연결: (20대 범위) OR (40대 범위) OR ...
-                ageCondition = ageCondition.or(MEMBER.BIRTH_DATE.between(minBirth, maxBirth));
-            }
-
-            // 완성된 연령대 조건 덩어리를 전체 검색 조건에 추가 (괄호로 감싸짐)
             conditions.add(ageCondition);
+        }
+
+        // 7. 회원 상태 다중 선택
+        if (!CollectionUtils.isEmpty(req.statuses())) {
+            conditions.add(MEMBER.STATUS.in(req.statuses()));
         }
 
         return conditions;

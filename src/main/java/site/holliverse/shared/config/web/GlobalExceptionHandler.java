@@ -16,6 +16,7 @@ import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.web.response.ApiErrorDetail;
 import site.holliverse.shared.web.response.ApiErrorResponse;
+import org.springframework.validation.BindException;
 
 import java.util.Objects;
 
@@ -38,13 +39,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(code.httpStatus()).body(body);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
     // @Valid + @RequestBody 검증 실패(JSON body validation)
-    public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiErrorResponse> handleValidation(BindException ex) {
         FieldError fe = ex.getBindingResult().getFieldError();
 
-        String field = fe != null ? fe.getField() : null;
-        String reason = fe != null ? Objects.toString(fe.getDefaultMessage(), "invalid") : "invalid";
+        String field = fe != null ? fe.getField() : "unknown";
+        String reason = fe != null ? Objects.toString(fe.getDefaultMessage(), "입력값이 올바르지 않습니다.") : "입력값이 올바르지 않습니다.";
 
         ApiErrorResponse body = ApiErrorResponse.error(
                 ErrorCode.INVALID_INPUT.defaultMessage(),

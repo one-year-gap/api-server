@@ -35,22 +35,22 @@ public class AdminRegionalMetricAssembler {
     static {
         // LinkedHashMap을 사용해 삽입 순서(=응답 순서)를 보장한다.
         Map<String, String> map = new LinkedHashMap<>();
-        map.put("서울특별시", "R001");
-        map.put("인천광역시", "R002");
-        map.put("경기도", "R003");
-        map.put("강원도", "R004");
-        map.put("충청남도", "R005");
+        map.put("서울", "R001");
+        map.put("인천", "R002");
+        map.put("경기", "R003");
+        map.put("강원특별자치도", "R004");
+        map.put("충남", "R005");
         map.put("세종특별자치시", "R006");
-        map.put("대전광역시", "R007");
-        map.put("충청북도", "R008");
-        map.put("경상북도", "R009");
-        map.put("대구광역시", "R010");
-        map.put("울산광역시", "R011");
-        map.put("부산광역시", "R012");
-        map.put("경상남도", "R013");
-        map.put("전라북도", "R014");
-        map.put("광주광역시", "R015");
-        map.put("전라남도", "R016");
+        map.put("대전", "R007");
+        map.put("충북", "R008");
+        map.put("경북", "R009");
+        map.put("대구", "R010");
+        map.put("울산", "R011");
+        map.put("부산", "R012");
+        map.put("경남", "R013");
+        map.put("전북특별자치도", "R014");
+        map.put("광주", "R015");
+        map.put("전남", "R016");
         map.put("제주특별자치도", "R017");
 
         REGION_CODE_MAP = Map.copyOf(map);

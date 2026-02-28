@@ -34,4 +34,7 @@ public class MemberRawData {
 
     // 8. 이용 요금제 (Product 테이블에서 가져온 이름)
     private String planName;
+
+    // 9. 회원 상태
+    private String status;
 }

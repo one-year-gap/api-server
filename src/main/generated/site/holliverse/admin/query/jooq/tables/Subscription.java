@@ -100,6 +100,16 @@ public class Subscription extends TableImpl<SubscriptionRecord> {
      */
     public final TableField<SubscriptionRecord, LocalDateTime> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
 
+    /**
+     * The column <code>public.subscription.contract_months</code>.
+     */
+    public final TableField<SubscriptionRecord, Integer> CONTRACT_MONTHS = createField(DSL.name("contract_months"), SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>public.subscription.contract_end_date</code>.
+     */
+    public final TableField<SubscriptionRecord, LocalDateTime> CONTRACT_END_DATE = createField(DSL.name("contract_end_date"), SQLDataType.LOCALDATETIME(6), this, "");
+
     private Subscription(Name alias, Table<SubscriptionRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

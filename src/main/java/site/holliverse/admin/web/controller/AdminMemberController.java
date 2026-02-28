@@ -3,27 +3,15 @@ package site.holliverse.admin.web.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import site.holliverse.admin.application.usecase.GetMemberDetailUseCase;
-import site.holliverse.admin.application.usecase.RetrieveMemberUseCase;
+import org.springframework.web.bind.annotation.*;
+import site.holliverse.admin.application.usecase.*;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase.RetrieveMemberResult;
 import site.holliverse.admin.query.dao.MemberDetailRawData;
 import site.holliverse.admin.web.assembler.AdminMemberAssembler;
-import site.holliverse.admin.web.dto.member.AdminMemberDetailResponseDto;
-import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
-import site.holliverse.admin.web.dto.member.AdminMemberListResponseDto;
+import site.holliverse.admin.web.dto.member.*;
 import site.holliverse.admin.web.mapper.AdminMemberMapper;
 import site.holliverse.shared.web.response.ApiResponse;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import site.holliverse.admin.application.usecase.UpdateMemberUseCase;
-import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
-import site.holliverse.admin.application.usecase.BulkUpdateMemberStatusUseCase;
-import site.holliverse.admin.web.dto.member.AdminMemberBulkStatusUpdateRequestDto;
 
 /**
  * 관리자 회원 관리 API 컨트롤러
@@ -41,6 +29,7 @@ public class AdminMemberController {
     private final AdminMemberMapper adminMemberMapper;
     private final UpdateMemberUseCase updateMemberUseCase;
     private final BulkUpdateMemberStatusUseCase bulkUpdateMemberStatusUseCase;
+    private final GetMembershipCountUseCase getMembershipCountUseCase;
 
     /**
      * 회원 목록 조회 API
@@ -114,5 +103,15 @@ public class AdminMemberController {
                 updatedCount + "명의 회원 상태가 변경되었습니다.",
                 updatedCount
         ));
+    }
+
+    /**
+     * 회원 총 수, 등급별 인원수 반환
+     */
+    @GetMapping("/membership")
+    public ResponseEntity<ApiResponse<TotalMembershipResponseDto>> totalMemberships() {
+
+        TotalMembershipResponseDto data = getMembershipCountUseCase.execute();
+        return ResponseEntity.ok(ApiResponse.success("멤버십 통계 조회가 완료되었습니다.", data));
     }
 }

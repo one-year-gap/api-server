@@ -118,7 +118,7 @@ public class AuthUseCase {
                 .phone(encryptedPhone)
                 .birthDate(request.getBirthDate())
                 .gender(request.getGender())
-                .membership(MemberMembership.BASIC)
+                .membership(MemberMembership.GOLD)
                 .type(MemberSignupType.FORM)
                 .status(MemberStatus.ACTIVE)
                 .role(MemberRole.CUSTOMER)
@@ -194,8 +194,7 @@ public class AuthUseCase {
                 address,
                 encryptedPhone,
                 request.birthDate(),
-                request.gender(),
-                request.membership()
+                request.gender()
         );
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import site.holliverse.admin.application.usecase.BulkUpdateMemberStatusUseCase;
+import site.holliverse.admin.application.usecase.GetMembershipCountUseCase;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase.RetrieveMemberResult;
 import site.holliverse.admin.application.usecase.UpdateMemberUseCase;
@@ -62,6 +63,7 @@ class AdminMemberControllerTest {
     @MockitoBean private AdminMemberMapper adminMemberMapper;
     @MockitoBean private UpdateMemberUseCase updateMemberUseCase;
     @MockitoBean private BulkUpdateMemberStatusUseCase bulkUpdateMemberStatusUseCase;
+    @MockitoBean private GetMembershipCountUseCase getMembershipCountUseCase;
 
     @Test
     @DisplayName("회원 목록 조회 성공 시 ApiResponse 규격에 맞춰 데이터를 반환한다.")
@@ -271,5 +273,28 @@ class AdminMemberControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("멤버십 통계 조회 성공: totalInK와 등급별 비율을 반환한다")
+    void getMembershipStats_success() throws Exception {
+        // given
+        TotalMembershipResponseDto responseDto = new TotalMembershipResponseDto(
+                new java.math.BigDecimal("14.2"),
+                new java.math.BigDecimal("33.4"),
+                new java.math.BigDecimal("33.3"),
+                new java.math.BigDecimal("33.3")
+        );
+        given(getMembershipCountUseCase.execute()).willReturn(responseDto);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/members/membership"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.totalInK").value(14.2))
+                .andExpect(jsonPath("$.data.vvipRate").value(33.4))
+                .andExpect(jsonPath("$.data.vipRate").value(33.3))
+                .andExpect(jsonPath("$.data.goldRate").value(33.3));
     }
 }

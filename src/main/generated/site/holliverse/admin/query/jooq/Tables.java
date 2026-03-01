@@ -6,8 +6,12 @@ package site.holliverse.admin.query.jooq;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
+import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
+import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult;
 import site.holliverse.admin.query.jooq.tables.Category;
 import site.holliverse.admin.query.jooq.tables.CategoryGroup;
+import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis;
 import site.holliverse.admin.query.jooq.tables.Coupon;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
@@ -40,6 +44,21 @@ public class Tables {
     public static final Address ADDRESS = Address.ADDRESS;
 
     /**
+     * The table <code>public.business_keyword</code>.
+     */
+    public static final BusinessKeyword BUSINESS_KEYWORD = BusinessKeyword.BUSINESS_KEYWORD;
+
+    /**
+     * The table <code>public.business_keyword_alias</code>.
+     */
+    public static final BusinessKeywordAlias BUSINESS_KEYWORD_ALIAS = BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS;
+
+    /**
+     * The table <code>public.business_keyword_mapping_result</code>.
+     */
+    public static final BusinessKeywordMappingResult BUSINESS_KEYWORD_MAPPING_RESULT = BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT;
+
+    /**
      * The table <code>public.category</code>.
      */
     public static final Category CATEGORY = Category.CATEGORY;
@@ -48,6 +67,11 @@ public class Tables {
      * The table <code>public.category_group</code>.
      */
     public static final CategoryGroup CATEGORY_GROUP = CategoryGroup.CATEGORY_GROUP;
+
+    /**
+     * The table <code>public.consultation_analysis</code>.
+     */
+    public static final ConsultationAnalysis CONSULTATION_ANALYSIS = ConsultationAnalysis.CONSULTATION_ANALYSIS;
 
     /**
      * The table <code>public.coupon</code>.

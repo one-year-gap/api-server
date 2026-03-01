@@ -9,11 +9,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import site.holliverse.admin.application.usecase.GetKeywordBubbleChartUseCase;
 import site.holliverse.admin.application.usecase.GetSupportStatUseCase;
 import site.holliverse.admin.query.dao.AdminSupportStatRawData;
 import site.holliverse.admin.web.dto.support.AdminSupportStatResponseDto;
+import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
 import site.holliverse.admin.web.mapper.AdminSupportStatMapper;
 import site.holliverse.auth.jwt.JwtTokenProvider;
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -34,6 +41,9 @@ class AdminDashboardControllerTest {
 
     @MockitoBean
     private AdminSupportStatMapper adminSupportStatMapper;
+
+    @MockitoBean
+    private GetKeywordBubbleChartUseCase getKeywordBubbleChartUseCase;
 
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
@@ -58,5 +68,74 @@ class AdminDashboardControllerTest {
                 .andExpect(jsonPath("$.data.openCount").value(4))
                 .andExpect(jsonPath("$.data.supportingCount").value(3))
                 .andExpect(jsonPath("$.data.closedCount").value(3));
+    }
+
+    @Test
+    @DisplayName("키워드 통계 API 호출 시 파라미터가 정상적이면 TOP 10 데이터를 반환한다.")
+    void getKeywordBubbleChartStats_Success() throws Exception {
+        // given
+        List<KeywordBubbleChartResponseDto> mockData = List.of(
+                new KeywordBubbleChartResponseDto(1L, "모바일", 100, new BigDecimal("25.00"))
+        );
+        given(getKeywordBubbleChartUseCase.execute(2026, 3)).willReturn(mockData);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/dashboard/supports/keywords")
+                        .param("year", "2026")
+                        .param("month", "3")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("상담 키워드 통계 조회가 완료되었습니다."))
+                .andExpect(jsonPath("$.data[0].keywordName").value("모바일"))
+                .andExpect(jsonPath("$.data[0].totalCount").value(100))
+                .andExpect(jsonPath("$.data[0].changeRate").value(25.00));
+    }
+
+    @Test
+    @DisplayName("잘못된 월(month=-5)을 입력하면 400 에러와 함께 유효성 검증 실패 응답을 반환한다.")
+    void getKeywordBubbleChartStats_InvalidMonth_Fail() throws Exception {
+        // given: UseCase까지 가지도 않고 컨트롤러 문지기(@Validated)에서 차단됨
+
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/dashboard/supports/keywords")
+                        .param("year", "2026")
+                        .param("month", "-5") // 잘못된 입력
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.reason").exists());
+    }
+
+    @Test
+    @DisplayName("년도만 입력하고 월을 입력하지 않으면 IllegalArgumentException에 의해 400 에러를 반환한다.")
+    void getKeywordBubbleChartStats_IncompleteParams_Fail() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/dashboard/supports/keywords")
+                        .param("year", "2026")
+                        // month 누락
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.errorDetail.reason").value("년도와 월은 함께 입력해야 합니다."));
+    }
+
+    @Test
+    @DisplayName("아직 분석되지 않은 미래 날짜를 요청하면 DATA_NOT_YET_ANALYZED 에러 응답을 반환한다.")
+    void getKeywordBubbleChartStats_FutureDate_Fail() throws Exception {
+        // given: UseCase가 미래 날짜를 감지하고 CustomException을 던지도록 Mocking 설정
+        given(getKeywordBubbleChartUseCase.execute(2030, 12))
+                .willThrow(new CustomException(ErrorCode.DATA_NOT_YET_ANALYZED));
+
+        // when & then: 400 상태 코드와 약속된 에러 포맷이 나오는지 검증
+        mockMvc.perform(get("/api/v1/admin/dashboard/supports/keywords")
+                        .param("year", "2030")
+                        .param("month", "12")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest()) // 400 에러 확인
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("해당 기간의 데이터 분석이 아직 완료되지 않았습니다."))
+                .andExpect(jsonPath("$.errorDetail.code").value("DATA_NOT_YET_ANALYZED"));
     }
 }

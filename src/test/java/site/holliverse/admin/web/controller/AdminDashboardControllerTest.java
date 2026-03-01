@@ -16,6 +16,8 @@ import site.holliverse.admin.web.dto.support.AdminSupportStatResponseDto;
 import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
 import site.holliverse.admin.web.mapper.AdminSupportStatMapper;
 import site.holliverse.auth.jwt.JwtTokenProvider;
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -117,5 +119,23 @@ class AdminDashboardControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
                 .andExpect(jsonPath("$.errorDetail.reason").value("년도와 월은 함께 입력해야 합니다."));
+    }
+
+    @Test
+    @DisplayName("아직 분석되지 않은 미래 날짜를 요청하면 DATA_NOT_YET_ANALYZED 에러 응답을 반환한다.")
+    void getKeywordBubbleChartStats_FutureDate_Fail() throws Exception {
+        // given: UseCase가 미래 날짜를 감지하고 CustomException을 던지도록 Mocking 설정
+        given(getKeywordBubbleChartUseCase.execute(2030, 12))
+                .willThrow(new CustomException(ErrorCode.DATA_NOT_YET_ANALYZED));
+
+        // when & then: 400 상태 코드와 약속된 에러 포맷이 나오는지 검증
+        mockMvc.perform(get("/api/v1/admin/dashboard/supports/keywords")
+                        .param("year", "2030")
+                        .param("month", "12")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest()) // 400 에러 확인
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("해당 기간의 데이터 분석이 아직 완료되지 않았습니다."))
+                .andExpect(jsonPath("$.errorDetail.code").value("DATA_NOT_YET_ANALYZED"));
     }
 }

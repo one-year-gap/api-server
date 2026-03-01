@@ -8,12 +8,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import site.holliverse.admin.query.dao.KeywordStatDao;
 import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -49,6 +53,7 @@ class GetKeywordBubbleChartUseCaseTest {
     @DisplayName("조회된 데이터가 없으면 빈 리스트를 반환한다.")
     void execute_noData_returnsEmptyList() {
         // given
+        given(keywordStatDao.getLastAnalyzedCaseDate()).willReturn(LocalDate.of(2026, 3, 31));
         given(keywordStatDao.getTop10KeywordStats(2026, 3)).willReturn(Collections.emptyList());
 
         // when
@@ -62,6 +67,7 @@ class GetKeywordBubbleChartUseCaseTest {
     @DisplayName("정상적인 월별 조회 시 전월 대비 증감율을 정확히 계산한다.")
     void execute_monthlyStats_calculatesChangeRate() {
         // given (3월 데이터: 모바일 100건, TV 50건)
+        given(keywordStatDao.getLastAnalyzedCaseDate()).willReturn(LocalDate.of(2026, 3, 31));
         List<KeywordBubbleChartResponseDto> currentStats = List.of(
                 new KeywordBubbleChartResponseDto(1L, "모바일", 100, null),
                 new KeywordBubbleChartResponseDto(2L, "TV", 50, null),
@@ -92,5 +98,17 @@ class GetKeywordBubbleChartUseCaseTest {
         // 3. 신규키워드: 지난달 0건 -> 이번달 10건 = 100.00% (방어 로직)
         assertThat(result.get(2).keywordName()).isEqualTo("신규키워드");
         assertThat(result.get(2).changeRate()).isEqualByComparingTo(new BigDecimal("100.00"));
+    }
+
+    @Test
+    @DisplayName("아직 분석이 완료되지 않은 미래의 달을 요청하면 CustomException을 발생시킨다.")
+    void execute_futureDate_throwsException() {
+        // given: DB에 분석 완료된 최신 데이터가 "2026년 2월 28일"까지만 있다고 가정
+        given(keywordStatDao.getLastAnalyzedCaseDate()).willReturn(LocalDate.of(2026, 2, 28));
+
+        // when & then: "2026년 3월"을 요청하면 예외가 터져야 함 (3월 1일 > 2월 28일)
+        assertThatThrownBy(() -> getKeywordBubbleChartUseCase.execute(2026, 3))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DATA_NOT_YET_ANALYZED);
     }
 }

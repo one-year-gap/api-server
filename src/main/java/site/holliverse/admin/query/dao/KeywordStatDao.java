@@ -16,6 +16,7 @@ import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD;
 import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD_MAPPING_RESULT;
 import static site.holliverse.admin.query.jooq.Tables.CONSULTATION_ANALYSIS;
 import static site.holliverse.admin.query.jooq.Tables.SUPPORT_CASE;
+import static site.holliverse.admin.query.jooq.enums.AnalysisStatus.COMPLETED;
 
 @Repository
 @RequiredArgsConstructor
@@ -116,5 +117,20 @@ public class KeywordStatDao {
                         .and(BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID.in(keywordIds)))
                 .groupBy(BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID, BUSINESS_KEYWORD.KEYWORD_NAME)
                 .fetchInto(KeywordBubbleChartResponseDto.class);
+    }
+
+    /**
+     * [배치 이력 확인용]
+     * 상태가 'COMPLETED'인 분석 내역 중, 가장 최신의 원본 상담 생성 일자(CREATED_AT)를 가져온다
+     */
+    public LocalDate getLastAnalyzedCaseDate() {
+        LocalDateTime maxDateTime = dsl.select(DSL.max(SUPPORT_CASE.CREATED_AT))
+                .from(CONSULTATION_ANALYSIS)
+                .join(SUPPORT_CASE).on(CONSULTATION_ANALYSIS.CASE_ID.eq(SUPPORT_CASE.CASE_ID))
+                .where(CONSULTATION_ANALYSIS.ANALYSIS_STATUS.eq(COMPLETED))
+                .fetchOneInto(LocalDateTime.class);
+
+        // 데이터가 아예 없으면 null 반환, 있으면 날짜(LocalDate)만 잘라서 반환
+        return maxDateTime != null ? maxDateTime.toLocalDate() : null;
     }
 }

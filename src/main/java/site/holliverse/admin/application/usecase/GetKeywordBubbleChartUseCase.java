@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.KeywordStatDao;
 import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -24,6 +26,18 @@ public class GetKeywordBubbleChartUseCase {
      * 버블 차트용 통계 데이터를 조립하고 증감율을 계산하여 반환
      */
     public List<KeywordBubbleChartResponseDto> execute(Integer year, Integer month) {
+
+        // 배치 완료 여부 검증 (미래 날짜 방어)
+        if (year != null && month != null) {
+            LocalDate requestedDate = LocalDate.of(year, month, 1); // 요청한 달의 1일
+            LocalDate lastAnalyzedDate = keywordStatDao.getLastAnalyzedCaseDate();
+
+            // DB에 분석된 데이터가 아예 없거나, 요청한 달(1일)이 마지막 분석 날짜보다 미래인 경우
+            if (lastAnalyzedDate == null || requestedDate.isAfter(lastAnalyzedDate)) {
+                // 400 에러로 처리
+                throw new CustomException(ErrorCode.DATA_NOT_YET_ANALYZED);
+            }
+        }
 
         // 1. 메인 쿼리: 이번 달(또는 전체 기간) TOP 10 키워드 조회
         List<KeywordBubbleChartResponseDto> currentStats = keywordStatDao.getTop10KeywordStats(year, month);

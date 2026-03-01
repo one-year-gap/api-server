@@ -13,8 +13,12 @@ import org.jooq.impl.SchemaImpl;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
+import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
+import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult;
 import site.holliverse.admin.query.jooq.tables.Category;
 import site.holliverse.admin.query.jooq.tables.CategoryGroup;
+import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis;
 import site.holliverse.admin.query.jooq.tables.Coupon;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
@@ -54,6 +58,21 @@ public class Public extends SchemaImpl {
     public final Address ADDRESS = Address.ADDRESS;
 
     /**
+     * The table <code>public.business_keyword</code>.
+     */
+    public final BusinessKeyword BUSINESS_KEYWORD = BusinessKeyword.BUSINESS_KEYWORD;
+
+    /**
+     * The table <code>public.business_keyword_alias</code>.
+     */
+    public final BusinessKeywordAlias BUSINESS_KEYWORD_ALIAS = BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS;
+
+    /**
+     * The table <code>public.business_keyword_mapping_result</code>.
+     */
+    public final BusinessKeywordMappingResult BUSINESS_KEYWORD_MAPPING_RESULT = BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT;
+
+    /**
      * The table <code>public.category</code>.
      */
     public final Category CATEGORY = Category.CATEGORY;
@@ -62,6 +81,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.category_group</code>.
      */
     public final CategoryGroup CATEGORY_GROUP = CategoryGroup.CATEGORY_GROUP;
+
+    /**
+     * The table <code>public.consultation_analysis</code>.
+     */
+    public final ConsultationAnalysis CONSULTATION_ANALYSIS = ConsultationAnalysis.CONSULTATION_ANALYSIS;
 
     /**
      * The table <code>public.coupon</code>.
@@ -146,8 +170,12 @@ public class Public extends SchemaImpl {
         return Arrays.asList(
             AddonService.ADDON_SERVICE,
             Address.ADDRESS,
+            BusinessKeyword.BUSINESS_KEYWORD,
+            BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS,
+            BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT,
             Category.CATEGORY,
             CategoryGroup.CATEGORY_GROUP,
+            ConsultationAnalysis.CONSULTATION_ANALYSIS,
             Coupon.COUPON,
             Internet.INTERNET,
             Iptv.IPTV,

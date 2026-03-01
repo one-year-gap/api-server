@@ -1,8 +1,11 @@
 package site.holliverse.admin.web.controller;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/dashboard")
 @RequiredArgsConstructor
+@Validated
 public class AdminDashboardController {
 
     private final GetSupportStatUseCase getSupportStatUseCase;
@@ -54,9 +58,18 @@ public class AdminDashboardController {
      */
     @GetMapping("/supports/keywords")
     public ResponseEntity<ApiResponse<List<KeywordBubbleChartResponseDto>>> getKeywordBubbleChartStats(
-            @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) Integer month
+            @RequestParam(required = false)
+            @Min(value = 2000, message = "년도는 2000 이상이어야 합니다.")
+            Integer year,
+            @RequestParam(required = false)
+            @Min(value = 1, message = "월은 1 이상이어야 합니다.")
+            @Max(value = 12, message = "월은 12 이하이어야 합니다.")
+            Integer month
     ) {
+
+        if ((year != null && month == null) || (year == null && month != null)) {
+            throw new IllegalArgumentException("년도와 월은 함께 입력해야 합니다.");
+        }
 
         // 1. UseCase 호출: DB 조회 및 전월 대비 증감율(%) 계산 로직 실행
         List<KeywordBubbleChartResponseDto> data = getKeywordBubbleChartUseCase.execute(year, month);

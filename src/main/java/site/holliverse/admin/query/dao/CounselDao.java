@@ -23,9 +23,8 @@ public class CounselDao {
     private final DSLContext dsl;
 
     /**
-     *
-     * @param date
-     * @return
+     *  시간대별 상담 트래픽 조회
+     * @param date 조회 날짜 ex) 2022-12-22
      */
     public List<CounselTrafficDailyRawData> fetchCounselTrafficByHour(LocalDate date) {
         Field<Integer> timeZone = extract(SUPPORT_CASE.CREATED_AT, DatePart.HOUR)
@@ -48,6 +47,10 @@ public class CounselDao {
                 ));
     }
 
+    /**
+     * 일자별 상담 트래픽 조회
+     * @param month 조회 날짜 ex) 2022-12
+     */
     public List<CounselTrafficMonthlyRawData> fetchCounselTrafficByDay(YearMonth month) {
         Field<Integer> day = extract(SUPPORT_CASE.CREATED_AT, DatePart.DAY)
                 .cast(Integer.class)

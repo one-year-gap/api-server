@@ -53,8 +53,7 @@ public class KeywordStatDao {
                         BUSINESS_KEYWORD.KEYWORD_NAME.as("keywordName"),
 
                         // 조건에 맞는 기간 동안 해당 키워드가 등장한 총 횟수 합산 (SUM)
-                        // 만약 결과가 null이면 0으로 치환(coalesce)하여 NullPointerException 방지
-                        DSL.coalesce(DSL.sum(BUSINESS_KEYWORD_MAPPING_RESULT.COUNT), BigDecimal.ZERO)
+                        DSL.sum(BUSINESS_KEYWORD_MAPPING_RESULT.COUNT)
                                 .cast(Integer.class).as("totalCount"),
 
                         // 증감율은 DB 쿼리에서 알 수 없으므로, DTO 매핑 짝을 맞추기 위해 강제로 null 삽입
@@ -103,7 +102,7 @@ public class KeywordStatDao {
         return dsl.select(
                         BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID.as("keywordId"),
                         BUSINESS_KEYWORD.KEYWORD_NAME.as("keywordName"),
-                        DSL.coalesce(DSL.sum(BUSINESS_KEYWORD_MAPPING_RESULT.COUNT), BigDecimal.ZERO)
+                        DSL.sum(BUSINESS_KEYWORD_MAPPING_RESULT.COUNT)
                                 .cast(Integer.class).as("totalCount"),
                         DSL.inline((BigDecimal) null).as("changeRate")
                 )

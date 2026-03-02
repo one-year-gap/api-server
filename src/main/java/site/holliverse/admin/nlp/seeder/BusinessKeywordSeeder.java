@@ -23,6 +23,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class BusinessKeywordSeeder implements ApplicationRunner {
 
+    private static final String ALIAS_MAP_PATH = "business_keyword_alias_map.json";
+
     private final ObjectMapper objectMapper;
     private final KeywordNormalizer normalizer;
     private final BusinessKeywordSeedingDao seedingDao;
@@ -40,7 +42,7 @@ public class BusinessKeywordSeeder implements ApplicationRunner {
         log.info("[Data Seeding] 비즈니스 키워드 JSON 데이터를 DB에 삽입합니다...");
 
         // 2. JSON 파일 읽어오기
-        try (InputStream inputStream = new ClassPathResource("business_keyword_alias_map.json").getInputStream()) {
+        try (InputStream inputStream = new ClassPathResource(ALIAS_MAP_PATH).getInputStream()) {
 
             // JSON 데이터를 Map으로 변환
             Map<String, List<String>> keywordMap = objectMapper.readValue(

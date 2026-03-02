@@ -172,6 +172,7 @@ def jacocoExcludes = [
         '**/Q*.java',
         '**/*Querydsl*',
         '**/*ArchitectureRules*',
+        '**/site/holliverse/*/nlp/**',
 ]
 
 tasks.named("jacocoTestReport", JacocoReport) {

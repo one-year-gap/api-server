@@ -184,7 +184,7 @@ public class GlobalExceptionHandler {
         //필드 강제
         ensureRequestContext(status);
         MDC.put(LogFieldKeys.SEVERITY, severity);
-        MDC.put(LogFieldKeys.ERROR_CODE, ex.getClass().getName());
+        MDC.put(LogFieldKeys.ERROR_TYPE, ex.getClass().getName());
         MDC.put(LogFieldKeys.ERROR_CODE, errorCode);
 
         String safeMessage = null;

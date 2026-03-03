@@ -13,6 +13,7 @@ import org.jooq.impl.SchemaImpl;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult;
@@ -56,6 +57,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.address</code>.
      */
     public final Address ADDRESS = Address.ADDRESS;
+
+    /**
+     * The table <code>public.analysis_dispatch_outbox</code>.
+     */
+    public final AnalysisDispatchOutbox ANALYSIS_DISPATCH_OUTBOX = AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX;
 
     /**
      * The table <code>public.business_keyword</code>.
@@ -170,6 +176,7 @@ public class Public extends SchemaImpl {
         return Arrays.asList(
             AddonService.ADDON_SERVICE,
             Address.ADDRESS,
+            AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX,
             BusinessKeyword.BUSINESS_KEYWORD,
             BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS,
             BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT,

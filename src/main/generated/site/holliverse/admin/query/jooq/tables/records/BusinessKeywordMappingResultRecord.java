@@ -5,6 +5,7 @@ package site.holliverse.admin.query.jooq.tables.records;
 
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
@@ -98,6 +99,38 @@ public class BusinessKeywordMappingResultRecord extends UpdatableRecordImpl<Busi
         return (BigDecimal) get(4);
     }
 
+    /**
+     * Setter for
+     * <code>public.business_keyword_mapping_result.created_at</code>.
+     */
+    public void setCreatedAt(LocalDateTime value) {
+        set(5, value);
+    }
+
+    /**
+     * Getter for
+     * <code>public.business_keyword_mapping_result.created_at</code>.
+     */
+    public LocalDateTime getCreatedAt() {
+        return (LocalDateTime) get(5);
+    }
+
+    /**
+     * Setter for
+     * <code>public.business_keyword_mapping_result.updated_at</code>.
+     */
+    public void setUpdatedAt(LocalDateTime value) {
+        set(6, value);
+    }
+
+    /**
+     * Getter for
+     * <code>public.business_keyword_mapping_result.updated_at</code>.
+     */
+    public LocalDateTime getUpdatedAt() {
+        return (LocalDateTime) get(6);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -121,7 +154,7 @@ public class BusinessKeywordMappingResultRecord extends UpdatableRecordImpl<Busi
     /**
      * Create a detached, initialised BusinessKeywordMappingResultRecord
      */
-    public BusinessKeywordMappingResultRecord(Long mappingId, Long analysisId, Long businessKeywordId, Integer count, BigDecimal changeRate) {
+    public BusinessKeywordMappingResultRecord(Long mappingId, Long analysisId, Long businessKeywordId, Integer count, BigDecimal changeRate, LocalDateTime createdAt, LocalDateTime updatedAt) {
         super(BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT);
 
         setMappingId(mappingId);
@@ -129,6 +162,8 @@ public class BusinessKeywordMappingResultRecord extends UpdatableRecordImpl<Busi
         setBusinessKeywordId(businessKeywordId);
         setCount(count);
         setChangeRate(changeRate);
+        setCreatedAt(createdAt);
+        setUpdatedAt(updatedAt);
         resetChangedOnNotNull();
     }
 }

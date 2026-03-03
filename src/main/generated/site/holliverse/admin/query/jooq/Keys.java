@@ -12,6 +12,7 @@ import org.jooq.impl.Internal;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult;
@@ -33,6 +34,7 @@ import site.holliverse.admin.query.jooq.tables.TabWatchPlan;
 import site.holliverse.admin.query.jooq.tables.UsageMonthly;
 import site.holliverse.admin.query.jooq.tables.records.AddonServiceRecord;
 import site.holliverse.admin.query.jooq.tables.records.AddressRecord;
+import site.holliverse.admin.query.jooq.tables.records.AnalysisDispatchOutboxRecord;
 import site.holliverse.admin.query.jooq.tables.records.BusinessKeywordAliasRecord;
 import site.holliverse.admin.query.jooq.tables.records.BusinessKeywordMappingResultRecord;
 import site.holliverse.admin.query.jooq.tables.records.BusinessKeywordRecord;
@@ -68,6 +70,7 @@ public class Keys {
     public static final UniqueKey<AddonServiceRecord> PK_ADDON_SERVICE = Internal.createUniqueKey(AddonService.ADDON_SERVICE, DSL.name("pk_addon_service"), new TableField[] { AddonService.ADDON_SERVICE.PRODUCT_ID }, true);
     public static final UniqueKey<AddressRecord> PK_ADDRESS = Internal.createUniqueKey(Address.ADDRESS, DSL.name("pk_address"), new TableField[] { Address.ADDRESS.ADDRESS_ID }, true);
     public static final UniqueKey<AddressRecord> UK_ADDRESS_UNIQUE = Internal.createUniqueKey(Address.ADDRESS, DSL.name("uk_address_unique"), new TableField[] { Address.ADDRESS.PROVINCE, Address.ADDRESS.CITY, Address.ADDRESS.STREET_ADDRESS }, true);
+    public static final UniqueKey<AnalysisDispatchOutboxRecord> PK_ANALYSIS_DISPATCH_OUTBOX = Internal.createUniqueKey(AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX, DSL.name("pk_analysis_dispatch_outbox"), new TableField[] { AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX.REQUEST_ID }, true);
     public static final UniqueKey<BusinessKeywordRecord> PK_BUSINESS_KEYWORD = Internal.createUniqueKey(BusinessKeyword.BUSINESS_KEYWORD, DSL.name("pk_business_keyword"), new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID }, true);
     public static final UniqueKey<BusinessKeywordRecord> UK_BUSINESS_KEYWORD_CODE = Internal.createUniqueKey(BusinessKeyword.BUSINESS_KEYWORD, DSL.name("uk_business_keyword_code"), new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.KEYWORD_CODE }, true);
     public static final UniqueKey<BusinessKeywordAliasRecord> PK_BUSINESS_KEYWORD_ALIAS = Internal.createUniqueKey(BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS, DSL.name("pk_business_keyword_alias"), new TableField[] { BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS.ALIAS_ID }, true);

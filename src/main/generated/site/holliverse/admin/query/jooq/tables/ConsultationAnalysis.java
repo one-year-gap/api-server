@@ -95,6 +95,16 @@ public class ConsultationAnalysis extends TableImpl<ConsultationAnalysisRecord> 
      */
     public final TableField<ConsultationAnalysisRecord, LocalDateTime> PROCESSED_AT = createField(DSL.name("processed_at"), SQLDataType.LOCALDATETIME(6), this, "");
 
+    /**
+     * The column <code>public.consultation_analysis.created_at</code>.
+     */
+    public final TableField<ConsultationAnalysisRecord, LocalDateTime> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
+
+    /**
+     * The column <code>public.consultation_analysis.updated_at</code>.
+     */
+    public final TableField<ConsultationAnalysisRecord, LocalDateTime> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
+
     private ConsultationAnalysis(Name alias, Table<ConsultationAnalysisRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

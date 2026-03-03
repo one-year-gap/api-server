@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.query.dao.MemberRawData;
 import site.holliverse.admin.web.dto.member.AdminMemberListRequestDto;
+import site.holliverse.shared.alert.AlertOwner;
+import site.holliverse.shared.logging.SystemLogEvent;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +29,8 @@ public class RetrieveMemberUseCase {
      * @return DB에서 가져온 날것의 데이터(RawData)와 전체 카운트
      */
     @Transactional(readOnly = true) // 단순 조회의 경우 성능 최적화를 위해 읽기 전용 트랜잭션 사용
+    @SystemLogEvent("admin.member.list")
+    @AlertOwner("yh")
     public RetrieveMemberResult execute(AdminMemberListRequestDto requestDto) {
         // 1. 전체 개수를 먼저 조회
         int totalCount = (int) adminMemberDao.count(requestDto);

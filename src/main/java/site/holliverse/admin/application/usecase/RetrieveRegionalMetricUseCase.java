@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.AdminRegionalMetricDao;
 import site.holliverse.admin.query.dao.RegionalMetricRawData;
 import site.holliverse.admin.web.dto.analytics.AdminRegionalMetricRequestDto;
+import site.holliverse.shared.alert.AlertOwner;
+import site.holliverse.shared.logging.SystemLogEvent;
 
 import java.util.List;
 
@@ -20,6 +22,8 @@ public class RetrieveRegionalMetricUseCase {
 
     // 요청 yyyymm 기준으로 쿼리 작성
     @Transactional(readOnly = true)
+    @SystemLogEvent("admin.regional.metrics")
+    @AlertOwner("bm")
     public List<RegionalMetricRawData> execute(AdminRegionalMetricRequestDto requestDto) {
         return adminRegionalMetricDao.findRegionalAverages(requestDto.yyyymm());
     }

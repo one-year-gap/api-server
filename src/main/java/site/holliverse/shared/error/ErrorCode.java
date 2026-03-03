@@ -9,6 +9,7 @@ public enum ErrorCode {
     MISSING_FIELD(HttpStatus.BAD_REQUEST, "MISSING_FIELD", "필수 입력값이 누락되었습니다."),
     OAUTH_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "OAUTH_INVALID_REQUEST", "OAuth 요청이 올바르지 않습니다."),
     OAUTH_USER_INFO_INVALID(HttpStatus.BAD_REQUEST, "OAUTH_USER_INFO_INVALID", "OAuth 사용자 정보가 유효하지 않습니다."),
+    DATA_NOT_YET_ANALYZED(HttpStatus.BAD_REQUEST, "DATA_NOT_YET_ANALYZED", "해당 기간의 데이터 분석이 아직 완료되지 않았습니다."),
 
     // 401
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증에 실패했습니다."),

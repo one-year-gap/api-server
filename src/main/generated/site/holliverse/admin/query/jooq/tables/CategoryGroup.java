@@ -4,6 +4,7 @@
 package site.holliverse.admin.query.jooq.tables;
 
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -65,6 +66,16 @@ public class CategoryGroup extends TableImpl<CategoryGroupRecord> {
      * The column <code>public.category_group.category_name</code>.
      */
     public final TableField<CategoryGroupRecord, String> CATEGORY_NAME = createField(DSL.name("category_name"), SQLDataType.VARCHAR(50).nullable(false), this, "");
+
+    /**
+     * The column <code>public.category_group.created_at</code>.
+     */
+    public final TableField<CategoryGroupRecord, LocalDateTime> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
+
+    /**
+     * The column <code>public.category_group.updated_at</code>.
+     */
+    public final TableField<CategoryGroupRecord, LocalDateTime> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private CategoryGroup(Name alias, Table<CategoryGroupRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);

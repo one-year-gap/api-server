@@ -5,9 +5,11 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.auth.dto.TokenRefreshResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.entity.RefreshToken;
 import site.holliverse.shared.persistence.repository.MemberRepository;
@@ -47,6 +49,8 @@ public class RefreshTokenUseCase {
     /**
      * 전달받은 리프레시 토큰으로 액세스/리프레시 토큰을 재발급한다.
      */
+    @SystemLogEvent("auth.token.refresh")
+    @AlertOwner("bm")
     @Transactional
     public TokenRefreshResponseDto refresh(String rawRefreshToken) {
         // 1) JWT 서명/만료/토큰타입 검증을한다음 검증 실패하면 예외처리

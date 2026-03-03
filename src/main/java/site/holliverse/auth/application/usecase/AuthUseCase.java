@@ -8,6 +8,7 @@ import site.holliverse.auth.dto.OnboardingPrefillResponseDto;
 import site.holliverse.auth.dto.SignUpRequestDto;
 import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberSignupType;
@@ -19,6 +20,7 @@ import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.AddressRepository;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
+import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.util.EncryptionTool;
 
 /**
@@ -66,7 +68,9 @@ public class AuthUseCase {
      * 2) 이메일/전화번호 중복 검증 (암호화된 값으로 비교)
      * 3) 주소 재사용 또는 신규 생성
      * 4) 기본 권한/상태/가입유형으로 회원 저장
-     */
+    */
+    @SystemLogEvent("auth.signup")
+    @AlertOwner("bm")
     @Transactional
     public SignUpResponseDto signUp(SignUpRequestDto request) {
         // DB 조회 및 저장을 위해 먼저 암호화를 수행
@@ -118,7 +122,7 @@ public class AuthUseCase {
                 .phone(encryptedPhone)
                 .birthDate(request.getBirthDate())
                 .gender(request.getGender())
-                .membership(MemberMembership.BASIC)
+                .membership(MemberMembership.GOLD)
                 .type(MemberSignupType.FORM)
                 .status(MemberStatus.ACTIVE)
                 .role(MemberRole.CUSTOMER)
@@ -132,7 +136,9 @@ public class AuthUseCase {
      * 로그아웃 시 리프레시 토큰을 폐기한다.
      * - 토큰이 없거나 비어 있으면 그대로 종료
      * - 이미 폐기/미존재 토큰도 실패 없이 종료
-     */
+    */
+    @SystemLogEvent("auth.logout")
+    @AlertOwner("bm")
     @Transactional
     public void logout(String rawRefreshToken) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
@@ -157,8 +163,10 @@ public class AuthUseCase {
 
     /**
      * 구글 나머지 정보 입력 받는 메서드
-     */
+    */
 
+    @SystemLogEvent("auth.onboarding.complete")
+    @AlertOwner("bm")
     @Transactional
     public void completeOnboarding(Long memberId, OnboardingCompleteRequestDto request) {
         Member member = memberRepository.findById(memberId)
@@ -194,8 +202,7 @@ public class AuthUseCase {
                 address,
                 encryptedPhone,
                 request.birthDate(),
-                request.gender(),
-                request.membership()
+                request.gender()
         );
     }
 }

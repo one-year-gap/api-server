@@ -4,6 +4,8 @@
 package site.holliverse.admin.query.jooq.tables.records;
 
 
+import java.time.LocalDateTime;
+
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 
@@ -46,6 +48,34 @@ public class CategoryGroupRecord extends UpdatableRecordImpl<CategoryGroupRecord
         return (String) get(1);
     }
 
+    /**
+     * Setter for <code>public.category_group.created_at</code>.
+     */
+    public void setCreatedAt(LocalDateTime value) {
+        set(2, value);
+    }
+
+    /**
+     * Getter for <code>public.category_group.created_at</code>.
+     */
+    public LocalDateTime getCreatedAt() {
+        return (LocalDateTime) get(2);
+    }
+
+    /**
+     * Setter for <code>public.category_group.updated_at</code>.
+     */
+    public void setUpdatedAt(LocalDateTime value) {
+        set(3, value);
+    }
+
+    /**
+     * Getter for <code>public.category_group.updated_at</code>.
+     */
+    public LocalDateTime getUpdatedAt() {
+        return (LocalDateTime) get(3);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -69,11 +99,13 @@ public class CategoryGroupRecord extends UpdatableRecordImpl<CategoryGroupRecord
     /**
      * Create a detached, initialised CategoryGroupRecord
      */
-    public CategoryGroupRecord(String categoryGroupCode, String categoryName) {
+    public CategoryGroupRecord(String categoryGroupCode, String categoryName, LocalDateTime createdAt, LocalDateTime updatedAt) {
         super(CategoryGroup.CATEGORY_GROUP);
 
         setCategoryGroupCode(categoryGroupCode);
         setCategoryName(categoryName);
+        setCreatedAt(createdAt);
+        setUpdatedAt(updatedAt);
         resetChangedOnNotNull();
     }
 }

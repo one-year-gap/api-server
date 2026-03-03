@@ -97,14 +97,13 @@ public class Member extends BaseEntity {
             Address address,
             String phone,
             LocalDate birthDate,
-            String gender,
-            MemberMembership membership
+            String gender
     ) {
         this.address = address;
         this.phone = phone;
         this.birthDate = birthDate;
         this.gender = gender;
-        this.membership = membership;
+        this.membership = MemberMembership.GOLD;
         this.status = MemberStatus.ACTIVE;
         this.statusUpdatedAt = LocalDateTime.now();
     }

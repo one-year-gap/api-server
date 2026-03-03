@@ -8,8 +8,10 @@ import org.springframework.util.CollectionUtils;
 import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.web.dto.member.AdminMemberBulkStatusUpdateRequestDto;
+import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.logging.SystemLogEvent;
 
 @Profile("admin")
 @Service
@@ -19,6 +21,8 @@ public class BulkUpdateMemberStatusUseCase {
     private final AdminMemberDao adminMemberDao;
 
     @Transactional
+    @SystemLogEvent("admin.member.bulkstatus")
+    @AlertOwner("yh")
     public int execute(AdminMemberBulkStatusUpdateRequestDto requestDto) {
 
         if (CollectionUtils.isEmpty(requestDto.memberIds())) {

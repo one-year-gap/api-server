@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import site.holliverse.shared.domain.model.MemberMembership;
 
 import java.time.LocalDate;
 
@@ -20,9 +19,6 @@ public record OnboardingCompleteRequestDto(
         @NotBlank(message = "필수 입력값입니다.")
         @Pattern(regexp = "M|F", message = "성별은 M 또는 F만 입력 가능합니다.")
         String gender,
-
-        @NotNull(message = "필수 입력값입니다.")
-        MemberMembership membership,
 
         @Valid
         @NotNull(message = "필수 입력값입니다.")

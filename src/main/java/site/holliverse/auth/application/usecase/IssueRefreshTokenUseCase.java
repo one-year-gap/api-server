@@ -5,6 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.auth.dto.IssueRefreshTokenResultDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.shared.alert.AlertOwner;
+import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.persistence.entity.RefreshToken;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
 
@@ -34,6 +36,8 @@ public class IssueRefreshTokenUseCase {
      * - 기존 활성 토큰이 있으면 rotate
      * - 없으면 신규 row 생성
      */
+    @SystemLogEvent("auth.token.issue")
+    @AlertOwner("bm")
     @Transactional
     public IssueRefreshTokenResultDto issue(Long memberId) {
         String refreshTokenRaw = jwtTokenProvider.generateRefreshToken(memberId);

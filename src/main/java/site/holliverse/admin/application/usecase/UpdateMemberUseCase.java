@@ -7,8 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
+import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.util.EncryptionTool;
 
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
@@ -23,6 +25,8 @@ public class UpdateMemberUseCase {
     private final EncryptionTool encryptionTool;
 
     @Transactional
+    @SystemLogEvent("admin.member.update")
+    @AlertOwner("yh")
     public void execute(Long memberId, AdminMemberUpdateRequestDto dto) {
 
         // 1. 대상 회원이 진짜 존재하는지 검증

@@ -4,6 +4,7 @@ import org.jooq.DSLContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import site.holliverse.admin.query.dao.AdminMembershipStatDao;
 import site.holliverse.admin.query.dao.AdminSupportStatDao;
 
 @Profile("admin")
@@ -14,4 +15,10 @@ public class AdminQueryConfiguration {
     public AdminSupportStatDao adminSupportStatDao(DSLContext dsl) {
         return new AdminSupportStatDao(dsl); // 여기서 직접 생성해서 넘김
     }
+
+    @Bean
+    public AdminMembershipStatDao adminMembershipStatDao(DSLContext dsl) {
+        return new AdminMembershipStatDao(dsl);
+    }
+
 }

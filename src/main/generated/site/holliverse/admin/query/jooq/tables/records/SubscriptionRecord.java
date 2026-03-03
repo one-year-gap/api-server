@@ -132,6 +132,34 @@ public class SubscriptionRecord extends UpdatableRecordImpl<SubscriptionRecord> 
         return (LocalDateTime) get(7);
     }
 
+    /**
+     * Setter for <code>public.subscription.contract_months</code>.
+     */
+    public void setContractMonths(Integer value) {
+        set(8, value);
+    }
+
+    /**
+     * Getter for <code>public.subscription.contract_months</code>.
+     */
+    public Integer getContractMonths() {
+        return (Integer) get(8);
+    }
+
+    /**
+     * Setter for <code>public.subscription.contract_end_date</code>.
+     */
+    public void setContractEndDate(LocalDateTime value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.subscription.contract_end_date</code>.
+     */
+    public LocalDateTime getContractEndDate() {
+        return (LocalDateTime) get(9);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -155,7 +183,7 @@ public class SubscriptionRecord extends UpdatableRecordImpl<SubscriptionRecord> 
     /**
      * Create a detached, initialised SubscriptionRecord
      */
-    public SubscriptionRecord(Long subscriptionId, Long memberId, Long productId, LocalDateTime startDate, LocalDateTime endDate, Boolean status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public SubscriptionRecord(Long subscriptionId, Long memberId, Long productId, LocalDateTime startDate, LocalDateTime endDate, Boolean status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer contractMonths, LocalDateTime contractEndDate) {
         super(Subscription.SUBSCRIPTION);
 
         setSubscriptionId(subscriptionId);
@@ -166,6 +194,8 @@ public class SubscriptionRecord extends UpdatableRecordImpl<SubscriptionRecord> 
         setStatus(status);
         setCreatedAt(createdAt);
         setUpdatedAt(updatedAt);
+        setContractMonths(contractMonths);
+        setContractEndDate(contractEndDate);
         resetChangedOnNotNull();
     }
 }

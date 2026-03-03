@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <property name="LOCAL_CONSOLE_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %highlight(%-5level) %clr([%thread]){faint} %clr(%logger{36}){cyan} %clr(trace=%X{traceId:--} req=%X{requestId:--}){yellow} - %msg %kvp%n%wEx"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${LOCAL_CONSOLE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <logger name="ACCESS_LOG" level="INFO"/>
+    <logger name="SYSTEM_EVENT" level="INFO"/>
+
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

@@ -4,11 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.logging.LogFieldKeys;
 import site.holliverse.shared.web.response.ApiErrorDetail;
 import site.holliverse.shared.web.response.ApiErrorResponse;
 
@@ -21,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class LoginFailureHandler implements AuthenticationFailureHandler {
 
+    private final Logger SECURITY_LOG = LoggerFactory.getLogger("APP_SECURITY");
     private final ObjectMapper objectMapper;
 
     public LoginFailureHandler(ObjectMapper objectMapper) {
@@ -30,6 +36,25 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
+        ErrorCode code = ErrorCode.INVALID_CREDENTIALS;
+
+        //민감정보는 남기지 않음.
+        MDC.put(LogFieldKeys.EVENT, "security.auth.failure");
+        MDC.put(LogFieldKeys.SEVERITY, "warn");
+        MDC.put(LogFieldKeys.ERROR_TYPE, exception.getClass().getName());
+        MDC.put(LogFieldKeys.ERROR_CODE, code.code());
+        MDC.put(LogFieldKeys.STATUS, String.valueOf(code.httpStatus().value()));
+
+        try {
+            SECURITY_LOG.warn("authentication failed");
+        } finally {
+            MDC.remove(LogFieldKeys.EVENT);
+            MDC.remove(LogFieldKeys.SEVERITY);
+            MDC.remove(LogFieldKeys.ERROR_TYPE);
+            MDC.remove(LogFieldKeys.ERROR_CODE);
+            MDC.remove(LogFieldKeys.STATUS);
+        }
+
         ApiErrorResponse body = ApiErrorResponse.error(
                 ErrorCode.INVALID_CREDENTIALS.defaultMessage(),
                 new ApiErrorDetail(

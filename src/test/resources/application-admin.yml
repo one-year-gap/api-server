@@ -1,0 +1,4 @@
+spring:
+  flyway:
+    user: ${FLYWAY_USER:${DB_USER_MIGRATOR:postgres}}
+    password: ${FLYWAY_PASSWORD:${DB_PASS_MIGRATOR:postgres}}

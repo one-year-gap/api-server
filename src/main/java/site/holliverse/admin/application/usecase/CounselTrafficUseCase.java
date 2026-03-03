@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.CounselDao;
 import site.holliverse.admin.query.dao.CounselTrafficDailyRawData;
 import site.holliverse.admin.query.dao.CounselTrafficMonthlyRawData;
+import site.holliverse.shared.alert.AlertOwner;
+import site.holliverse.shared.logging.SystemLogEvent;
 
 
 import java.time.LocalDate;
@@ -28,6 +30,8 @@ public class CounselTrafficUseCase {
      *          count: 상담 건 수
      */
     @Transactional(readOnly = true)
+    @SystemLogEvent("admin.counsel.traffic.hour")
+    @AlertOwner("dy")
     public List<CounselTrafficDailyRawData> getHourlyTraffic(LocalDate date) {
         List<CounselTrafficDailyRawData> rawData = counselDao.fetchCounselTrafficByHour(date);
 
@@ -56,6 +60,8 @@ public class CounselTrafficUseCase {
      *          count: 상담 건 수
      */
     @Transactional(readOnly = true)
+    @SystemLogEvent("admin.counsel.traffic.day")
+    @AlertOwner("dy")
     public List<CounselTrafficMonthlyRawData> getDailyTraffic(YearMonth month) {
         List<CounselTrafficMonthlyRawData> rawData = counselDao.fetchCounselTrafficByDay(month);
         int lastDay = month.lengthOfMonth();

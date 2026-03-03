@@ -16,6 +16,7 @@ import site.holliverse.customer.persistence.entity.Internet;
 import site.holliverse.customer.persistence.entity.Iptv;
 import site.holliverse.customer.persistence.entity.MobilePlan;
 import site.holliverse.customer.persistence.entity.Product;
+import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.customer.persistence.entity.TabWatchPlan;
 import site.holliverse.customer.persistence.repository.AddonRepository;
@@ -26,6 +27,8 @@ import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
 import org.springframework.context.annotation.Profile;
+import site.holliverse.shared.logging.SystemLogEvent;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -67,6 +70,8 @@ public class GetProductListUseCase {
     }
 
     @Transactional(readOnly = true)
+    @SystemLogEvent("customer.product.list")
+    @AlertOwner("hy")
     public ProductListResult execute(String category, int page, int size, int bestCount) {
         if (category == null || category.isBlank()) {
             throw new IllegalArgumentException("카테고리는 필수입니다.");

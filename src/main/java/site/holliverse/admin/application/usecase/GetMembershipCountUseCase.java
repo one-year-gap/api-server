@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.AdminMembershipStatDao;
 import site.holliverse.admin.query.dao.AdminMembershipStatRawData;
 import site.holliverse.admin.web.dto.member.TotalMembershipResponseDto;
+import site.holliverse.shared.alert.AlertOwner;
+import site.holliverse.shared.logging.SystemLogEvent;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,7 +20,8 @@ import java.math.RoundingMode;
 public class GetMembershipCountUseCase {
 
     private final AdminMembershipStatDao adminMembershipStatDao;
-
+    @SystemLogEvent("admin.membership")
+    @AlertOwner("bm")
     public TotalMembershipResponseDto execute() {
         // DB에서 등급별 원시 카운트를 1행으로 조회
         AdminMembershipStatRawData raw = adminMembershipStatDao.getMembershipStats();

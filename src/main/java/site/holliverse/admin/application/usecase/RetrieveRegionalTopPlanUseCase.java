@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.AdminRegionalTopPlanDao;
 import site.holliverse.admin.query.dao.RegionalSubscriberCountRawData;
 import site.holliverse.admin.query.dao.RegionalTopPlanRawData;
+import site.holliverse.shared.alert.AlertOwner;
+import site.holliverse.shared.logging.SystemLogEvent;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -39,6 +41,8 @@ public class RetrieveRegionalTopPlanUseCase {
      * 3) 지역명을 기준으로 두 결과를 병합
      */
     @Transactional(readOnly = true)
+    @SystemLogEvent("admin.regional.topN")
+    @AlertOwner("bm")
     public List<RegionalTopPlanSummary> execute() {
 
         // 지역별

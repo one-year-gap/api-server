@@ -9,9 +9,12 @@ import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.product.ChangeProductUseCase;
 import site.holliverse.customer.application.usecase.product.GetProductDetailUseCase;
 import site.holliverse.customer.application.usecase.product.ProductDetailResult;
+import site.holliverse.shared.alert.AlertOwner;
+import site.holliverse.shared.logging.SystemLogEvent;
 
 @Service
 @Profile("customer")
+@AlertOwner("hy")
 public class ComparePlansUseCase {
 
     private final ChangeProductUseCase changeProductUseCase;
@@ -26,6 +29,7 @@ public class ComparePlansUseCase {
         this.planComparator = planComparator;
     }
 
+    @SystemLogEvent("customer.plan.compare")
     @Transactional(readOnly = true)
     public ComparePlansResult execute(Long memberId, Long targetPlanId) {
         Long currentPlanId = changeProductUseCase.findCurrentMobileProductId(memberId)

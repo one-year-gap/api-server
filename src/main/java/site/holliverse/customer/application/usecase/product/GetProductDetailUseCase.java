@@ -13,6 +13,7 @@ import site.holliverse.customer.persistence.entity.Internet;
 import site.holliverse.customer.persistence.entity.Iptv;
 import site.holliverse.customer.persistence.entity.MobilePlan;
 import site.holliverse.customer.persistence.entity.Product;
+import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.customer.persistence.entity.TabWatchPlan;
 import site.holliverse.customer.persistence.repository.AddonRepository;
@@ -24,6 +25,8 @@ import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import org.springframework.context.annotation.Profile;
+import site.holliverse.shared.logging.SystemLogEvent;
+
 import java.util.Optional;
 
 @Service
@@ -52,6 +55,8 @@ public class GetProductDetailUseCase {
     }
 
     @Transactional(readOnly = true)
+    @SystemLogEvent("customer.product.detail")
+    @AlertOwner("hy")
     public ProductDetailResult execute(Long planId) {
         Product product = productRepository.findById(planId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "product", "해당 상품을 찾을 수 없습니다: " + planId));

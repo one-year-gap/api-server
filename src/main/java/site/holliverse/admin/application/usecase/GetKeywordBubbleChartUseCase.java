@@ -1,12 +1,15 @@
 package site.holliverse.admin.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.KeywordStatDao;
 import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
+import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.logging.SystemLogEvent;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -16,6 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Profile("admin")
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class GetKeywordBubbleChartUseCase {
@@ -25,6 +29,8 @@ public class GetKeywordBubbleChartUseCase {
     /**
      * 버블 차트용 통계 데이터를 조립하고 증감율을 계산하여 반환
      */
+    @SystemLogEvent("admin.counsel.keyword")
+    @AlertOwner("yh")
     public List<KeywordBubbleChartResponseDto> execute(Integer year, Integer month) {
 
         // 배치 완료 여부 검증 (미래 날짜 방어)

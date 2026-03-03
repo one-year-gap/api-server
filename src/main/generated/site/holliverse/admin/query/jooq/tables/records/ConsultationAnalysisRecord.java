@@ -119,6 +119,34 @@ public class ConsultationAnalysisRecord extends UpdatableRecordImpl<Consultation
         return (LocalDateTime) get(6);
     }
 
+    /**
+     * Setter for <code>public.consultation_analysis.created_at</code>.
+     */
+    public void setCreatedAt(LocalDateTime value) {
+        set(7, value);
+    }
+
+    /**
+     * Getter for <code>public.consultation_analysis.created_at</code>.
+     */
+    public LocalDateTime getCreatedAt() {
+        return (LocalDateTime) get(7);
+    }
+
+    /**
+     * Setter for <code>public.consultation_analysis.updated_at</code>.
+     */
+    public void setUpdatedAt(LocalDateTime value) {
+        set(8, value);
+    }
+
+    /**
+     * Getter for <code>public.consultation_analysis.updated_at</code>.
+     */
+    public LocalDateTime getUpdatedAt() {
+        return (LocalDateTime) get(8);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -142,7 +170,7 @@ public class ConsultationAnalysisRecord extends UpdatableRecordImpl<Consultation
     /**
      * Create a detached, initialised ConsultationAnalysisRecord
      */
-    public ConsultationAnalysisRecord(Long analysisId, Long caseId, Long jobInstanceId, Long analyzerVersion, AnalysisStatus analysisStatus, String errorMessage, LocalDateTime processedAt) {
+    public ConsultationAnalysisRecord(Long analysisId, Long caseId, Long jobInstanceId, Long analyzerVersion, AnalysisStatus analysisStatus, String errorMessage, LocalDateTime processedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
         super(ConsultationAnalysis.CONSULTATION_ANALYSIS);
 
         setAnalysisId(analysisId);
@@ -152,6 +180,8 @@ public class ConsultationAnalysisRecord extends UpdatableRecordImpl<Consultation
         setAnalysisStatus(analysisStatus);
         setErrorMessage(errorMessage);
         setProcessedAt(processedAt);
+        setCreatedAt(createdAt);
+        setUpdatedAt(updatedAt);
         resetChangedOnNotNull();
     }
 }

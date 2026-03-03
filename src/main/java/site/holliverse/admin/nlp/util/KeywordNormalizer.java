@@ -1,8 +1,10 @@
 package site.holliverse.admin.nlp.util;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("admin")
 public class KeywordNormalizer {
 
     /**

@@ -5,6 +5,7 @@ package site.holliverse.admin.query.jooq.tables;
 
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -88,6 +89,18 @@ public class BusinessKeywordMappingResult extends TableImpl<BusinessKeywordMappi
      * <code>public.business_keyword_mapping_result.change_rate</code>.
      */
     public final TableField<BusinessKeywordMappingResultRecord, BigDecimal> CHANGE_RATE = createField(DSL.name("change_rate"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0.00"), SQLDataType.NUMERIC)), this, "");
+
+    /**
+     * The column
+     * <code>public.business_keyword_mapping_result.created_at</code>.
+     */
+    public final TableField<BusinessKeywordMappingResultRecord, LocalDateTime> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
+
+    /**
+     * The column
+     * <code>public.business_keyword_mapping_result.updated_at</code>.
+     */
+    public final TableField<BusinessKeywordMappingResultRecord, LocalDateTime> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
 
     private BusinessKeywordMappingResult(Name alias, Table<BusinessKeywordMappingResultRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);

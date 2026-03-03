@@ -6,6 +6,7 @@ package site.holliverse.admin.query.jooq;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult;
@@ -42,6 +43,11 @@ public class Tables {
      * The table <code>public.address</code>.
      */
     public static final Address ADDRESS = Address.ADDRESS;
+
+    /**
+     * The table <code>public.analysis_dispatch_outbox</code>.
+     */
+    public static final AnalysisDispatchOutbox ANALYSIS_DISPATCH_OUTBOX = AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX;
 
     /**
      * The table <code>public.business_keyword</code>.

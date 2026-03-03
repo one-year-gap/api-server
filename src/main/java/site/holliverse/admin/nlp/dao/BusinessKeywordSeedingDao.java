@@ -2,12 +2,14 @@ package site.holliverse.admin.nlp.dao;
 
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD;
 import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD_ALIAS;
 
 @Repository
+@Profile("admin")
 @RequiredArgsConstructor
 public class BusinessKeywordSeedingDao {
 

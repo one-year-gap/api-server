@@ -1,7 +1,12 @@
 package site.holliverse.shared.config.web;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -10,19 +15,26 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.logging.LogFieldKeys;
 import site.holliverse.shared.web.response.ApiErrorDetail;
 import site.holliverse.shared.web.response.ApiErrorResponse;
 import org.springframework.validation.BindException;
 
 import java.util.Objects;
 
+
 @RestControllerAdvice
 // 전역 예외를 공통 실패 응답 포맷(ApiErrorResponse)으로 변환한다.
 public class GlobalExceptionHandler {
+    private static final Logger APP_ERROR_LOG = LoggerFactory.getLogger("APP_ERROR");
+    private static final int MAX_LOG_MESSAGE_LENGTH = 1024;
+    private static final String UNKNOWN = "unknown";
 
     @ExceptionHandler(CustomException.class)
     // 서비스 계층에서 의도적으로 던진 도메인/비즈니스 예외 처리
@@ -97,7 +109,7 @@ public class GlobalExceptionHandler {
             return conflict(ErrorCode.DUPLICATED_PHONE, "phone", ErrorCode.DUPLICATED_PHONE.defaultMessage());
         }
 
-        return conflict(ErrorCode.CONFLICT, null,  ErrorCode.CONFLICT.defaultMessage());
+        return conflict(ErrorCode.CONFLICT, null, ErrorCode.CONFLICT.defaultMessage());
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -160,5 +172,94 @@ public class GlobalExceptionHandler {
                 new ApiErrorDetail(code.code(), field, reason)
         );
         return ResponseEntity.status(code.httpStatus()).body(body);
+    }
+
+    /*
+     * 예외처리 log
+     */
+    private void logException(Throwable ex, HttpStatus status, String errorCode, String message) {
+        String severity = resolveSeverity(status);
+        boolean includeStackTrace = "error".equals(severity) || "fatal".equalsIgnoreCase(severity);
+
+        //필드 강제
+        ensureRequestContext(status);
+        MDC.put(LogFieldKeys.SEVERITY, severity);
+        MDC.put(LogFieldKeys.ERROR_TYPE, ex.getClass().getName());
+        MDC.put(LogFieldKeys.ERROR_CODE, errorCode);
+
+        String safeMessage = null;
+        //유효성 검증
+        if (message == null || message.isBlank()) {
+            safeMessage = "error";
+        }
+
+        //메세지 길이 검증
+        if (message != null && message.length() > MAX_LOG_MESSAGE_LENGTH) {
+            safeMessage = message.substring(0, MAX_LOG_MESSAGE_LENGTH) + "...";
+        }
+
+        try {
+            if (includeStackTrace){
+                //ERROR 이상만 stackTrace
+                APP_ERROR_LOG.error(safeMessage,ex);
+            }else {
+                //WARN은 stackTrace 미포함
+                APP_ERROR_LOG.warn(safeMessage);
+            }
+        }finally {
+            MDC.remove(LogFieldKeys.SEVERITY);
+            MDC.remove(LogFieldKeys.ERROR_TYPE);
+            MDC.remove(LogFieldKeys.ERROR_CODE);
+        }
+    }
+
+    /*
+     * Error log level fatal 판단
+     */
+    private String resolveSeverity(HttpStatus status) {
+        String existing = MDC.get(LogFieldKeys.SEVERITY);
+        if ("fatal".equalsIgnoreCase(existing)) {
+            return "fatal";
+        }
+
+        return status.is5xxServerError() ? "error" : "warn";
+    }
+
+    /*
+     * MDC 필드가 비어있지 않게 조정
+     */
+    private void ensureRequestContext(HttpStatus status) {
+        HttpServletRequest request = currentRequest();
+
+        //method 보정
+        if (hasText(MDC.get(LogFieldKeys.METHOD))) {
+            MDC.put(LogFieldKeys.METHOD, request != null ? request.getMethod() : UNKNOWN);
+        }
+        //uriTemplate 보정
+        if (hasText(MDC.get(LogFieldKeys.URI_TEMPLATE))) {
+            Object pattern = request != null
+                    ? request.getAttribute("org.springframework.web.servlet.HandlerMapping.bestMatchingPattern")
+                    : null;
+            MDC.put(LogFieldKeys.URI_TEMPLATE, pattern != null ? pattern.toString() : UNKNOWN);
+        }
+        //traceId 보정
+        if (hasText(MDC.get(LogFieldKeys.TRACE_ID))) {
+            MDC.put(LogFieldKeys.TRACE_ID, UNKNOWN);
+        }
+        //requestId 보정
+        if (hasText(MDC.get(LogFieldKeys.REQUEST_ID))) {
+            MDC.put(LogFieldKeys.REQUEST_ID, UNKNOWN);
+        }
+        MDC.put(LogFieldKeys.STATUS, String.valueOf(status.value()));
+    }
+
+
+    private HttpServletRequest currentRequest() {
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        return attrs != null ? attrs.getRequest() : null;
+    }
+
+    private boolean hasText(String value) {
+        return value == null || value.isBlank();
     }
 }

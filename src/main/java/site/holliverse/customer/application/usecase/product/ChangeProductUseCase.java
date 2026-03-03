@@ -7,8 +7,10 @@ import site.holliverse.customer.domain.policy.SubscriptionChangePolicy;
 import site.holliverse.customer.persistence.entity.Subscription;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.SubscriptionRepository;
+import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.domain.model.ProductType;
 import org.springframework.context.annotation.Profile;
@@ -44,6 +46,8 @@ public class ChangeProductUseCase {
      * 요금제 변경: 해당 타입 활성 구독 있으면 기존 해지 후 신규 생성.
      * 규칙: 타입별 활성 구독은 회원당 1개만 유지된다.
      */
+    @SystemLogEvent("customer.product.change")
+    @AlertOwner("hy")
     @Transactional
     public ChangeProductResult execute(Long memberId, Long targetProductId) {
         var targetProduct = productRepository.findById(targetProductId)

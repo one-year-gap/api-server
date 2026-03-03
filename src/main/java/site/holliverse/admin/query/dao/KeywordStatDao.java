@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
 
@@ -19,6 +20,7 @@ import static site.holliverse.admin.query.jooq.Tables.SUPPORT_CASE;
 import static site.holliverse.admin.query.jooq.enums.AnalysisStatus.COMPLETED;
 
 @Repository
+@Profile("admin")
 @RequiredArgsConstructor
 public class KeywordStatDao {
 

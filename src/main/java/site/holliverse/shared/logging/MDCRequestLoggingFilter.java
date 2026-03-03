@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerMapping;
-import site.holliverse.shared.logging.LogStaticContext;
+
 
 import java.io.IOException;
 import java.util.UUID;
@@ -36,7 +36,7 @@ public class MDCRequestLoggingFilter extends OncePerRequestFilter {
     private static final String B3_TRACE_HEADER = "X-B3-TraceId";
     private static final String TRACE_PARENT_HEADER = "traceparent";
 
-    private final LogStaticConstatext logStaticContext;
+    private final LogStaticContext logStaticContext;
 
     public MDCRequestLoggingFilter(
             LogStaticContext logStaticContext,

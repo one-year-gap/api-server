@@ -10,6 +10,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -36,13 +37,20 @@ public class MDCRequestLoggingFilter extends OncePerRequestFilter {
     private static final String B3_TRACE_HEADER = "X-B3-TraceId";
     private static final String TRACE_PARENT_HEADER = "traceparent";
 
-    private final LogStaticContext logStaticContext;
+    private final String service;
+    private final String version;
+    private final String team;
 
     public MDCRequestLoggingFilter(
-            LogStaticContext logStaticContext,
+            @Nullable LogStaticContext logStaticContext,
+            @Value("${spring.application.name:unknown-service}") String service,
+            @Value("${app.version:unknown-version}") String version,
+            @Value("${app.team:unknown-team}") String team,
             @Value("${app.env:unknown-env}") String env
     ) {
-        this.logStaticContext = logStaticContext;
+        this.service = logStaticContext != null ? logStaticContext.service() : service;
+        this.version = logStaticContext != null ? logStaticContext.version() : version;
+        this.team = logStaticContext != null ? logStaticContext.team() : team;
     }
 
     @Override
@@ -58,9 +66,9 @@ public class MDCRequestLoggingFilter extends OncePerRequestFilter {
         MDC.put(LogFieldKeys.TRACE_ID, traceId);
         MDC.put(LogFieldKeys.METHOD, request.getMethod());
         MDC.put(LogFieldKeys.TIME_STAMP, String.valueOf(startAtMillis));
-        MDC.put(LogFieldKeys.SERVICE, logStaticContext.service());
-        MDC.put(LogFieldKeys.VERSION, logStaticContext.version());
-        MDC.put(LogFieldKeys.TEAM, logStaticContext.team());
+        MDC.put(LogFieldKeys.SERVICE, service);
+        MDC.put(LogFieldKeys.VERSION, version);
+        MDC.put(LogFieldKeys.TEAM, team);
 
         request.setAttribute(REQUEST_START_AT_ATTRIBUTE, startAtMillis);
         response.setHeader(REQUEST_ID_HEADER, requestId);

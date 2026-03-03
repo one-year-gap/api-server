@@ -94,6 +94,7 @@ logging:
 
 app:
   oauth2:
+    onboarding-redirect-uri: ${APP_OAUTH2_ONBOARDING_REDIRECT_URI:http://localhost:8080/test/onboarding}
     redirect-uri: ${APP_OAUTH2_REDIRECT_URI:http://localhost:8080/test/callback}
   jwt:
     secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}

@@ -34,7 +34,7 @@ public final class RefreshTokenCookieUtil {
     ) {
         ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, refreshToken)
                 .httpOnly(true)
-                .secure(secure)
+                .secure(true)
                 .path(COOKIE_PATH)
                 .sameSite("Lax")
                 .maxAge(Duration.ofSeconds(refreshTokenExpiresInSeconds))
@@ -48,7 +48,7 @@ public final class RefreshTokenCookieUtil {
     public static void clearRefreshTokenCookie(HttpServletResponse response, boolean secure) {
         ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(secure)
+                .secure(true)
                 .path(COOKIE_PATH)
                 .sameSite("Lax")
                 .maxAge(Duration.ZERO)

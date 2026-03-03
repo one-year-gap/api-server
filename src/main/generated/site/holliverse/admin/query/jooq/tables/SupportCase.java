@@ -37,6 +37,7 @@ import site.holliverse.admin.query.jooq.Keys;
 import site.holliverse.admin.query.jooq.Public;
 import site.holliverse.admin.query.jooq.enums.SupportStatus;
 import site.holliverse.admin.query.jooq.tables.Category.CategoryPath;
+import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis.ConsultationAnalysisPath;
 import site.holliverse.admin.query.jooq.tables.Member.MemberPath;
 import site.holliverse.admin.query.jooq.tables.records.SupportCaseRecord;
 
@@ -250,6 +251,19 @@ public class SupportCase extends TableImpl<SupportCaseRecord> {
             _category = new CategoryPath(this, Keys.SUPPORT_CASE__FK_SUPPORT_CASE_TO_CATEGORY, null);
 
         return _category;
+    }
+
+    private transient ConsultationAnalysisPath _consultationAnalysis;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.consultation_analysis</code> table
+     */
+    public ConsultationAnalysisPath consultationAnalysis() {
+        if (_consultationAnalysis == null)
+            _consultationAnalysis = new ConsultationAnalysisPath(this, null, Keys.CONSULTATION_ANALYSIS__FK_ANALYSIS_TO_CASE.getInverseKey());
+
+        return _consultationAnalysis;
     }
 
     @Override

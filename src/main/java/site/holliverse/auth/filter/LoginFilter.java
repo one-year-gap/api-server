@@ -49,7 +49,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
         if (!request.getMethod().equals("POST")) {
-            throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
+            throw new AuthenticationServiceException("로그인은 post 로 요청 해야 합니다.: " + request.getMethod());
         }
 
         Map<String, String> loginMap;
@@ -61,8 +61,12 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
             loginMap = objectMapper.readValue(messageBody, new TypeReference<>() {
             });
         } catch (IOException e) {
-            // 파싱 실패는 보안 예외 흐름으로 전달되도록 런타임 예외로 전환
-            throw new RuntimeException(e);
+            // 파싱 실패한 경우
+            //   - body가 JSON 형식이 아님
+            //  - JSON 문법 깨짐(괄호/쉼표 오류)
+            //  - 인코딩/스트림 읽기 문제
+            //  - Content-Type은 JSON인데 실제 payload가 빈값/이상값
+            throw new AuthenticationServiceException("로그인 요청 본문 파싱 실패", e);
         }
 
         String email = loginMap.get(emailParameter);

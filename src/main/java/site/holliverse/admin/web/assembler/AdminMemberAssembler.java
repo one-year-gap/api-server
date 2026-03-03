@@ -47,6 +47,7 @@ public class AdminMemberAssembler {
                 .birthDate(raw.getBirthDate())
                 .email(raw.getEmail())
                 .planName(raw.getPlanName())
+                .status(raw.getStatus())
                 .build();
     }
 

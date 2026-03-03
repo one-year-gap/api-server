@@ -12,8 +12,12 @@ import org.jooq.impl.Internal;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
+import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
+import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
+import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult;
 import site.holliverse.admin.query.jooq.tables.Category;
 import site.holliverse.admin.query.jooq.tables.CategoryGroup;
+import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis;
 import site.holliverse.admin.query.jooq.tables.Coupon;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
@@ -29,8 +33,12 @@ import site.holliverse.admin.query.jooq.tables.TabWatchPlan;
 import site.holliverse.admin.query.jooq.tables.UsageMonthly;
 import site.holliverse.admin.query.jooq.tables.records.AddonServiceRecord;
 import site.holliverse.admin.query.jooq.tables.records.AddressRecord;
+import site.holliverse.admin.query.jooq.tables.records.BusinessKeywordAliasRecord;
+import site.holliverse.admin.query.jooq.tables.records.BusinessKeywordMappingResultRecord;
+import site.holliverse.admin.query.jooq.tables.records.BusinessKeywordRecord;
 import site.holliverse.admin.query.jooq.tables.records.CategoryGroupRecord;
 import site.holliverse.admin.query.jooq.tables.records.CategoryRecord;
+import site.holliverse.admin.query.jooq.tables.records.ConsultationAnalysisRecord;
 import site.holliverse.admin.query.jooq.tables.records.CouponRecord;
 import site.holliverse.admin.query.jooq.tables.records.InternetRecord;
 import site.holliverse.admin.query.jooq.tables.records.IptvRecord;
@@ -60,9 +68,14 @@ public class Keys {
     public static final UniqueKey<AddonServiceRecord> PK_ADDON_SERVICE = Internal.createUniqueKey(AddonService.ADDON_SERVICE, DSL.name("pk_addon_service"), new TableField[] { AddonService.ADDON_SERVICE.PRODUCT_ID }, true);
     public static final UniqueKey<AddressRecord> PK_ADDRESS = Internal.createUniqueKey(Address.ADDRESS, DSL.name("pk_address"), new TableField[] { Address.ADDRESS.ADDRESS_ID }, true);
     public static final UniqueKey<AddressRecord> UK_ADDRESS_UNIQUE = Internal.createUniqueKey(Address.ADDRESS, DSL.name("uk_address_unique"), new TableField[] { Address.ADDRESS.PROVINCE, Address.ADDRESS.CITY, Address.ADDRESS.STREET_ADDRESS }, true);
+    public static final UniqueKey<BusinessKeywordRecord> PK_BUSINESS_KEYWORD = Internal.createUniqueKey(BusinessKeyword.BUSINESS_KEYWORD, DSL.name("pk_business_keyword"), new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID }, true);
+    public static final UniqueKey<BusinessKeywordRecord> UK_BUSINESS_KEYWORD_CODE = Internal.createUniqueKey(BusinessKeyword.BUSINESS_KEYWORD, DSL.name("uk_business_keyword_code"), new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.KEYWORD_CODE }, true);
+    public static final UniqueKey<BusinessKeywordAliasRecord> PK_BUSINESS_KEYWORD_ALIAS = Internal.createUniqueKey(BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS, DSL.name("pk_business_keyword_alias"), new TableField[] { BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS.ALIAS_ID }, true);
+    public static final UniqueKey<BusinessKeywordMappingResultRecord> PK_MAPPING_RESULT = Internal.createUniqueKey(BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT, DSL.name("pk_mapping_result"), new TableField[] { BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT.MAPPING_ID }, true);
     public static final UniqueKey<CategoryRecord> PK_CATEGORY = Internal.createUniqueKey(Category.CATEGORY, DSL.name("pk_category"), new TableField[] { Category.CATEGORY.CATEGORY_CODE }, true);
     public static final UniqueKey<CategoryGroupRecord> PK_CATEGORY_GROUP = Internal.createUniqueKey(CategoryGroup.CATEGORY_GROUP, DSL.name("pk_category_group"), new TableField[] { CategoryGroup.CATEGORY_GROUP.CATEGORY_GROUP_CODE }, true);
     public static final UniqueKey<CategoryGroupRecord> UK_CATEGORY_GROUP_CATEGORY_NAME = Internal.createUniqueKey(CategoryGroup.CATEGORY_GROUP, DSL.name("uk_category_group_category_name"), new TableField[] { CategoryGroup.CATEGORY_GROUP.CATEGORY_NAME }, true);
+    public static final UniqueKey<ConsultationAnalysisRecord> PK_CONSULTATION_ANALYSIS = Internal.createUniqueKey(ConsultationAnalysis.CONSULTATION_ANALYSIS, DSL.name("pk_consultation_analysis"), new TableField[] { ConsultationAnalysis.CONSULTATION_ANALYSIS.ANALYSIS_ID }, true);
     public static final UniqueKey<CouponRecord> PK_COUPON = Internal.createUniqueKey(Coupon.COUPON, DSL.name("pk_coupon"), new TableField[] { Coupon.COUPON.COUPON_ID }, true);
     public static final UniqueKey<InternetRecord> PK_INTERNET = Internal.createUniqueKey(Internet.INTERNET, DSL.name("pk_internet"), new TableField[] { Internet.INTERNET.PRODUCT_ID }, true);
     public static final UniqueKey<IptvRecord> PK_IPTV = Internal.createUniqueKey(Iptv.IPTV, DSL.name("pk_iptv"), new TableField[] { Iptv.IPTV.PRODUCT_ID }, true);
@@ -86,7 +99,11 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final ForeignKey<AddonServiceRecord, ProductRecord> ADDON_SERVICE__FK_ADDON_SERVICE_TO_PRODUCT = Internal.createForeignKey(AddonService.ADDON_SERVICE, DSL.name("fk_addon_service_to_product"), new TableField[] { AddonService.ADDON_SERVICE.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
+    public static final ForeignKey<BusinessKeywordAliasRecord, BusinessKeywordRecord> BUSINESS_KEYWORD_ALIAS__FK_ALIAS_TO_KEYWORD = Internal.createForeignKey(BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS, DSL.name("fk_alias_to_keyword"), new TableField[] { BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS.BUSINESS_KEYWORD_ID }, Keys.PK_BUSINESS_KEYWORD, new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID }, true);
+    public static final ForeignKey<BusinessKeywordMappingResultRecord, ConsultationAnalysisRecord> BUSINESS_KEYWORD_MAPPING_RESULT__FK_MAPPING_TO_ANALYSIS = Internal.createForeignKey(BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT, DSL.name("fk_mapping_to_analysis"), new TableField[] { BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT.ANALYSIS_ID }, Keys.PK_CONSULTATION_ANALYSIS, new TableField[] { ConsultationAnalysis.CONSULTATION_ANALYSIS.ANALYSIS_ID }, true);
+    public static final ForeignKey<BusinessKeywordMappingResultRecord, BusinessKeywordRecord> BUSINESS_KEYWORD_MAPPING_RESULT__FK_MAPPING_TO_KEYWORD = Internal.createForeignKey(BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT, DSL.name("fk_mapping_to_keyword"), new TableField[] { BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT.BUSINESS_KEYWORD_ID }, Keys.PK_BUSINESS_KEYWORD, new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID }, true);
     public static final ForeignKey<CategoryRecord, CategoryGroupRecord> CATEGORY__FK_CATEGORY_TO_GROUP = Internal.createForeignKey(Category.CATEGORY, DSL.name("fk_category_to_group"), new TableField[] { Category.CATEGORY.CATEGORY_GROUP_CODE }, Keys.PK_CATEGORY_GROUP, new TableField[] { CategoryGroup.CATEGORY_GROUP.CATEGORY_GROUP_CODE }, true);
+    public static final ForeignKey<ConsultationAnalysisRecord, SupportCaseRecord> CONSULTATION_ANALYSIS__FK_ANALYSIS_TO_CASE = Internal.createForeignKey(ConsultationAnalysis.CONSULTATION_ANALYSIS, DSL.name("fk_analysis_to_case"), new TableField[] { ConsultationAnalysis.CONSULTATION_ANALYSIS.CASE_ID }, Keys.PK_SUPPORT_CASE, new TableField[] { SupportCase.SUPPORT_CASE.CASE_ID }, true);
     public static final ForeignKey<InternetRecord, ProductRecord> INTERNET__FK_INTERNET_TO_PRODUCT = Internal.createForeignKey(Internet.INTERNET, DSL.name("fk_internet_to_product"), new TableField[] { Internet.INTERNET.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
     public static final ForeignKey<IptvRecord, ProductRecord> IPTV__FK_IPTV_TO_PRODUCT = Internal.createForeignKey(Iptv.IPTV, DSL.name("fk_iptv_to_product"), new TableField[] { Iptv.IPTV.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
     public static final ForeignKey<MemberRecord, AddressRecord> MEMBER__FK_MEMBER_TO_ADDRESS = Internal.createForeignKey(Member.MEMBER, DSL.name("fk_member_to_address"), new TableField[] { Member.MEMBER.ADDRESS_ID }, Keys.PK_ADDRESS, new TableField[] { Address.ADDRESS.ADDRESS_ID }, true);

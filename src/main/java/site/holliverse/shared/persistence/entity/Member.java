@@ -88,4 +88,23 @@ public class Member extends BaseEntity {
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "membership", length = 20)
     private MemberMembership membership;
+
+
+    /**
+     * 구글 로그인시 수정필요한 경우
+     */
+    public void completeOnboarding(
+            Address address,
+            String phone,
+            LocalDate birthDate,
+            String gender
+    ) {
+        this.address = address;
+        this.phone = phone;
+        this.birthDate = birthDate;
+        this.gender = gender;
+        this.membership = MemberMembership.GOLD;
+        this.status = MemberStatus.ACTIVE;
+        this.statusUpdatedAt = LocalDateTime.now();
+    }
 }

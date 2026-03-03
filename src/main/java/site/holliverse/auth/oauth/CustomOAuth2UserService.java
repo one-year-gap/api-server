@@ -54,14 +54,15 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             );
         }
 
-        // 2) 이메일로 회원을 조회하고, 없으면 소셜 회원을 신규 생성한다.
+        // 2) 이메일로 회원을 조회 한 뒤, 만약 이메일이 존재하면 그대로 로그인 진행
+        // 만약 이메일이 없다면 처음 회원가입 한 것이니 status = PROCESSING
         Member member = memberRepository.findByEmail(email)
                 .orElseGet(() -> memberRepository.save(Member.builder()
                         .providerId(providerId)
                         .email(email)
                         .name(name)
                         .type(MemberSignupType.GOOGLE)
-                        .status(MemberStatus.ACTIVE)
+                        .status(MemberStatus.PROCESSING)
                         .role(MemberRole.CUSTOMER)
                         .build()));
 

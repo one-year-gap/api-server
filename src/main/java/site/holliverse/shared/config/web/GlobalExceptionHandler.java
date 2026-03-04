@@ -48,6 +48,7 @@ public class GlobalExceptionHandler {
         );
 
         ApiErrorResponse body = ApiErrorResponse.error(ex.getMessage(), detail);
+        logException(ex, ex.getErrorCode(), ex.getMessage());
         return ResponseEntity.status(code.httpStatus()).body(body);
     }
 
@@ -63,6 +64,9 @@ public class GlobalExceptionHandler {
                 ErrorCode.INVALID_INPUT.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), field, reason)
         );
+
+        logException(ex, ErrorCode.INVALID_INPUT, ex.getMessage());
+
         return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
     }
 
@@ -73,6 +77,8 @@ public class GlobalExceptionHandler {
                 ErrorCode.INVALID_INPUT.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), null, ex.getMessage())
         );
+        logException(ex, ErrorCode.INVALID_INPUT, ex.getMessage());
+
         return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
     }
 
@@ -83,6 +89,8 @@ public class GlobalExceptionHandler {
                 ErrorCode.INVALID_INPUT.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), ex.getParameterName(), ex.getMessage())
         );
+        logException(ex, ErrorCode.INVALID_INPUT, ex.getMessage());
+
         return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
     }
 
@@ -93,6 +101,8 @@ public class GlobalExceptionHandler {
                 ErrorCode.INVALID_INPUT.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), ex.getName(), ex.getMessage())
         );
+        logException(ex, ErrorCode.INVALID_INPUT, ex.getMessage());
+
         return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
     }
 
@@ -109,6 +119,7 @@ public class GlobalExceptionHandler {
             return conflict(ErrorCode.DUPLICATED_PHONE, "phone", ErrorCode.DUPLICATED_PHONE.defaultMessage());
         }
 
+        logException(ex, ErrorCode.CONFLICT, ex.getMessage());
         return conflict(ErrorCode.CONFLICT, null, ErrorCode.CONFLICT.defaultMessage());
     }
 
@@ -119,6 +130,8 @@ public class GlobalExceptionHandler {
                 ErrorCode.UNAUTHORIZED.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.UNAUTHORIZED.code(), null, ex.getMessage())
         );
+        logException(ex,ErrorCode.UNAUTHORIZED,ex.getMessage());
+
         return ResponseEntity.status(ErrorCode.UNAUTHORIZED.httpStatus()).body(body);
     }
 
@@ -129,6 +142,8 @@ public class GlobalExceptionHandler {
                 ErrorCode.FORBIDDEN.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.FORBIDDEN.code(), null, ex.getMessage())
         );
+        logException(ex,ErrorCode.FORBIDDEN,ex.getMessage());
+
         return ResponseEntity.status(ErrorCode.FORBIDDEN.httpStatus()).body(body);
     }
 
@@ -142,6 +157,8 @@ public class GlobalExceptionHandler {
                 message
         );
         ApiErrorResponse body = ApiErrorResponse.error(message, detail);
+        logException(ex,ErrorCode.FORBIDDEN,ex.getMessage());
+
         return ResponseEntity.status(ex.getStatusCode()).body(body);
     }
 
@@ -152,6 +169,8 @@ public class GlobalExceptionHandler {
                 ErrorCode.INVALID_INPUT.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.INVALID_INPUT.code(), null, ex.getMessage())
         );
+        logException(ex,ErrorCode.INVALID_INPUT,ex.getMessage());
+
         return ResponseEntity.status(ErrorCode.INVALID_INPUT.httpStatus()).body(body);
     }
 
@@ -162,6 +181,8 @@ public class GlobalExceptionHandler {
                 ErrorCode.INTERNAL_ERROR.defaultMessage(),
                 new ApiErrorDetail(ErrorCode.INTERNAL_ERROR.code(), null, "예기치 못한 오류가 발생했습니다.")
         );
+        logException(ex, ErrorCode.INTERNAL_ERROR, ex.getMessage());
+
         return ResponseEntity.status(ErrorCode.INTERNAL_ERROR.httpStatus()).body(body);
     }
 
@@ -177,19 +198,19 @@ public class GlobalExceptionHandler {
     /*
      * 예외처리 log
      */
-    private void logException(Throwable ex, HttpStatus status, String errorCode, String message) {
-        String severity = resolveSeverity(status);
+    private void logException(Throwable ex, ErrorCode status, String message) {
+        String severity = resolveSeverity(status.httpStatus());
         boolean includeStackTrace = "error".equals(severity) || "fatal".equalsIgnoreCase(severity);
 
         //필드 강제
-        ensureRequestContext(status);
+        ensureRequestContext(status.httpStatus());
         MDC.put(LogFieldKeys.SEVERITY, severity);
         MDC.put(LogFieldKeys.ERROR_TYPE, ex.getClass().getName());
-        MDC.put(LogFieldKeys.ERROR_CODE, errorCode);
+        MDC.put(LogFieldKeys.ERROR_CODE, status.code());
 
-        String safeMessage = null;
+        String safeMessage = message;
         //유효성 검증
-        if (message == null || message.isBlank()) {
+        if (safeMessage == null || safeMessage.isBlank()) {
             safeMessage = "error";
         }
 
@@ -199,14 +220,14 @@ public class GlobalExceptionHandler {
         }
 
         try {
-            if (includeStackTrace){
+            if (includeStackTrace) {
                 //ERROR 이상만 stackTrace
-                APP_ERROR_LOG.error(safeMessage,ex);
-            }else {
+                APP_ERROR_LOG.error(safeMessage, ex);
+            } else {
                 //WARN은 stackTrace 미포함
                 APP_ERROR_LOG.warn(safeMessage);
             }
-        }finally {
+        } finally {
             MDC.remove(LogFieldKeys.SEVERITY);
             MDC.remove(LogFieldKeys.ERROR_TYPE);
             MDC.remove(LogFieldKeys.ERROR_CODE);

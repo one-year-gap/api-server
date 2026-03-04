@@ -57,6 +57,7 @@ class GetProductListUseCaseTest {
     private static Product productWithId(Long id) {
         Product p = org.mockito.Mockito.mock(Product.class);
         when(p.getProductId()).thenReturn(id);
+        when(p.getTags()).thenReturn(List.of("데이터알뜰"));
         return p;
     }
 
@@ -234,6 +235,7 @@ class GetProductListUseCaseTest {
             assertThat(result.products().getContent()).hasSize(1);
             assertThat(result.products().getContent().get(0)).isInstanceOf(ProductSummaryDto.class);
             assertThat(result.products().getContent().get(0).productId()).isEqualTo(1L);
+            assertThat(result.products().getContent().get(0).tags()).containsExactly("데이터알뜰");
             assertThat(result.products().getNumber()).isZero();
         }
     }

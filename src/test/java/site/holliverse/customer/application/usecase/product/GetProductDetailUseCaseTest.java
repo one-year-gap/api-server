@@ -26,6 +26,7 @@ import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -61,6 +62,7 @@ class GetProductDetailUseCaseTest {
                 .salePrice(8000)
                 .productType(productType)
                 .discountType("할인")
+                .tags(List.of("데이터알뜰"))
                 .build();
     }
 
@@ -150,6 +152,7 @@ class GetProductDetailUseCaseTest {
 
             //then
             assertThat(result.product().productId()).isEqualTo(planId);
+            assertThat(result.product().tags()).containsExactly("데이터알뜰");
             assertThat(result.mobilePlan().get().dataAmount()).isEqualTo("100GB");
             assertThat(result.internet()).isEmpty();
             assertThat(result.iptv()).isEmpty();

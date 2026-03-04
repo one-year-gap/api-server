@@ -91,7 +91,7 @@ public class GetCustomerProfileUseCase {
         }
 
         Map<String, Object> usageDetails = usageMonthlyRepository
-                .findFirstBySubscription_IdOrderByYyymmDesc(mobileSubscription.getId())
+                .findFirstBySubscription_IdOrderByYyyymmDesc(mobileSubscription.getId())
                 .map(usageMonthly -> usageMonthly.getUsageDetails() == null ? Map.<String, Object>of() : usageMonthly.getUsageDetails())
                 .orElse(Map.of());
 

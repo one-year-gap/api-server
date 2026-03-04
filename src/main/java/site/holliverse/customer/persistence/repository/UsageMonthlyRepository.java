@@ -9,5 +9,5 @@ import java.util.Optional;
 @Profile("customer")
 public interface UsageMonthlyRepository extends JpaRepository<UsageMonthly, Long> {
 
-    Optional<UsageMonthly> findFirstBySubscription_IdOrderByYyymmDesc(Long subscriptionId);
+    Optional<UsageMonthly> findFirstBySubscription_IdOrderByYyyymmDesc(Long subscriptionId);
 }

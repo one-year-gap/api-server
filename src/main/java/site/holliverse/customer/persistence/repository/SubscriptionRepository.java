@@ -46,4 +46,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
             @Param("memberId") Long memberId,
             @Param("productType") ProductType productType
     );
+
+    //모든활성 구독 가져오기 
+    @Query("SELECT s FROM Subscription s JOIN FETCH s.product WHERE s.member.id = :memberId AND s.status = true ORDER BY s.startDate DESC")
+    List<Subscription> findAllActiveByMemberId(@Param("memberId") Long memberId);
 }

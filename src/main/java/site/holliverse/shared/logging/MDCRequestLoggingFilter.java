@@ -83,7 +83,14 @@ public class MDCRequestLoggingFilter extends OncePerRequestFilter {
             MDC.put(LogFieldKeys.URI_TEMPLATE, resolveUriTemplate(request));
 
             if (!isAccessLogExcluded(request)) {
-                accessLog.info("http request completed");
+                int status = response.getStatus();
+                if (status >= 500) {
+                    accessLog.error("http request completed");
+                } else if (status >= 400) {
+                    accessLog.warn("http request completed");
+                } else {
+                    accessLog.info("http request completed");
+                }
             }
 
             MDC.clear();

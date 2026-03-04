@@ -30,6 +30,7 @@ public class ProductResponseMapper {
                 p.salePrice(),
                 p.discountType(),
                 p.productCode(),
+                p.tags(),
                 content,
                 isBest
         );

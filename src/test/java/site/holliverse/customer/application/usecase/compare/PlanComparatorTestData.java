@@ -3,6 +3,7 @@ package site.holliverse.customer.application.usecase.compare;
 import site.holliverse.customer.application.usecase.dto.MobilePlanDetailDto;
 import site.holliverse.customer.application.usecase.dto.ProductSummaryDto;
 import site.holliverse.shared.domain.model.ProductType;
+import java.util.List;
 
 /**
  * PlanComparatorTest용 실제 요금제 데이터 (5G 프리미어 에센셜 / 5G 프리미어 플러스).
@@ -34,7 +35,8 @@ public final class PlanComparatorTestData {
                 58_500,
                 ProductType.MOBILE_PLAN,
                 "5G-PREMIER-ESSENTIAL",
-                "약정 할인"
+                "약정 할인",
+                List.of("데이터무제한")
         );
     }
 
@@ -73,7 +75,8 @@ public final class PlanComparatorTestData {
                 73_500,
                 ProductType.MOBILE_PLAN,
                 "5G-PREMIER-PLUS",
-                "약정 할인"
+                "약정 할인",
+                List.of("데이터무제한", "OTT프리미엄")
         );
     }
 

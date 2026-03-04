@@ -97,7 +97,8 @@ public class GetProductDetailUseCase {
                 p.getSalePrice(),
                 p.getProductType(),
                 p.getProductCode(),
-                p.getDiscountType()
+                p.getDiscountType(),
+                p.getTags()
         );
     }
 

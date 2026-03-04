@@ -93,7 +93,8 @@ class ProductControllerTest {
                 8000,
                 productType,
                 "CODE-001",
-                "할인"
+                "할인",
+                List.of("데이터알뜰")
         );
     }
 
@@ -106,6 +107,7 @@ class ProductControllerTest {
                 8000,
                 "할인",
                 "CODE-001",
+                List.of("데이터알뜰"),
                 (ProductContent) null,
                 false
         );
@@ -144,6 +146,7 @@ class ProductControllerTest {
                     .andExpect(jsonPath("$.status").value("success"))
                     .andExpect(jsonPath("$.data.page").exists())
                     .andExpect(jsonPath("$.data.content").isArray())
+                    .andExpect(jsonPath("$.data.content[0].tags[0]").value("데이터알뜰"))
                     .andExpect(jsonPath("$.timestamp").exists());
             verify(getProductListUseCase).execute("mobile", 0, 20, 0);
         }
@@ -269,6 +272,7 @@ class ProductControllerTest {
                     .andExpect(jsonPath("$.data.productId").value(1))
                     .andExpect(jsonPath("$.data.name").value("5G 요금제"))
                     .andExpect(jsonPath("$.data.productType").value("MOBILE_PLAN"))
+                    .andExpect(jsonPath("$.data.tags[0]").value("데이터알뜰"))
                     .andExpect(jsonPath("$.data").exists())
                     .andExpect(jsonPath("$.timestamp").exists());
             verify(getProductDetailUseCase).execute(planId);
@@ -347,9 +351,9 @@ class ProductControllerTest {
                         .willReturn(new ComparePlansResult(currentResult, targetResult, comparison));
 
                 ProductDetailResponse currentPlanDto = new ProductDetailResponse(
-                        1L, "5G 프리미어 에센셜", "MOBILE_PLAN", 59_000, 49_500, "할인", "CODE", null, false);
+                        1L, "5G 프리미어 에센셜", "MOBILE_PLAN", 59_000, 49_500, "할인", "CODE", List.of("데이터무제한"), null, false);
                 ProductDetailResponse targetPlanDto = new ProductDetailResponse(
-                        2L, "5G 프리미어 플러스", "MOBILE_PLAN", 74_000, 62_000, "할인", "CODE", null, false);
+                        2L, "5G 프리미어 플러스", "MOBILE_PLAN", 74_000, 62_000, "할인", "CODE", List.of("데이터무제한"), null, false);
                 PlanCompareResponse mockResponse = new PlanCompareResponse(
                         currentPlanDto, targetPlanDto,
                         new ComparisonResponse(15_000, "+15,000원", List.of())

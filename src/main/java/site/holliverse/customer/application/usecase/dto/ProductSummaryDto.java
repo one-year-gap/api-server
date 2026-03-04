@@ -1,6 +1,7 @@
 package site.holliverse.customer.application.usecase.dto;
 
 import site.holliverse.shared.domain.model.ProductType;
+import java.util.List;
 
 public record ProductSummaryDto(
         Long productId,
@@ -9,5 +10,6 @@ public record ProductSummaryDto(
         Integer salePrice,
         ProductType productType,
         String productCode,
-        String discountType
+        String discountType,
+        List<String> tags
 ) {}

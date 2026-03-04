@@ -129,7 +129,8 @@ public class GetProductListUseCase {
                 p.getSalePrice(),
                 p.getProductType(),
                 p.getProductCode(),
-                p.getDiscountType()
+                p.getDiscountType(),
+                p.getTags()
         );
     }
 

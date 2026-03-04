@@ -1,5 +1,7 @@
 package site.holliverse.customer.web.dto.product;
 
+import java.util.List;
+
 public record ProductDetailResponse(
         Long productId,
         String name,
@@ -8,6 +10,7 @@ public record ProductDetailResponse(
         Integer salePrice,
         String discountType,
         String productCode,
+        List<String> tags,
         ProductContent content,
         boolean isBest
 ) {}

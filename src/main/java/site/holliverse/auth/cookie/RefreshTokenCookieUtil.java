@@ -25,6 +25,7 @@ public final class RefreshTokenCookieUtil {
 
     /**
      * HttpOnly 리프레시 토큰 쿠키를 응답 헤더에 추가한다.
+     * ngrok일때는 None
      */
     public static void addRefreshTokenCookie(
             HttpServletResponse response,
@@ -36,7 +37,7 @@ public final class RefreshTokenCookieUtil {
                 .httpOnly(true)
                 .secure(true)
                 .path(COOKIE_PATH)
-                .sameSite("Lax")
+                .sameSite("None")
                 .maxAge(Duration.ofSeconds(refreshTokenExpiresInSeconds))
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -50,7 +51,7 @@ public final class RefreshTokenCookieUtil {
                 .httpOnly(true)
                 .secure(true)
                 .path(COOKIE_PATH)
-                .sameSite("Lax")
+                .sameSite("None")
                 .maxAge(Duration.ZERO)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

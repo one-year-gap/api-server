@@ -95,7 +95,9 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "https://*.holliverse.site",
                 "http://localhost:3000",
-                "http://localhost:3001"
+                "http://localhost:3001",
+                "https://eleonor-neoanthropic-overkeenly.ngrok-free.dev", // 테스트 끝난후 삭제
+                "https://holliverse.site"
         ));
         config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

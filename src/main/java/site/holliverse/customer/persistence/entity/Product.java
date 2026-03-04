@@ -6,6 +6,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.shared.persistence.BaseEntity;
+import java.util.List;
 
 @Entity
 @Table(name = "product")
@@ -39,4 +40,9 @@ public class Product extends BaseEntity {
     /** 할인 유형 설명 (예: 선택약정 25%, 3년 약정 결합). API discount_type */
     @Column(name = "discount_type", length = 100)
     private String discountType;
+
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "tags", nullable = false, columnDefinition = "jsonb")
+    private List<String> tags = List.of();
 }

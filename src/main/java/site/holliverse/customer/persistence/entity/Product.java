@@ -6,6 +6,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.shared.persistence.BaseEntity;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -44,5 +45,5 @@ public class Product extends BaseEntity {
     @Builder.Default
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "tags", nullable = false, columnDefinition = "jsonb")
-    private List<String> tags = List.of();
+    private List<String> tags = new ArrayList<>();
 }

@@ -60,15 +60,15 @@ class MemberControllerIntegrationTest {
     @DisplayName("GET /api/v1/customer/me - DB 데이터 기준으로 회원정보/구독/모바일 사용량을 반환한다.")
     void getMyProfile_success() throws Exception {
         String suffix = String.valueOf(System.nanoTime());
-        Long memberId = createMemberFixture(suffix, true);
-        setSecurityContextWithMember(memberId);
+        MemberFixtureResult fixture = createMemberFixture(suffix, true);
+        setSecurityContextWithMember(fixture.memberId());
 
         try {
             mockMvc.perform(get(API_ME))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath(JSON_STATUS).value("success"))
                     .andExpect(jsonPath(JSON_DATA_NAME).value("홍길동"))
-                    .andExpect(jsonPath(JSON_DATA_PHONE).value("010-****-5678"))
+                    .andExpect(jsonPath(JSON_DATA_PHONE).value(fixture.expectedMaskedPhone()))
                     .andExpect(jsonPath(JSON_DATA_MEMBERSHIP).value("GOLD"))
                     .andExpect(jsonPath(JSON_FIRST_SUBSCRIPTION_TYPE).value("MOBILE_PLAN"))
                     .andExpect(jsonPath(JSON_MOBILE_DATA_AMOUNT).value("완전 무제한"))
@@ -84,8 +84,8 @@ class MemberControllerIntegrationTest {
     @DisplayName("GET /api/v1/customer/me - 이름 복호화 실패 시 DECRYPTION_FAILED(500)를 반환한다.")
     void getMyProfile_decryptionFailed() throws Exception {
         String suffix = String.valueOf(System.nanoTime());
-        Long memberId = createMemberFixture(suffix, false);
-        setSecurityContextWithMember(memberId);
+        MemberFixtureResult fixture = createMemberFixture(suffix, false);
+        setSecurityContextWithMember(fixture.memberId());
 
         try {
             mockMvc.perform(get(API_ME))
@@ -98,8 +98,7 @@ class MemberControllerIntegrationTest {
     }
 
     // --- Helpers ---
-    // 데이터 주입
-    private Long createMemberFixture(String suffix, boolean encryptName) {
+    private MemberFixtureResult createMemberFixture(String suffix, boolean encryptName) {
         Long addressId = jdbcTemplate.queryForObject(
                 "INSERT INTO address (province, city, street_address, postal_code) " +
                         "VALUES (?, ?, ?, ?) RETURNING address_id",
@@ -111,7 +110,9 @@ class MemberControllerIntegrationTest {
         );
 
         String encryptedName = encryptName ? encryptionTool.encrypt("홍길동") : "홍길동";
-        String encryptedPhone = encryptionTool.encrypt("01012345678");
+        String phonePlain = "010" + String.format("%08d", Math.abs(Long.parseLong(suffix)) % 100_000_000);
+        String encryptedPhone = encryptionTool.encrypt(phonePlain);
+        String expectedMaskedPhone = "010-****-" + phonePlain.substring(phonePlain.length() - 4);
 
         Long memberId = jdbcTemplate.queryForObject(
                 "INSERT INTO member (" +
@@ -182,8 +183,10 @@ class MemberControllerIntegrationTest {
                 "{\"data_gb\": 2.8, \"sms_cnt\": 54, \"voice_min\": 145}"
         );
 
-        return memberId;
+        return new MemberFixtureResult(memberId, expectedMaskedPhone);
     }
+
+    private record MemberFixtureResult(long memberId, String expectedMaskedPhone) {}
 
     // 보안 context mocking
     private void setSecurityContextWithMember(Long memberId) {

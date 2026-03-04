@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -150,6 +151,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     // 컨트롤러에서 던진 HTTP 상태 전용 예외(401, 400 등)를 그대로 반영
     public ResponseEntity<ApiErrorResponse> handleResponseStatus(ResponseStatusException ex) {
+        ErrorCode errorCode = resolveErrorCode(ex.getStatusCode());
         String message = ex.getReason() != null ? ex.getReason() : ex.getStatusCode().toString();
         ApiErrorDetail detail = new ApiErrorDetail(
                 ex.getStatusCode().toString(),
@@ -157,7 +159,7 @@ public class GlobalExceptionHandler {
                 message
         );
         ApiErrorResponse body = ApiErrorResponse.error(message, detail);
-        logException(ex,ErrorCode.FORBIDDEN,ex.getMessage());
+        logException(ex,errorCode,ex.getMessage());
 
         return ResponseEntity.status(ex.getStatusCode()).body(body);
     }
@@ -283,4 +285,18 @@ public class GlobalExceptionHandler {
     private boolean hasText(String value) {
         return value == null || value.isBlank();
     }
+
+    private ErrorCode resolveErrorCode(HttpStatusCode statusCode) {
+      int s = statusCode.value();
+
+      if (s == 400) return ErrorCode.INVALID_INPUT;
+      if (s == 401) return ErrorCode.UNAUTHORIZED;
+      if (s == 403) return ErrorCode.FORBIDDEN;
+      if (s == 404) return ErrorCode.NOT_FOUND;
+      if (s == 409) return ErrorCode.CONFLICT;
+      if (s >= 500) return ErrorCode.INTERNAL_ERROR;
+
+      // 정의되지 않은 4xx/기타 상태 fallback
+      return (s >= 400 && s < 500) ? ErrorCode.INVALID_INPUT : ErrorCode.INTERNAL_ERROR;
+  }
 }

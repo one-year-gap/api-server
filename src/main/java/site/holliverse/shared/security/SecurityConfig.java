@@ -96,7 +96,7 @@ public class SecurityConfig {
                 "https://*.holliverse.site",
                 "http://localhost:3000",
                 "http://localhost:3001",
-                "https://*.ngrok-free.dev", //프론트 로컬쪽 테스트 끝나면 바로 삭제
+                "https://eleonor-neoanthropic-overkeenly.ngrok-free.dev", // 테스트 끝난후 삭제
                 "https://holliverse.site"
         ));
         config.setAllowCredentials(true);

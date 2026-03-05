@@ -1,6 +1,5 @@
 package site.holliverse.customer.web.dto.member;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.ProductType;
 
@@ -20,11 +19,11 @@ public record CustomerProfileResponse(
             ProductType productType
     ) {}
 
-    /** 모바일 요금제 당월 사용량 상세 (API JSON: data_gb, sms_cnt, voice_min) */
+    /** 모바일 요금제 당월 사용량 상세 (camelCase: dataGb, smsCnt, voiceMin) */
     public record UsageDetails(
-            @JsonProperty("data_gb") Double dataGb,
-            @JsonProperty("sms_cnt") Integer smsCnt,
-            @JsonProperty("voice_min") Integer voiceMin
+            Double dataGb,
+            Integer smsCnt,
+            Integer voiceMin
     ) {}
 
     public record MobilePlanDetail(

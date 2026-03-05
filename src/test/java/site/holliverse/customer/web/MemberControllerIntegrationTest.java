@@ -43,9 +43,9 @@ class MemberControllerIntegrationTest {
     private static final String JSON_DATA_MEMBERSHIP = "$.data.membership";
     private static final String JSON_FIRST_SUBSCRIPTION_TYPE = "$.data.subscriptions[0].productType";
     private static final String JSON_MOBILE_DATA_AMOUNT = "$.data.mobilePlan.dataAmount";
-    private static final String JSON_USAGE_DATA_GB = "$.data.mobilePlan.usageDetails.data_gb";
-    private static final String JSON_USAGE_SMS_CNT = "$.data.mobilePlan.usageDetails.sms_cnt";
-    private static final String JSON_USAGE_VOICE_MIN = "$.data.mobilePlan.usageDetails.voice_min";
+    private static final String JSON_USAGE_DATA_GB = "$.data.mobilePlan.usageDetails.dataGb";
+    private static final String JSON_USAGE_SMS_CNT = "$.data.mobilePlan.usageDetails.smsCnt";
+    private static final String JSON_USAGE_VOICE_MIN = "$.data.mobilePlan.usageDetails.voiceMin";
     private static final String JSON_ERROR_CODE = "$.errorDetail.code";
     private static final String JSON_ERROR_FIELD = "$.errorDetail.field";
 

@@ -95,12 +95,29 @@ public class GetCustomerProfileUseCase {
                 .map(usageMonthly -> usageMonthly.getUsageDetails() == null ? Map.<String, Object>of() : usageMonthly.getUsageDetails())
                 .orElse(Map.of());
 
+        DataAmountNormalization normalized = normalizeDataAmount(mobilePlan.getDataAmount());
+
         return new CustomerProfileResult.MobilePlanInfo(
-                mobilePlan.getDataAmount(),
+                normalized.dataAmount(),
+                normalized.isDay(),
                 mobilePlan.getBenefitSms(),
                 mobilePlan.getBenefitVoiceCall(),
                 usageDetails
         );
+    }
+
+    private DataAmountNormalization normalizeDataAmount(String rawDataAmount) {
+        if (rawDataAmount == null || rawDataAmount.isBlank()) {
+            return new DataAmountNormalization(rawDataAmount, false);
+        }
+
+        boolean isDay = rawDataAmount.contains("매일");
+        if (!isDay) {
+            return new DataAmountNormalization(rawDataAmount, false);
+        }
+
+        String normalized = rawDataAmount.replace("매일", "").replaceAll("\\s+", " ").trim();
+        return new DataAmountNormalization(normalized, true);
     }
 
     private String safeDecrypt(String field, String cipherText) {
@@ -118,5 +135,7 @@ public class GetCustomerProfileUseCase {
             );
         }
     }
+
+    private record DataAmountNormalization(String dataAmount, boolean isDay) {}
 
 }

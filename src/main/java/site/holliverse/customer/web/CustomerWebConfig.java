@@ -8,6 +8,7 @@ import site.holliverse.customer.web.assembler.PlanCompareResponseAssembler;
 import java.time.Clock;
 import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.mapper.CompareResponseMapper;
+import site.holliverse.customer.web.mapper.CustomerProfileResponseMapper;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 
 @Configuration
@@ -39,5 +40,10 @@ public class CustomerWebConfig {
             ProductResponseMapper productResponseMapper,
             CompareResponseMapper compareResponseMapper) {
         return new PlanCompareResponseAssembler(productResponseMapper, compareResponseMapper);
+    }
+
+    @Bean
+    public CustomerProfileResponseMapper customerProfileResponseMapper() {
+        return new CustomerProfileResponseMapper();
     }
 }

@@ -29,9 +29,6 @@ public class MemberController {
     @GetMapping("/me")
     public ApiResponse<CustomerProfileResponse> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        if (customUserDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
-        }
 
         CustomerProfileResult result = getCustomerProfileUseCase.execute(customUserDetails.getMemberId());
         CustomerProfileResponse response = customerProfileResponseMapper.toResponse(result);

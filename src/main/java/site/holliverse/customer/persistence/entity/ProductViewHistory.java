@@ -2,36 +2,42 @@ package site.holliverse.customer.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import site.holliverse.shared.persistence.BaseEntity;
-import site.holliverse.shared.persistence.entity.Member;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@IdClass(ProductViewHistoryId.class)
 @Table(name = "product_view_history")
-public class ProductViewHistory extends BaseEntity {
+public class ProductViewHistory {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "view_id")
-    private Long id;
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
 
-    // 연관 관계 (N:1)
-    // 어떤 회원이 보았는가
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @Id
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
 
-    // 어떤 상품을 보았는가
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @Column(name = "product_name", nullable = false, length = 100)
+    private String productName;
+
+    @Column(name = "product_type", nullable = false, length = 50)
+    private String productType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "tags", columnDefinition = "jsonb")
+    private String tags;
 
     @Builder.Default
     @Column(name = "viewed_at", nullable = false)
-    private LocalDateTime viewedAt = LocalDateTime.now();
+    private OffsetDateTime viewedAt = OffsetDateTime.now();
+
+    @Column(name = "last_event_id", nullable = false)
+    private Long lastEventId;
 }

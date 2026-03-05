@@ -1,5 +1,7 @@
 package site.holliverse.customer.application.usecase.member;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,8 @@ import java.util.Map;
 @Service
 @Profile("customer")
 public class GetCustomerProfileUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(GetCustomerProfileUseCase.class);
 
     private final MemberRepository memberRepository;
     private final SubscriptionRepository subscriptionRepository;
@@ -87,6 +91,8 @@ public class GetCustomerProfileUseCase {
         MobilePlan mobilePlan = mobilePlanRepository.findById(productId).orElse(null);
 
         if (mobilePlan == null) {
+            log.warn("데이터 정합성 문제: Product(MOBILE_PLAN) 존재하나 MobilePlan 상세 정보 없음. subscriptionId={}, productId={}",
+                    mobileSubscription.getId(), productId);
             return null;
         }
 

@@ -10,6 +10,7 @@ import site.holliverse.customer.web.assembler.ProductListResponseAssembler;
 import site.holliverse.customer.web.mapper.CompareResponseMapper;
 import site.holliverse.customer.web.mapper.CustomerProfileResponseMapper;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
+import site.holliverse.customer.web.mapper.RecentActivityResponseMapper;
 
 @Configuration
 @Profile("customer")
@@ -45,5 +46,10 @@ public class CustomerWebConfig {
     @Bean
     public CustomerProfileResponseMapper customerProfileResponseMapper() {
         return new CustomerProfileResponseMapper();
+    }
+
+    @Bean
+    public RecentActivityResponseMapper recentActivityResponseMapper() {
+        return new RecentActivityResponseMapper();
     }
 }

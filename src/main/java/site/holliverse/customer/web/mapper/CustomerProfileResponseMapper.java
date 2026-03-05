@@ -23,7 +23,7 @@ public class CustomerProfileResponseMapper {
                 result.mobilePlan().isDay(),
                 result.mobilePlan().benefitSms(),
                 result.mobilePlan().benefitVoiceCall(),
-                result.mobilePlan().usageDetails()
+                toUsageDetails(result.mobilePlan().usageDetails())
         );
 
         return new CustomerProfileResponse(
@@ -32,6 +32,17 @@ public class CustomerProfileResponseMapper {
                 maskPhone(result.phone()),
                 subscriptions,
                 mobilePlan
+        );
+    }
+
+    private CustomerProfileResponse.UsageDetails toUsageDetails(CustomerProfileResult.UsageDetails details) {
+        if (details == null) {
+            return new CustomerProfileResponse.UsageDetails(null, null, null);
+        }
+        return new CustomerProfileResponse.UsageDetails(
+                details.dataGb(),
+                details.smsCnt(),
+                details.voiceMin()
         );
     }
 

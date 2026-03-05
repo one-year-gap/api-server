@@ -96,10 +96,12 @@ public class GetCustomerProfileUseCase {
             return null;
         }
 
-        Map<String, Object> usageDetails = usageMonthlyRepository
+        Map<String, Object> rawUsageDetails = usageMonthlyRepository
                 .findFirstBySubscription_IdOrderByYyyymmDesc(mobileSubscription.getId())
                 .map(usageMonthly -> usageMonthly.getUsageDetails() == null ? Map.<String, Object>of() : usageMonthly.getUsageDetails())
                 .orElse(Map.of());
+
+        CustomerProfileResult.UsageDetails usageDetails = mapToUsageDetails(rawUsageDetails);
 
         DataAmountNormalization normalized = normalizeDataAmount(mobilePlan.getDataAmount());
 
@@ -110,6 +112,16 @@ public class GetCustomerProfileUseCase {
                 mobilePlan.getBenefitVoiceCall(),
                 usageDetails
         );
+    }
+
+    private CustomerProfileResult.UsageDetails mapToUsageDetails(Map<String, Object> map) {
+        if (map == null || map.isEmpty()) {
+            return new CustomerProfileResult.UsageDetails(null, null, null);
+        }
+        Double dataGb = map.get("data_gb") instanceof Number n ? n.doubleValue() : null;
+        Integer smsCnt = map.get("sms_cnt") instanceof Number n ? n.intValue() : null;
+        Integer voiceMin = map.get("voice_min") instanceof Number n ? n.intValue() : null;
+        return new CustomerProfileResult.UsageDetails(dataGb, smsCnt, voiceMin);
     }
 
     private DataAmountNormalization normalizeDataAmount(String rawDataAmount) {

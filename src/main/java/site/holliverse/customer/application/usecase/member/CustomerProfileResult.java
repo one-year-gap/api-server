@@ -22,6 +22,7 @@ public record CustomerProfileResult(
 
     public record MobilePlanInfo(
             String dataAmount,
+            boolean isDay,
             String benefitSms,
             String benefitVoiceCall,
             Map<String, Object> usageDetails // 모바일 요금제 사용량 상세정보

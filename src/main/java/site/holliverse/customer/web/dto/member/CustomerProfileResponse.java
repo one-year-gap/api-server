@@ -22,6 +22,7 @@ public record CustomerProfileResponse(
 
     public record MobilePlanDetail(
             String dataAmount,
+            boolean isDay,
             String benefitSms,
             String benefitVoiceCall,
             Map<String, Object> usageDetails

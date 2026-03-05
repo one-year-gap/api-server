@@ -20,6 +20,7 @@ public class CustomerProfileResponseMapper {
                 ? null
                 : new CustomerProfileResponse.MobilePlanDetail(
                 result.mobilePlan().dataAmount(),
+                result.mobilePlan().isDay(),
                 result.mobilePlan().benefitSms(),
                 result.mobilePlan().benefitVoiceCall(),
                 result.mobilePlan().usageDetails()

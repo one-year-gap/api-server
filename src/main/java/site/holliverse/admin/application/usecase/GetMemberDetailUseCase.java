@@ -11,6 +11,8 @@ import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.logging.SystemLogEvent;
 
+import java.util.List;
+
 /**
  * 관리자 - 회원 상세 정보 조회 UseCase
  */
@@ -24,19 +26,33 @@ public class GetMemberDetailUseCase {
     /**
      * 회원 상세 정보를 조회
      * @param memberId 조회할 회원의 고유 ID
-     * @return MemberDetailRawData (DB에서 꺼낸 순수 데이터)
+     * @return GetMemberDetailResult (RawData + Top3 키워드)
      */
     @Transactional(readOnly = true)
     @SystemLogEvent("admin.member.detail")
     @AlertOwner("yh")
-    public MemberDetailRawData execute(Long memberId) {
+    public GetMemberDetailResult execute(Long memberId) {
 
-        // Dao를 통해 데이터 조회. 없으면 팀 표준 CustomException(404 NOT_FOUND) 발생
-        return adminMemberDao.findDetailById(memberId)
+        // 1. 기존 상세 정보 + 단순 통계 3개 조회
+        MemberDetailRawData rawData = adminMemberDao.findDetailById(memberId)
                 .orElseThrow(() -> new CustomException(
-                ErrorCode.NOT_FOUND,
-                "memberId", // 에러가 발생한 필드
-                "해당 회원을 찾을 수 없습니다. (ID: " + memberId + ")" // 상세 이유
-        ));
+                        ErrorCode.NOT_FOUND,
+                        "memberId", // 에러가 발생한 필드
+                        "해당 회원을 찾을 수 없습니다. (ID: " + memberId + ")" // 상세 이유
+                ));
+
+        // 2. 주요 상담 키워드 Top 3 별도 조회
+        List<String> top3Keywords = adminMemberDao.findTop3KeywordsByMemberId(memberId);
+
+        // 3. 두 데이터를 하나로 묶어서 반환
+        return new GetMemberDetailResult(rawData, top3Keywords);
     }
+
+    /**
+     * UseCase의 결과를 묶어서 반환하기 위한 전용 Record
+     */
+    public record GetMemberDetailResult(
+            MemberDetailRawData rawData,
+            List<String> top3Keywords
+    ) {}
 }

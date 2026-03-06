@@ -231,9 +231,9 @@ public class AdminMemberDao {
             conditions.add(MEMBER.MEMBERSHIP.in(req.memberships()));
         }
 
-        // 3. 성별 (단일 선택)
-        if (StringUtils.hasText(req.gender())) {
-            conditions.add(MEMBER.GENDER.eq(req.gender()));
+        // 3. 성별 (다중 선택)
+        if (!CollectionUtils.isEmpty(req.genders())) {
+            conditions.add(MEMBER.GENDER.in(req.genders()));
         }
 
         // 4. 요금제명 (다중 선택 가능)

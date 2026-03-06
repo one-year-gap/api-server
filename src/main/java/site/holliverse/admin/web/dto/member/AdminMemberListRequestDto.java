@@ -23,8 +23,9 @@ public record AdminMemberListRequestDto(
                 regexp = "^(VVIP|VIP|GOLD)$",
                 message = "유효하지 않은 멤버십 등급입니다."
         ) String> memberships,
-        @Pattern(regexp = "^(M|F)$", message = "성별은 M 또는 F만 가능합니다.")
-        String gender,
+
+        // 성별 필터링 (다중 선택 가능)
+        List<@Pattern(regexp = "^(M|F)$", message = "성별은 M 또는 F만 가능합니다.") String> genders,
 
         List<String> planNames,        // 구독 중인 상품 다중 선택
 

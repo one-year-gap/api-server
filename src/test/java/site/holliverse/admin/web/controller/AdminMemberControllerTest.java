@@ -128,8 +128,15 @@ class AdminMemberControllerTest {
         // given
         Long memberId = 2L;
 
-        // UseCase와 Mapper가 주고받을 가짜 객체들
+        // 1. UseCase가 반환할 가짜 Raw Data와 키워드 리스트 생성
         MemberDetailRawData mockRaw = mock(MemberDetailRawData.class);
+        List<String> mockKeywords = List.of("가입/해지", "요금제", "단말기 파손");
+
+        // 2. UseCase 반환 타입 (Result Record) 생성
+        GetMemberDetailUseCase.GetMemberDetailResult mockResult =
+                new GetMemberDetailUseCase.GetMemberDetailResult(mockRaw, mockKeywords);
+
+        // 3. Mapper가 반환할 가짜 DTO
         AdminMemberDetailResponseDto mockResponse = new AdminMemberDetailResponseDto(
                 "김영현",
                 31,
@@ -144,19 +151,26 @@ class AdminMemberControllerTest {
                 "2년 1개월",
                 "ACTIVE",
 
-                // --- 새로 추가된 약정 및 상담 데이터 ---
+                // 약정 데이터
                 true,
                 24,
                 LocalDate.now().minusMonths(12),
                 LocalDate.now().plusMonths(12),
                 365,
                 false,
+
+                // 상담 데이터
                 10L,
-                LocalDate.now().minusDays(5)
+                LocalDate.now().minusDays(5),
+                "CLOSED",       // recentSupportStatus
+                5,              // recentSatisfactionScore
+                4.5,            // averageSatisfactionScore
+                mockKeywords    // top3Keywords
         );
 
-        given(getMemberDetailUseCase.execute(memberId)).willReturn(mockRaw);
-        given(adminMemberMapper.toResponse(mockRaw)).willReturn(mockResponse);
+        // 4. UseCase와 Mapper 동작 모킹 (파라미터 변경점 적용)
+        given(getMemberDetailUseCase.execute(memberId)).willReturn(mockResult);
+        given(adminMemberMapper.toResponse(mockRaw, mockKeywords)).willReturn(mockResponse);
 
         // when & then
         mockMvc.perform(get("/api/v1/admin/members/{memberId}", memberId))
@@ -167,12 +181,16 @@ class AdminMemberControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message").value("회원 상세 조회가 완료되었습니다."))
 
-                // 데이터 검증
+                // 기존 데이터 검증
                 .andExpect(jsonPath("$.data.name").value("김영현"))
                 .andExpect(jsonPath("$.data.currentMobilePlan").value("5G 요금제"))
                 .andExpect(jsonPath("$.data.phone").value("010-1234-5678"))
                 .andExpect(jsonPath("$.data.isContracted").value(true))
-                .andExpect(jsonPath("$.data.joinDurationText").value("2년 1개월"));;
+                .andExpect(jsonPath("$.data.joinDurationText").value("2년 1개월"))
+                .andExpect(jsonPath("$.data.recentSupportStatus").value("CLOSED"))
+                .andExpect(jsonPath("$.data.averageSatisfactionScore").value(4.5))
+                .andExpect(jsonPath("$.data.top3Keywords[0]").value("가입/해지"))
+                .andExpect(jsonPath("$.data.top3Keywords[1]").value("요금제"));
     }
 
     @Test

@@ -16,6 +16,7 @@ import site.holliverse.shared.domain.model.MemberSignupType;
 import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.MemberRepository;
+import site.holliverse.shared.util.EncryptionTool;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final MemberRepository memberRepository;
     private final DefaultOAuth2UserService delegate;
+    private final EncryptionTool encryptionTool;
 
     @Override
     @Transactional
@@ -39,7 +41,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String providerId = (String) attributes.get("sub");
         String email = (String) attributes.get("email");
         String name = (String) attributes.getOrDefault("name", email);
-
+        String encName = encryptionTool.encrypt(name);
         if (providerId == null || providerId.isBlank()) {
             throw new OAuth2AuthenticationException(
                     new OAuth2Error("invalid_user_id"),
@@ -60,7 +62,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .orElseGet(() -> memberRepository.save(Member.builder()
                         .providerId(providerId)
                         .email(email)
-                        .name(name)
+                        .name(encName)
                         .type(MemberSignupType.GOOGLE)
                         .status(MemberStatus.PROCESSING)
                         .role(MemberRole.CUSTOMER)

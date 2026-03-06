@@ -35,7 +35,8 @@ public enum ErrorCode {
     CONFLICT(HttpStatus.CONFLICT, "CONFLICT", "중복 또는 충돌이 발생했습니다."),
 
     // 500
-    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "서버 내부 오류가 발생했습니다.");
+    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "서버 내부 오류가 발생했습니다."),
+    DECRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DECRYPTION_FAILED", "민감정보 복호화 처리 중 오류가 발생했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

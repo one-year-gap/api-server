@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+import site.holliverse.auth.dto.OnboardingCompleteRequestDto;
+import site.holliverse.auth.dto.OnboardingPrefillResponseDto;
 import site.holliverse.auth.dto.SignUpRequestDto;
 import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
@@ -25,10 +27,12 @@ import site.holliverse.shared.persistence.entity.RefreshToken;
 import site.holliverse.shared.persistence.repository.AddressRepository;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
+import site.holliverse.shared.util.DecryptionTool;
 import site.holliverse.shared.util.EncryptionTool;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,6 +59,8 @@ class AuthUseCaseTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private EncryptionTool encryptionTool;
+    @Mock
+    private DecryptionTool decryptionTool;
 
     @InjectMocks
     private AuthUseCase authUseCase;
@@ -233,6 +239,163 @@ class AuthUseCaseTest {
         }
     }
 
+    @Nested
+    @DisplayName("getOnboardingPrefill")
+    class GetOnboardingPrefill {
+
+        @Test
+        @DisplayName("회원이 존재하면 이메일과 복호화된 이름을 반환한다")
+        void returnsEmailAndDecryptedName() {
+            // given
+            Member member = Member.builder()
+                    .id(10L)
+                    .email("google@holliverse.com")
+                    .name("encrypted-name")
+                    .build();
+            when(memberRepository.findById(10L)).thenReturn(Optional.of(member));
+            when(decryptionTool.decrypt("encrypted-name")).thenReturn("홍길동");
+
+            // when
+            OnboardingPrefillResponseDto result = authUseCase.getOnboardingPrefill(10L);
+
+            // then
+            assertThat(result.email()).isEqualTo("google@holliverse.com");
+            assertThat(result.name()).isEqualTo("홍길동");
+        }
+
+        @Test
+        @DisplayName("회원이 없으면 MEMBER_NOT_FOUND 예외를 던진다")
+        void throwsWhenMemberNotFound() {
+            // given
+            when(memberRepository.findById(999L)).thenReturn(Optional.empty());
+
+            // when, then
+            assertThatThrownBy(() -> authUseCase.getOnboardingPrefill(999L))
+                    .isInstanceOf(CustomException.class)
+                    .satisfies(ex -> {
+                        CustomException custom = (CustomException) ex;
+                        assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
+                        assertThat(custom.getField()).isEqualTo("memberId");
+                    });
+        }
+    }
+
+    @Nested
+    @DisplayName("completeOnboarding")
+    class CompleteOnboarding {
+
+        @Test
+        @DisplayName("처리중 회원이면 기존 주소를 재사용해 온보딩을 완료한다")
+        void completeWithExistingAddress() {
+            // given
+            LocalDateTime oldStatusUpdatedAt = LocalDateTime.of(2025, 1, 1, 0, 0);
+            Member member = Member.builder()
+                    .id(1L)
+                    .status(MemberStatus.PROCESSING)
+                    .statusUpdatedAt(oldStatusUpdatedAt)
+                    .build();
+            Address existingAddress = Address.builder()
+                    .province("seoul")
+                    .city("gangnam")
+                    .streetAddress("teheran-ro 123")
+                    .postalCode("06234")
+                    .build();
+            OnboardingCompleteRequestDto request = createOnboardingRequest();
+
+            when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+            when(encryptionTool.encrypt("01012345678")).thenReturn("encrypted-phone");
+            when(memberRepository.existsByPhone("encrypted-phone")).thenReturn(false);
+            when(addressRepository.findByProvinceAndCityAndStreetAddress("seoul", "gangnam", "teheran-ro 123"))
+                    .thenReturn(Optional.of(existingAddress));
+
+            // when
+            authUseCase.completeOnboarding(1L, request);
+
+            // then
+            assertThat(member.getAddress()).isEqualTo(existingAddress);
+            assertThat(member.getPhone()).isEqualTo("encrypted-phone");
+            assertThat(member.getBirthDate()).isEqualTo(LocalDate.of(1999, 1, 1));
+            assertThat(member.getGender()).isEqualTo("M");
+            assertThat(member.getMembership()).isEqualTo(MemberMembership.GOLD);
+            assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
+            assertThat(member.getStatusUpdatedAt()).isAfter(oldStatusUpdatedAt);
+            verify(addressRepository, never()).save(any(Address.class));
+        }
+
+        @Test
+        @DisplayName("주소가 없으면 새 주소를 저장하고 온보딩을 완료한다")
+        void completeWithNewAddress() {
+            // given
+            Member member = Member.builder()
+                    .id(2L)
+                    .status(MemberStatus.PROCESSING)
+                    .build();
+            OnboardingCompleteRequestDto request = createOnboardingRequest();
+            Address savedAddress = Address.builder()
+                    .province("seoul")
+                    .city("gangnam")
+                    .streetAddress("teheran-ro 123")
+                    .postalCode("06234")
+                    .build();
+
+            when(memberRepository.findById(2L)).thenReturn(Optional.of(member));
+            when(encryptionTool.encrypt("01012345678")).thenReturn("encrypted-phone");
+            when(memberRepository.existsByPhone("encrypted-phone")).thenReturn(false);
+            when(addressRepository.findByProvinceAndCityAndStreetAddress("seoul", "gangnam", "teheran-ro 123"))
+                    .thenReturn(Optional.empty());
+            when(addressRepository.save(any(Address.class))).thenReturn(savedAddress);
+
+            // when
+            authUseCase.completeOnboarding(2L, request);
+
+            // then
+            assertThat(member.getAddress()).isEqualTo(savedAddress);
+            verify(addressRepository).save(any(Address.class));
+        }
+
+        @Test
+        @DisplayName("처리중 상태가 아니면 INVALID_INPUT 예외를 던진다")
+        void throwsWhenMemberStatusIsNotProcessing() {
+            // given
+            Member member = Member.builder()
+                    .id(3L)
+                    .status(MemberStatus.ACTIVE)
+                    .build();
+            when(memberRepository.findById(3L)).thenReturn(Optional.of(member));
+
+            // when, then
+            assertThatThrownBy(() -> authUseCase.completeOnboarding(3L, createOnboardingRequest()))
+                    .isInstanceOf(CustomException.class)
+                    .satisfies(ex -> {
+                        CustomException custom = (CustomException) ex;
+                        assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT);
+                        assertThat(custom.getField()).isEqualTo("memberStatus");
+                    });
+        }
+
+        @Test
+        @DisplayName("암호화된 전화번호가 중복되면 DUPLICATED_PHONE 예외를 던진다")
+        void throwsWhenEncryptedPhoneDuplicated() {
+            // given
+            Member member = Member.builder()
+                    .id(4L)
+                    .status(MemberStatus.PROCESSING)
+                    .build();
+            when(memberRepository.findById(4L)).thenReturn(Optional.of(member));
+            when(encryptionTool.encrypt("01012345678")).thenReturn("encrypted-phone");
+            when(memberRepository.existsByPhone("encrypted-phone")).thenReturn(true);
+
+            // when, then
+            assertThatThrownBy(() -> authUseCase.completeOnboarding(4L, createOnboardingRequest()))
+                    .isInstanceOf(CustomException.class)
+                    .satisfies(ex -> {
+                        CustomException custom = (CustomException) ex;
+                        assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.DUPLICATED_PHONE);
+                        assertThat(custom.getField()).isEqualTo("phone");
+                    });
+        }
+    }
+
     private SignUpRequestDto createRequest() {
         SignUpRequestDto request = new SignUpRequestDto();
         ReflectionTestUtils.setField(request, "email", "test@holliverse.com");
@@ -249,5 +412,19 @@ class AuthUseCaseTest {
         ReflectionTestUtils.setField(address, "postalCode", "06234");
         ReflectionTestUtils.setField(request, "address", address);
         return request;
+    }
+
+    private OnboardingCompleteRequestDto createOnboardingRequest() {
+        return new OnboardingCompleteRequestDto(
+                "01012345678",
+                LocalDate.of(1999, 1, 1),
+                "M",
+                new OnboardingCompleteRequestDto.AddressRequest(
+                        "seoul",
+                        "gangnam",
+                        "teheran-ro 123",
+                        "06234"
+                )
+        );
     }
 }

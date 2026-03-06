@@ -21,6 +21,9 @@ import static site.holliverse.admin.query.jooq.enums.ProductTypeEnum.MOBILE_PLAN
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
 import static site.holliverse.admin.query.jooq.Tables.SUPPORT_CASE;
+import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD;
+import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD_MAPPING_RESULT;
+import static site.holliverse.admin.query.jooq.Tables.CONSULTATION_ANALYSIS;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -173,7 +176,29 @@ public class AdminMemberDao {
                         DSL.select(DSL.max(SUPPORT_CASE.CREATED_AT))
                                 .from(SUPPORT_CASE)
                                 .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                                .asField("lastSupportDate")
+                                .asField("lastSupportDate"),
+
+                        // 최근 상담 결과 (가장 최근에 생성된 상담의 status 1개)
+                        DSL.select(SUPPORT_CASE.STATUS.cast(String.class)) // Enum -> String 변환
+                                .from(SUPPORT_CASE)
+                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                                .orderBy(SUPPORT_CASE.CREATED_AT.desc())
+                                .limit(1)
+                                .asField("recentSupportStatus"),
+
+                        // 최근 상담 만족도 점수
+                        DSL.select(SUPPORT_CASE.SATISFACTION_SCORE)
+                                .from(SUPPORT_CASE)
+                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                                .orderBy(SUPPORT_CASE.CREATED_AT.desc())
+                                .limit(1)
+                                .asField("recentSatisfactionScore"),
+
+                        // 상담 평점 (모든 만족도 점수의 평균)
+                        DSL.select(DSL.avg(SUPPORT_CASE.SATISFACTION_SCORE).cast(Double.class)) // 소수점 반환
+                                .from(SUPPORT_CASE)
+                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                                .asField("averageSatisfactionScore")
                 )
                 .from(MEMBER)
 
@@ -204,6 +229,22 @@ public class AdminMemberDao {
 
                 // 결과가 1건이거나 없으므로 Optional 반환
                 .fetchOptionalInto(MemberDetailRawData.class);
+    }
+
+    /**
+     특정 회원의 상담 분석 키워드 Top 3 추출
+     */
+    public List<String> findTop3KeywordsByMemberId(Long memberId) {
+        return dsl.select(BUSINESS_KEYWORD.KEYWORD_NAME)
+                .from(SUPPORT_CASE)
+                .join(CONSULTATION_ANALYSIS).on(SUPPORT_CASE.CASE_ID.eq(CONSULTATION_ANALYSIS.CASE_ID))
+                .join(BUSINESS_KEYWORD_MAPPING_RESULT).on(CONSULTATION_ANALYSIS.ANALYSIS_ID.eq(BUSINESS_KEYWORD_MAPPING_RESULT.ANALYSIS_ID))
+                .join(BUSINESS_KEYWORD).on(BUSINESS_KEYWORD_MAPPING_RESULT.BUSINESS_KEYWORD_ID.eq(BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID))
+                .where(SUPPORT_CASE.MEMBER_ID.eq(memberId))
+                .groupBy(BUSINESS_KEYWORD.KEYWORD_NAME)      // 키워드 이름으로 그룹화
+                .orderBy(DSL.sum(BUSINESS_KEYWORD_MAPPING_RESULT.COUNT).desc()) // 가장 많이 나온 순서대로 정렬
+                .limit(3) // 3개만 추출
+                .fetchInto(String.class); // List<String> 형태로 반환
     }
 
     // ==========================================

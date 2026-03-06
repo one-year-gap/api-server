@@ -29,6 +29,10 @@ public record MemberDetailRawData(
         LocalDateTime contractEndDate, // 약정 만료일
 
         Long totalSupportCount, // 총 상담 횟수
-        LocalDateTime lastSupportDate // 최근 상담 일자
+        LocalDateTime lastSupportDate, // 최근 상담 일자
+
+        String recentSupportStatus,       // 최근 상담 결과 (OPEN, CLOSED 등)
+        Integer recentSatisfactionScore,  // 최근 상담 만족도 점수
+        Double averageSatisfactionScore   // 상담 평균 만족도 점수 (DB에서 소수점으로 반환)
 ) {
 }

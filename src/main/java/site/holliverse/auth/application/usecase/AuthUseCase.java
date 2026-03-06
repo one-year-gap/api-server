@@ -21,6 +21,7 @@ import site.holliverse.shared.persistence.repository.AddressRepository;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
 import site.holliverse.shared.logging.SystemLogEvent;
+import site.holliverse.shared.util.DecryptionTool;
 import site.holliverse.shared.util.EncryptionTool;
 
 /**
@@ -44,6 +45,7 @@ public class AuthUseCase {
     private final PasswordEncoder passwordEncoder;
     /** 개인정보(이름, 폰번호) 암호화를 위한 도구. */
     private final EncryptionTool encryptionTool;
+    private final DecryptionTool decryptionTool;
 
     public AuthUseCase(
             MemberRepository memberRepository,
@@ -51,7 +53,7 @@ public class AuthUseCase {
             RefreshTokenRepository refreshTokenRepository,
             RefreshTokenHashService refreshTokenHashService,
             PasswordEncoder passwordEncoder,
-            EncryptionTool encryptionTool
+            EncryptionTool encryptionTool, DecryptionTool decryptionTool
     ) {
         this.memberRepository = memberRepository;
         this.addressRepository = addressRepository;
@@ -59,6 +61,7 @@ public class AuthUseCase {
         this.refreshTokenHashService = refreshTokenHashService;
         this.passwordEncoder = passwordEncoder;
         this.encryptionTool = encryptionTool;
+        this.decryptionTool = decryptionTool;
     }
 
     /**
@@ -158,7 +161,7 @@ public class AuthUseCase {
     public OnboardingPrefillResponseDto getOnboardingPrefill(Long memberId){
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()->new CustomException(ErrorCode.MEMBER_NOT_FOUND,"memberId"));
-        return new OnboardingPrefillResponseDto(member.getEmail(),member.getName());
+        return new OnboardingPrefillResponseDto(member.getEmail(), decryptionTool.decrypt(member.getName()));
     }
 
     /**

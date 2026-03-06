@@ -16,6 +16,7 @@ import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.MemberRepository;
+import site.holliverse.shared.util.EncryptionTool;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,12 +37,14 @@ class CustomOAuth2UserServiceTest {
     private DefaultOAuth2UserService delegate;
     @Mock
     private OAuth2UserRequest userRequest;
+    @Mock
+    private EncryptionTool encryptionTool;
 
     private CustomOAuth2UserService customOAuth2UserService;
 
     @BeforeEach
     void setUp() {
-        customOAuth2UserService = new CustomOAuth2UserService(memberRepository, delegate);
+        customOAuth2UserService = new CustomOAuth2UserService(memberRepository, delegate,encryptionTool);
     }
 
     @Test

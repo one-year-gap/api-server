@@ -242,12 +242,12 @@ public class AdminMemberDao {
             // 프론트에서 넘어온 요금제 배열에 포함된 회원의 '구독 요금제 개수'를 세서,
             // 그 개수가 프론트에서 넘긴 배열의 크기(size)와 완벽히 일치하는 사람만 찾음
             conditions.add(
-                    DSL.select(DSL.countDistinct(PRODUCT.NAME))
+                    DSL.select(DSL.countDistinct(PRODUCT.PRODUCT_CODE))
                             .from(SUBSCRIPTION)
                             .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
                             .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
                             .and(SUBSCRIPTION.STATUS.isTrue())
-                            .and(PRODUCT.NAME.in(req.planNames())) // 프론트에서 보낸 요금제 목록(IN)
+                            .and(PRODUCT.PRODUCT_CODE.in(req.planNames())) // 프론트에서 보낸 요금제 목록(IN)
                             .asField()
                             .eq(req.planNames().size()) // 보낸 배열의 길이와 똑같은지 비교
             );

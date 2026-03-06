@@ -2,6 +2,7 @@ package site.holliverse.admin.web.dto.member;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 회원 상세 정보 응답용 DTO
@@ -30,6 +31,11 @@ public record AdminMemberDetailResponseDto(
 
         // --- 추가된 상담 이력 통계 ---
         long totalSupportCount,           // 18. 총 상담 횟수 (없으면 0)
-        LocalDate lastSupportDate         // 19. 최근 상담 일자 (상담 내역 없으면 null)
+        LocalDate lastSupportDate,         // 19. 최근 상담 일자 (상담 내역 없으면 null)
+
+        String recentSupportStatus,       // 20. 최근 상담 결과(상태) (OPEN, CLOSED 등)
+        Integer recentSatisfactionScore,  // 21. 최근 상담 만족도 점수 (0~5)
+        Double averageSatisfactionScore,  // 22. 상담 평균 만족도 점수
+        List<String> top3Keywords         // 23. 주요 상담 키워드 Top 3
 ) {
 }

@@ -10,6 +10,7 @@ import site.holliverse.shared.util.DecryptionTool;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Profile("admin")
 @Component
@@ -18,7 +19,7 @@ public class AdminMemberMapper {
 
     private final DecryptionTool decryptionTool;
 
-    public AdminMemberDetailResponseDto toResponse(MemberDetailRawData rawData) {
+    public AdminMemberDetailResponseDto toResponse(MemberDetailRawData rawData, List<String> top3Keywords) {
         LocalDate today = LocalDate.now();
 
         // 1. 나이 계산 (만 나이)
@@ -87,6 +88,10 @@ public class AdminMemberMapper {
         long supportCount = rawData.totalSupportCount() != null ? rawData.totalSupportCount() : 0L;
         LocalDate finalLastSupportDate = rawData.lastSupportDate() != null ? rawData.lastSupportDate().toLocalDate() : null;
 
+        // 평균 만족도 점수 소수점 1자리 반올림 (null 방어)
+        Double avgScore = rawData.averageSatisfactionScore();
+        double finalAvgScore = (avgScore != null) ? Math.round(avgScore * 10) / 10.0 : 0.0;
+
         // 7. 최종 응답 DTO(record) 생성 후 반환
         return new AdminMemberDetailResponseDto(
                 decryptedName,
@@ -102,15 +107,21 @@ public class AdminMemberMapper {
                 joinDurationText,
                 rawData.status(),
 
-                isContracted,                // 약정 여부
-                rawData.contractMonths(),    // 약정 개월수 (12 or 24)
-                finalContractStartDate,      // 약정 시작일
-                finalContractEndDate,        // 약정 만료일
-                remainingDays,               // 남은 일수
-                isExpired,                   // 만료 여부
+                isContracted,
+                rawData.contractMonths(),
+                finalContractStartDate,
+                finalContractEndDate,
+                remainingDays,
+                isExpired,
 
                 supportCount,
-                finalLastSupportDate
+                finalLastSupportDate,
+
+                // 추가된 4가지 데이터 매핑
+                rawData.recentSupportStatus(),
+                rawData.recentSatisfactionScore(),
+                finalAvgScore,
+                top3Keywords // 파라미터로 받은 키워드 리스트
         );
     }
 }

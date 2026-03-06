@@ -6,12 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import site.holliverse.admin.application.usecase.*;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase.RetrieveMemberResult;
-import site.holliverse.admin.query.dao.MemberDetailRawData;
 import site.holliverse.admin.web.assembler.AdminMemberAssembler;
 import site.holliverse.admin.web.dto.member.*;
 import site.holliverse.admin.web.mapper.AdminMemberMapper;
 import site.holliverse.shared.web.response.ApiResponse;
 import jakarta.validation.Valid;
+import site.holliverse.admin.application.usecase.GetMemberDetailUseCase.GetMemberDetailResult;
 
 /**
  * 관리자 회원 관리 API 컨트롤러
@@ -59,11 +59,11 @@ public class AdminMemberController {
     @GetMapping("/{memberId}")
     public ResponseEntity<ApiResponse<AdminMemberDetailResponseDto>> getMemberDetail(@PathVariable("memberId") Long memberId) {
 
-        // 1. UseCase 호출: DB에서 상세 데이터 수집 (없으면 여기서 404 예외 발생)
-        MemberDetailRawData rawData = getMemberDetailUseCase.execute(memberId);
+        // 1. UseCase 호출: DB에서 상세 데이터와 키워드 Top3를 묶음(Result)으로 수집
+        GetMemberDetailResult result = getMemberDetailUseCase.execute(memberId);
 
-        // 2. Mapper 호출: 복호화, 나이/기간 계산 및 DTO 조립
-        AdminMemberDetailResponseDto data = adminMemberMapper.toResponse(rawData);
+        // 2. Mapper 호출: result 안에 있는 rawData와 top3Keywords 두 개를 모두 넘겨줌
+        AdminMemberDetailResponseDto data = adminMemberMapper.toResponse(result.rawData(), result.top3Keywords());
 
         return ResponseEntity.ok(ApiResponse.success("회원 상세 조회가 완료되었습니다.", data));
     }

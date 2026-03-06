@@ -161,7 +161,7 @@ class MemberControllerIntegrationTest {
                         ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 productId,
                 "완전 무제한",
-                "80GB",
+                80,
                 "브랜드 혜택",
                 "무제한",
                 "기본 제공",

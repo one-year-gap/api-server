@@ -15,7 +15,8 @@ import java.util.Set;
  * 모바일 요금제 비교: 가격 차이 + 필드별 변경 내역 계산.
  * - 가격: target.salePrice - current.salePrice
  * - Set 파싱: benefit_brands, benefit_media, benefit_premium → 추가/제거 집합
- * - 일반 문자열: data_amount, benefit_voice_call, benefit_sms, tethering_sharing_data, benefit_signature_family_discount
+ * - 일반 문자열: data_amount, benefit_voice_call, benefit_sms, benefit_signature_family_discount
+ * - 숫자 필드: tethering_sharing_data (GB 단위 정수, 표시 시 \"70GB\" 형태로 변환)
  */
 @Component
 @Profile("customer")
@@ -71,6 +72,13 @@ public class PlanComparator {
             return NONE;
         }
         return value.trim();
+    }
+
+    private static String norm(Integer value) {
+        if (value == null) {
+            return NONE;
+        }
+        return value + "GB";
     }
 
     private static String formatPriceMessage(int priceDiff) {

@@ -2,7 +2,7 @@ package site.holliverse.customer.web.dto.product;
 
 public record MobileContent(
         String dataAmount,
-        String tetheringSharingData,
+        Integer tetheringSharingData,
         String benefitBrands,
         String benefitVoiceCall,
         String benefitSms,

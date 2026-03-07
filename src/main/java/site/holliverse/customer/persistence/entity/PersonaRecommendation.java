@@ -44,4 +44,12 @@ public class PersonaRecommendation {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    /** 캐시 갱신 시 segment, 문구, 추천 상품 목록만 업데이트. */
+    public void updateRecommendation(PersonaSegment segment, String cachedLlmRecommendation,
+                                    List<RecommendedProductItem> recommendedProducts) {
+        this.segment = segment;
+        this.cachedLlmRecommendation = cachedLlmRecommendation;
+        this.recommendedProducts = recommendedProducts != null ? new ArrayList<>(recommendedProducts) : new ArrayList<>();
+    }
 }

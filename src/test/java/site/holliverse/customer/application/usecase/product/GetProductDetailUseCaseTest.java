@@ -70,7 +70,7 @@ class GetProductDetailUseCaseTest {
         return MobilePlan.builder()
                 .productId(productId)
                 .dataAmount("100GB")
-                .tetheringSharingData("20GB")
+                .tetheringSharingData(20)
                 .benefitBrands("넷플릭스")
                 .benefitVoiceCall("무제한")
                 .benefitSms("200건")

@@ -44,7 +44,7 @@ public final class PlanComparatorTestData {
         return new MobilePlanDetailDto(
                 ESSENTIAL_PRODUCT_ID,
                 "데이터 무제한",
-                "테더링 + 쉐어링 70GB",
+                70,
                 null,
                 "집/이동전화 무제한 (+부가통화 300분)",
                 "기본제공",
@@ -84,7 +84,7 @@ public final class PlanComparatorTestData {
         return new MobilePlanDetailDto(
                 PLUS_PRODUCT_ID,
                 "데이터 무제한",
-                "테더링+쉐어링 100GB",
+                100,
                 "넷플릭스 | 유튜브 프리미엄 | 디즈니+ | 티빙 | 멀티팩",
                 "집/이동전화 무제한 (+부가통화 300분)",
                 "기본제공",

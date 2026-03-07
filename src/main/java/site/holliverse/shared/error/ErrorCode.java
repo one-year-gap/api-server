@@ -34,6 +34,9 @@ public enum ErrorCode {
     DUPLICATED_PHONE(HttpStatus.CONFLICT, "DUPLICATED_PHONE", "이미 사용 중인 전화번호입니다."),
     CONFLICT(HttpStatus.CONFLICT, "CONFLICT", "중복 또는 충돌이 발생했습니다."),
 
+    // 503
+    RECOMMENDATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "RECOMMENDATION_UNAVAILABLE", "추천 서비스를 현재 사용할 수 없습니다."),
+
     // 500
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "서버 내부 오류가 발생했습니다."),
     DECRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DECRYPTION_FAILED", "민감정보 복호화 처리 중 오류가 발생했습니다.");

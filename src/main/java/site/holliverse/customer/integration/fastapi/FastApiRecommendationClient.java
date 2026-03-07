@@ -18,7 +18,7 @@ import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationRes
 @Profile("customer")
 public class FastApiRecommendationClient {
 
-    private static final String RECOMMEND_PATH = "/recommendations";
+    private static final String RECOMMEND_PATH = "/api/v1/recommendations";
 
     private final RestTemplate restTemplate;
     private final String baseUrl;

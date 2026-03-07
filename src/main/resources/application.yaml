@@ -129,10 +129,19 @@ app:
 
 
 # =================================================================
+# FastAPI (LLM 추천) 연동
+# =================================================================
+external:
+  fastapi:
+    base-url: ${FASTAPI_BASE_URL:http://localhost:8000}
+    connect-timeout-ms: ${FASTAPI_CONNECT_TIMEOUT_MS:5000}
+    read-timeout-ms: ${FASTAPI_READ_TIMEOUT_MS:60000}
+
+# =================================================================
 # Security & Encryption Configuration
 # - secret-key: 32byte 필수 (AES-256 기준)
 # - 환경변수 설정 시: SECRET_KEY, ALGORITHM, TRANSFORMATION
 # =================================================================
-secret-key: ${SECRET_KEY}
+secret-key: ${SECRET_KEY:Xy9zPvQ3kL5mRnJwT8bH2cD4fG7jA1sE}
 algorithm: ${ALGORITHM:AES}
 transformation: ${TRANSFORMATION:AES/ECB/PKCS5Padding}

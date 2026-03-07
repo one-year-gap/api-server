@@ -2,7 +2,6 @@ package site.holliverse.customer.application.usecase.recommendation;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
 import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationResponse;
@@ -31,19 +30,21 @@ public class RecommendationService {
     private final MemberRepository memberRepository;
     private final PersonaRecommendationRepository personaRecommendationRepository;
     private final FastApiRecommendationClient fastApiRecommendationClient;
+    private final RecommendationTxService recommendationTxService;
 
     public RecommendationService(MemberRepository memberRepository,
                                 PersonaRecommendationRepository personaRecommendationRepository,
-                                FastApiRecommendationClient fastApiRecommendationClient) {
+                                FastApiRecommendationClient fastApiRecommendationClient,
+                                RecommendationTxService recommendationTxService) {
         this.memberRepository = memberRepository;
         this.personaRecommendationRepository = personaRecommendationRepository;
         this.fastApiRecommendationClient = fastApiRecommendationClient;
+        this.recommendationTxService = recommendationTxService;
     }
 
     /**
      * 캐시 우선: DB에 유효 캐시가 있으면 반환, 없거나 만료 시 FastAPI 호출 후 저장·반환.
      */
-    @Transactional
     public RecommendationResult getRecommendations(Long memberId) {
         ensureMemberExists(memberId);
 
@@ -51,16 +52,15 @@ public class RecommendationService {
         return personaRecommendationRepository.findById(memberId)
                 .filter(entity -> entity.getUpdatedAt().isAfter(cacheExpiry))
                 .map(entity -> toResult(entity, RecommendationResult.RecommendationSource.CACHE))
-                .orElseGet(() -> fetchAndUpsert(memberId));
+                .orElseGet(() -> fetchAndStore(memberId));
     }
 
     /**
      * 강제 갱신: 항상 FastAPI 호출 후 DB에 저장·반환.
      */
-    @Transactional
     public RecommendationResult refreshRecommendations(Long memberId) {
         ensureMemberExists(memberId);
-        return fetchAndUpsert(memberId);
+        return fetchAndStore(memberId);
     }
 
     private void ensureMemberExists(Long memberId) {
@@ -69,7 +69,7 @@ public class RecommendationService {
         }
     }
 
-    private RecommendationResult fetchAndUpsert(Long memberId) {
+    private RecommendationResult fetchAndStore(Long memberId) {
         FastApiRecommendationResponse response;
         try {
             response = fastApiRecommendationClient.fetchRecommendation(memberId);
@@ -81,26 +81,10 @@ public class RecommendationService {
             throw new CustomException(ErrorCode.RECOMMENDATION_UNAVAILABLE, "fastapi", "추천 서비스 응답이 비어 있습니다.");
         }
 
-        PersonaRecommendation saved = upsert(memberId, response);
-        return toResult(saved, RecommendationResult.RecommendationSource.FASTAPI);
-    }
-
-    private PersonaRecommendation upsert(Long memberId, FastApiRecommendationResponse response) {
         List<RecommendedProductItem> items = mapToRecommendedProductItems(response.recommendedProducts());
-
-        return personaRecommendationRepository.findById(memberId)
-                .map(existing -> {
-                    existing.updateRecommendation(response.segment(), response.cachedLlmRecommendation(), items);
-                    return personaRecommendationRepository.save(existing);
-                })
-                .orElseGet(() -> personaRecommendationRepository.save(
-                        PersonaRecommendation.builder()
-                                .memberId(memberId)
-                                .segment(response.segment())
-                                .cachedLlmRecommendation(response.cachedLlmRecommendation())
-                                .recommendedProducts(items)
-                                .build()
-                ));
+        PersonaRecommendation saved = recommendationTxService.upsert(memberId, response.segment(),
+                response.cachedLlmRecommendation(), items);
+        return toResult(saved, RecommendationResult.RecommendationSource.FASTAPI);
     }
 
     private static List<RecommendedProductItem> mapToRecommendedProductItems(List<FastApiRecommendedProductItem> from) {

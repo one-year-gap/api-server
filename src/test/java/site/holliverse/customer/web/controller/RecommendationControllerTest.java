@@ -65,7 +65,7 @@ class RecommendationControllerTest {
 
     private static RecommendationResult result(RecommendationResult.RecommendationSource source) {
         return new RecommendationResult(
-                PersonaSegment.upsell,
+                PersonaSegment.UPSELL,
                 "캐시 문구",
                 List.of(new RecommendedProductItem(1L, "추천 이유")),
                 source,
@@ -86,7 +86,7 @@ class RecommendationControllerTest {
             mockMvc.perform(get("/api/v1/customer/recommendations"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("success"))
-                    .andExpect(jsonPath("$.data.segment").value("upsell"))
+                    .andExpect(jsonPath("$.data.segment").value("UPSELL"))
                     .andExpect(jsonPath("$.data.source").value("CACHE"))
                     .andExpect(jsonPath("$.data.recommendedProducts").isArray())
                     .andExpect(jsonPath("$.data.recommendedProducts[0].productId").value(1))

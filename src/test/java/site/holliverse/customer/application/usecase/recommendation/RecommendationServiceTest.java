@@ -34,6 +34,8 @@ class RecommendationServiceTest {
     private PersonaRecommendationRepository personaRecommendationRepository;
     @Mock
     private FastApiRecommendationClient fastApiRecommendationClient;
+    @Mock
+    private RecommendationTxService recommendationTxService;
 
     @InjectMocks
     private RecommendationService recommendationService;
@@ -54,7 +56,7 @@ class RecommendationServiceTest {
             RecommendationResult result = recommendationService.getRecommendations(MEMBER_ID);
 
             assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.CACHE);
-            assertThat(result.segment()).isEqualTo(PersonaSegment.normal);
+            assertThat(result.segment()).isEqualTo(PersonaSegment.NORMAL);
             verify(fastApiRecommendationClient, never()).fetchRecommendation(any());
         }
 
@@ -64,7 +66,7 @@ class RecommendationServiceTest {
             when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
             when(personaRecommendationRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
             FastApiRecommendationResponse apiResponse = new FastApiRecommendationResponse(
-                    PersonaSegment.upsell,
+                    PersonaSegment.UPSELL,
                     "추천 문구",
                     List.of(new FastApiRecommendedProductItem(10L, "이유1"))
             );
@@ -76,13 +78,15 @@ class RecommendationServiceTest {
                     .recommendedProducts(List.of(new RecommendedProductItem(10L, "이유1")))
                     .updatedAt(Instant.now())
                     .build();
-            when(personaRecommendationRepository.save(any())).thenReturn(saved);
+            when(recommendationTxService.upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
+                    eq(apiResponse.cachedLlmRecommendation()), anyList())).thenReturn(saved);
 
             RecommendationResult result = recommendationService.getRecommendations(MEMBER_ID);
 
             assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.FASTAPI);
             verify(fastApiRecommendationClient).fetchRecommendation(MEMBER_ID);
-            verify(personaRecommendationRepository).save(any(PersonaRecommendation.class));
+            verify(recommendationTxService).upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
+                    eq(apiResponse.cachedLlmRecommendation()), anyList());
         }
 
         @Test
@@ -105,12 +109,11 @@ class RecommendationServiceTest {
         void alwaysCallsFastApi_savesAndReturns() {
             when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
             FastApiRecommendationResponse apiResponse = new FastApiRecommendationResponse(
-                    PersonaSegment.churn_risk,
+                    PersonaSegment.CHURN_RISK,
                     "채널이탈 추천",
                     List.of(new FastApiRecommendedProductItem(20L, "이유2"))
             );
             when(fastApiRecommendationClient.fetchRecommendation(MEMBER_ID)).thenReturn(apiResponse);
-            when(personaRecommendationRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
             PersonaRecommendation saved = PersonaRecommendation.builder()
                     .memberId(MEMBER_ID)
                     .segment(apiResponse.segment())
@@ -118,21 +121,23 @@ class RecommendationServiceTest {
                     .recommendedProducts(List.of(new RecommendedProductItem(20L, "이유2")))
                     .updatedAt(Instant.now())
                     .build();
-            when(personaRecommendationRepository.save(any())).thenReturn(saved);
+            when(recommendationTxService.upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
+                    eq(apiResponse.cachedLlmRecommendation()), anyList())).thenReturn(saved);
 
             RecommendationResult result = recommendationService.refreshRecommendations(MEMBER_ID);
 
             assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.FASTAPI);
-            assertThat(result.segment()).isEqualTo(PersonaSegment.churn_risk);
+            assertThat(result.segment()).isEqualTo(PersonaSegment.CHURN_RISK);
             verify(fastApiRecommendationClient).fetchRecommendation(MEMBER_ID);
-            verify(personaRecommendationRepository).save(any(PersonaRecommendation.class));
+            verify(recommendationTxService).upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
+                    eq(apiResponse.cachedLlmRecommendation()), anyList());
         }
     }
 
     private static PersonaRecommendation validCachedEntity(Long memberId) {
         return PersonaRecommendation.builder()
                 .memberId(memberId)
-                .segment(PersonaSegment.normal)
+                .segment(PersonaSegment.NORMAL)
                 .cachedLlmRecommendation("캐시 문구")
                 .recommendedProducts(List.of(new RecommendedProductItem(1L, "이유")))
                 .updatedAt(Instant.now().minus(1, java.time.temporal.ChronoUnit.DAYS))

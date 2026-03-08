@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 
+import site.holliverse.admin.query.jooq.enums.FamilyRoleType;
 import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
 import site.holliverse.admin.query.jooq.enums.MemberRoleType;
 import site.holliverse.admin.query.jooq.enums.MemberSignupType;
@@ -263,6 +264,48 @@ public class MemberRecord extends UpdatableRecordImpl<MemberRecord> {
         return (MemberMembershipType) get(16);
     }
 
+    /**
+     * Setter for <code>public.member.children_count</code>.
+     */
+    public void setChildrenCount(Integer value) {
+        set(17, value);
+    }
+
+    /**
+     * Getter for <code>public.member.children_count</code>.
+     */
+    public Integer getChildrenCount() {
+        return (Integer) get(17);
+    }
+
+    /**
+     * Setter for <code>public.member.family_group_id</code>.
+     */
+    public void setFamilyGroupId(Long value) {
+        set(18, value);
+    }
+
+    /**
+     * Getter for <code>public.member.family_group_id</code>.
+     */
+    public Long getFamilyGroupId() {
+        return (Long) get(18);
+    }
+
+    /**
+     * Setter for <code>public.member.family_role</code>.
+     */
+    public void setFamilyRole(FamilyRoleType value) {
+        set(19, value);
+    }
+
+    /**
+     * Getter for <code>public.member.family_role</code>.
+     */
+    public FamilyRoleType getFamilyRole() {
+        return (FamilyRoleType) get(19);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -286,7 +329,7 @@ public class MemberRecord extends UpdatableRecordImpl<MemberRecord> {
     /**
      * Create a detached, initialised MemberRecord
      */
-    public MemberRecord(Long memberId, Long addressId, String providerId, String email, String password, String name, String phone, LocalDate birthDate, String gender, LocalDate joinDate, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime statusUpdatedAt, MemberStatusType status, MemberSignupType type, MemberRoleType role, MemberMembershipType membership) {
+    public MemberRecord(Long memberId, Long addressId, String providerId, String email, String password, String name, String phone, LocalDate birthDate, String gender, LocalDate joinDate, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime statusUpdatedAt, MemberStatusType status, MemberSignupType type, MemberRoleType role, MemberMembershipType membership, Integer childrenCount, Long familyGroupId, FamilyRoleType familyRole) {
         super(Member.MEMBER);
 
         setMemberId(memberId);
@@ -306,6 +349,9 @@ public class MemberRecord extends UpdatableRecordImpl<MemberRecord> {
         setType(type);
         setRole(role);
         setMembership(membership);
+        setChildrenCount(childrenCount);
+        setFamilyGroupId(familyGroupId);
+        setFamilyRole(familyRole);
         resetChangedOnNotNull();
     }
 }

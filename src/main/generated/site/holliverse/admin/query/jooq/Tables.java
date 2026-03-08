@@ -7,6 +7,7 @@ package site.holliverse.admin.query.jooq;
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
 import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
+import site.holliverse.admin.query.jooq.tables.Billing;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult;
@@ -14,11 +15,13 @@ import site.holliverse.admin.query.jooq.tables.Category;
 import site.holliverse.admin.query.jooq.tables.CategoryGroup;
 import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis;
 import site.holliverse.admin.query.jooq.tables.Coupon;
+import site.holliverse.admin.query.jooq.tables.FamilyGroup;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
 import site.holliverse.admin.query.jooq.tables.Member;
 import site.holliverse.admin.query.jooq.tables.MemberCoupon;
 import site.holliverse.admin.query.jooq.tables.MobilePlan;
+import site.holliverse.admin.query.jooq.tables.PersonaRecommendation;
 import site.holliverse.admin.query.jooq.tables.Product;
 import site.holliverse.admin.query.jooq.tables.ProductViewHistory;
 import site.holliverse.admin.query.jooq.tables.RefreshToken;
@@ -48,6 +51,11 @@ public class Tables {
      * The table <code>public.analysis_dispatch_outbox</code>.
      */
     public static final AnalysisDispatchOutbox ANALYSIS_DISPATCH_OUTBOX = AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX;
+
+    /**
+     * The table <code>public.billing</code>.
+     */
+    public static final Billing BILLING = Billing.BILLING;
 
     /**
      * The table <code>public.business_keyword</code>.
@@ -85,6 +93,11 @@ public class Tables {
     public static final Coupon COUPON = Coupon.COUPON;
 
     /**
+     * The table <code>public.family_group</code>.
+     */
+    public static final FamilyGroup FAMILY_GROUP = FamilyGroup.FAMILY_GROUP;
+
+    /**
      * The table <code>public.internet</code>.
      */
     public static final Internet INTERNET = Internet.INTERNET;
@@ -108,6 +121,11 @@ public class Tables {
      * The table <code>public.mobile_plan</code>.
      */
     public static final MobilePlan MOBILE_PLAN = MobilePlan.MOBILE_PLAN;
+
+    /**
+     * The table <code>public.persona_recommendation</code>.
+     */
+    public static final PersonaRecommendation PERSONA_RECOMMENDATION = PersonaRecommendation.PERSONA_RECOMMENDATION;
 
     /**
      * The table <code>public.product</code>.

@@ -70,7 +70,7 @@ public class MobilePlan extends TableImpl<MobilePlanRecord> {
     /**
      * The column <code>public.mobile_plan.tethering_sharing_data</code>.
      */
-    public final TableField<MobilePlanRecord, String> TETHERING_SHARING_DATA = createField(DSL.name("tethering_sharing_data"), SQLDataType.VARCHAR(100), this, "");
+    public final TableField<MobilePlanRecord, Integer> TETHERING_SHARING_DATA = createField(DSL.name("tethering_sharing_data"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>public.mobile_plan.benefit_sms</code>.

@@ -14,6 +14,7 @@ import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Identity;
 import org.jooq.InverseForeignKey;
+import org.jooq.JSONB;
 import org.jooq.Name;
 import org.jooq.Path;
 import org.jooq.PlainSQL;
@@ -28,6 +29,7 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
@@ -38,7 +40,6 @@ import site.holliverse.admin.query.jooq.tables.AddonService.AddonServicePath;
 import site.holliverse.admin.query.jooq.tables.Internet.InternetPath;
 import site.holliverse.admin.query.jooq.tables.Iptv.IptvPath;
 import site.holliverse.admin.query.jooq.tables.MobilePlan.MobilePlanPath;
-import site.holliverse.admin.query.jooq.tables.ProductViewHistory.ProductViewHistoryPath;
 import site.holliverse.admin.query.jooq.tables.Subscription.SubscriptionPath;
 import site.holliverse.admin.query.jooq.tables.TabWatchPlan.TabWatchPlanPath;
 import site.holliverse.admin.query.jooq.tables.records.ProductRecord;
@@ -109,6 +110,27 @@ public class Product extends TableImpl<ProductRecord> {
      * The column <code>public.product.updated_at</code>.
      */
     public final TableField<ProductRecord, LocalDateTime> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
+
+    /**
+     * The column <code>public.product.tags</code>.
+     */
+    public final TableField<ProductRecord, JSONB> TAGS = createField(DSL.name("tags"), SQLDataType.JSONB.nullable(false).defaultValue(DSL.field(DSL.raw("'[]'::jsonb"), SQLDataType.JSONB)), this, "");
+
+    /**
+     * The column <code>public.product.embedding_text</code>.
+     */
+    public final TableField<ProductRecord, String> EMBEDDING_TEXT = createField(DSL.name("embedding_text"), SQLDataType.CLOB, this, "");
+
+    /**
+     * @deprecated Unknown data type. If this is a qualified, user-defined type,
+     * it may have been excluded from code generation. If this is a built-in
+     * type, you can define an explicit {@link org.jooq.Binding} to specify how
+     * this type should be handled. Deprecation can be turned off using
+     * {@literal <deprecationOnUnknownTypes/>} in your code generator
+     * configuration.
+     */
+    @Deprecated
+    public final TableField<ProductRecord, Object> EMBEDDING_VECTOR = createField(DSL.name("embedding_vector"), DefaultDataType.getDefaultDataType("\"public\".\"vector\""), this, "");
 
     private Product(Name alias, Table<ProductRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -241,19 +263,6 @@ public class Product extends TableImpl<ProductRecord> {
             _mobilePlan = new MobilePlanPath(this, null, Keys.MOBILE_PLAN__FK_MOBILE_PLAN_TO_PRODUCT.getInverseKey());
 
         return _mobilePlan;
-    }
-
-    private transient ProductViewHistoryPath _productViewHistory;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>public.product_view_history</code> table
-     */
-    public ProductViewHistoryPath productViewHistory() {
-        if (_productViewHistory == null)
-            _productViewHistory = new ProductViewHistoryPath(this, null, Keys.PRODUCT_VIEW_HISTORY__FK_PRODUCT_VIEW_HISTORY_TO_PRODUCT.getInverseKey());
-
-        return _productViewHistory;
     }
 
     private transient SubscriptionPath _subscription;

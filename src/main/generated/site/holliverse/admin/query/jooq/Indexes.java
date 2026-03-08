@@ -9,6 +9,7 @@ import org.jooq.OrderField;
 import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 
+import site.holliverse.admin.query.jooq.tables.ProductViewHistory;
 import site.holliverse.admin.query.jooq.tables.RefreshToken;
 
 
@@ -22,6 +23,7 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
+    public static final Index IDX_PVH_MEMBER_VIEWED = Internal.createIndex(DSL.name("idx_pvh_member_viewed"), ProductViewHistory.PRODUCT_VIEW_HISTORY, new OrderField[] { ProductViewHistory.PRODUCT_VIEW_HISTORY.MEMBER_ID, ProductViewHistory.PRODUCT_VIEW_HISTORY.VIEWED_AT.desc() }, false);
     public static final Index IDX_REFRESH_TOKEN_EXPIRES_AT = Internal.createIndex(DSL.name("idx_refresh_token_expires_at"), RefreshToken.REFRESH_TOKEN, new OrderField[] { RefreshToken.REFRESH_TOKEN.EXPIRES_AT }, false);
     public static final Index IDX_REFRESH_TOKEN_MEMBER_ID = Internal.createIndex(DSL.name("idx_refresh_token_member_id"), RefreshToken.REFRESH_TOKEN, new OrderField[] { RefreshToken.REFRESH_TOKEN.MEMBER_ID }, false);
 }

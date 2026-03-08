@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 
-import site.holliverse.admin.query.jooq.enums.DispatchOutboxStatus;
+import site.holliverse.admin.query.jooq.enums.AnalysisStatus;
+import site.holliverse.admin.query.jooq.enums.DispatchOutboxType;
+import site.holliverse.admin.query.jooq.enums.DispatchStatus;
 import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
 
 
@@ -64,129 +66,173 @@ public class AnalysisDispatchOutboxRecord extends UpdatableRecordImpl<AnalysisDi
     }
 
     /**
-     * Setter for <code>public.analysis_dispatch_outbox.efs_path_counsel</code>.
-     */
-    public void setEfsPathCounsel(String value) {
-        set(3, value);
-    }
-
-    /**
-     * Getter for <code>public.analysis_dispatch_outbox.efs_path_counsel</code>.
-     */
-    public String getEfsPathCounsel() {
-        return (String) get(3);
-    }
-
-    /**
-     * Setter for <code>public.analysis_dispatch_outbox.efs_path_alias</code>.
-     */
-    public void setEfsPathAlias(String value) {
-        set(4, value);
-    }
-
-    /**
-     * Getter for <code>public.analysis_dispatch_outbox.efs_path_alias</code>.
-     */
-    public String getEfsPathAlias() {
-        return (String) get(4);
-    }
-
-    /**
      * Setter for <code>public.analysis_dispatch_outbox.analysis_version</code>.
      */
     public void setAnalysisVersion(String value) {
-        set(5, value);
+        set(3, value);
     }
 
     /**
      * Getter for <code>public.analysis_dispatch_outbox.analysis_version</code>.
      */
     public String getAnalysisVersion() {
-        return (String) get(5);
-    }
-
-    /**
-     * Setter for <code>public.analysis_dispatch_outbox.status</code>.
-     */
-    public void setStatus(DispatchOutboxStatus value) {
-        set(6, value);
-    }
-
-    /**
-     * Getter for <code>public.analysis_dispatch_outbox.status</code>.
-     */
-    public DispatchOutboxStatus getStatus() {
-        return (DispatchOutboxStatus) get(6);
+        return (String) get(3);
     }
 
     /**
      * Setter for <code>public.analysis_dispatch_outbox.attempt_count</code>.
      */
     public void setAttemptCount(Integer value) {
-        set(7, value);
+        set(4, value);
     }
 
     /**
      * Getter for <code>public.analysis_dispatch_outbox.attempt_count</code>.
      */
     public Integer getAttemptCount() {
-        return (Integer) get(7);
+        return (Integer) get(4);
     }
 
     /**
      * Setter for <code>public.analysis_dispatch_outbox.next_retry_at</code>.
      */
     public void setNextRetryAt(LocalDateTime value) {
-        set(8, value);
+        set(5, value);
     }
 
     /**
      * Getter for <code>public.analysis_dispatch_outbox.next_retry_at</code>.
      */
     public LocalDateTime getNextRetryAt() {
-        return (LocalDateTime) get(8);
+        return (LocalDateTime) get(5);
     }
 
     /**
      * Setter for <code>public.analysis_dispatch_outbox.last_error</code>.
      */
     public void setLastError(String value) {
-        set(9, value);
+        set(6, value);
     }
 
     /**
      * Getter for <code>public.analysis_dispatch_outbox.last_error</code>.
      */
     public String getLastError() {
-        return (String) get(9);
+        return (String) get(6);
     }
 
     /**
      * Setter for <code>public.analysis_dispatch_outbox.created_at</code>.
      */
     public void setCreatedAt(LocalDateTime value) {
-        set(10, value);
+        set(7, value);
     }
 
     /**
      * Getter for <code>public.analysis_dispatch_outbox.created_at</code>.
      */
     public LocalDateTime getCreatedAt() {
-        return (LocalDateTime) get(10);
+        return (LocalDateTime) get(7);
     }
 
     /**
      * Setter for <code>public.analysis_dispatch_outbox.updated_at</code>.
      */
     public void setUpdatedAt(LocalDateTime value) {
-        set(11, value);
+        set(8, value);
     }
 
     /**
      * Getter for <code>public.analysis_dispatch_outbox.updated_at</code>.
      */
     public LocalDateTime getUpdatedAt() {
+        return (LocalDateTime) get(8);
+    }
+
+    /**
+     * Setter for <code>public.analysis_dispatch_outbox.type</code>.
+     */
+    public void setType(DispatchOutboxType value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.analysis_dispatch_outbox.type</code>.
+     */
+    public DispatchOutboxType getType() {
+        return (DispatchOutboxType) get(9);
+    }
+
+    /**
+     * Setter for <code>public.analysis_dispatch_outbox.claim_token</code>.
+     */
+    public void setClaimToken(Long value) {
+        set(10, value);
+    }
+
+    /**
+     * Getter for <code>public.analysis_dispatch_outbox.claim_token</code>.
+     */
+    public Long getClaimToken() {
+        return (Long) get(10);
+    }
+
+    /**
+     * Setter for
+     * <code>public.analysis_dispatch_outbox.claimed_started_at</code>.
+     */
+    public void setClaimedStartedAt(LocalDateTime value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for
+     * <code>public.analysis_dispatch_outbox.claimed_started_at</code>.
+     */
+    public LocalDateTime getClaimedStartedAt() {
         return (LocalDateTime) get(11);
+    }
+
+    /**
+     * Setter for <code>public.analysis_dispatch_outbox.claimed_done_at</code>.
+     */
+    public void setClaimedDoneAt(LocalDateTime value) {
+        set(12, value);
+    }
+
+    /**
+     * Getter for <code>public.analysis_dispatch_outbox.claimed_done_at</code>.
+     */
+    public LocalDateTime getClaimedDoneAt() {
+        return (LocalDateTime) get(12);
+    }
+
+    /**
+     * Setter for <code>public.analysis_dispatch_outbox.analysis_status</code>.
+     */
+    public void setAnalysisStatus(AnalysisStatus value) {
+        set(13, value);
+    }
+
+    /**
+     * Getter for <code>public.analysis_dispatch_outbox.analysis_status</code>.
+     */
+    public AnalysisStatus getAnalysisStatus() {
+        return (AnalysisStatus) get(13);
+    }
+
+    /**
+     * Setter for <code>public.analysis_dispatch_outbox.dispatch_status</code>.
+     */
+    public void setDispatchStatus(DispatchStatus value) {
+        set(14, value);
+    }
+
+    /**
+     * Getter for <code>public.analysis_dispatch_outbox.dispatch_status</code>.
+     */
+    public DispatchStatus getDispatchStatus() {
+        return (DispatchStatus) get(14);
     }
 
     // -------------------------------------------------------------------------
@@ -212,21 +258,24 @@ public class AnalysisDispatchOutboxRecord extends UpdatableRecordImpl<AnalysisDi
     /**
      * Create a detached, initialised AnalysisDispatchOutboxRecord
      */
-    public AnalysisDispatchOutboxRecord(String requestId, Long jobInstanceId, String chunkId, String efsPathCounsel, String efsPathAlias, String analysisVersion, DispatchOutboxStatus status, Integer attemptCount, LocalDateTime nextRetryAt, String lastError, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public AnalysisDispatchOutboxRecord(String requestId, Long jobInstanceId, String chunkId, String analysisVersion, Integer attemptCount, LocalDateTime nextRetryAt, String lastError, LocalDateTime createdAt, LocalDateTime updatedAt, DispatchOutboxType type, Long claimToken, LocalDateTime claimedStartedAt, LocalDateTime claimedDoneAt, AnalysisStatus analysisStatus, DispatchStatus dispatchStatus) {
         super(AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX);
 
         setRequestId(requestId);
         setJobInstanceId(jobInstanceId);
         setChunkId(chunkId);
-        setEfsPathCounsel(efsPathCounsel);
-        setEfsPathAlias(efsPathAlias);
         setAnalysisVersion(analysisVersion);
-        setStatus(status);
         setAttemptCount(attemptCount);
         setNextRetryAt(nextRetryAt);
         setLastError(lastError);
         setCreatedAt(createdAt);
         setUpdatedAt(updatedAt);
+        setType(type);
+        setClaimToken(claimToken);
+        setClaimedStartedAt(claimedStartedAt);
+        setClaimedDoneAt(claimedDoneAt);
+        setAnalysisStatus(analysisStatus);
+        setDispatchStatus(dispatchStatus);
         resetChangedOnNotNull();
     }
 }

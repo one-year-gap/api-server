@@ -51,15 +51,15 @@ public class MobilePlanRecord extends UpdatableRecordImpl<MobilePlanRecord> {
     /**
      * Setter for <code>public.mobile_plan.tethering_sharing_data</code>.
      */
-    public void setTetheringSharingData(String value) {
+    public void setTetheringSharingData(Integer value) {
         set(2, value);
     }
 
     /**
      * Getter for <code>public.mobile_plan.tethering_sharing_data</code>.
      */
-    public String getTetheringSharingData() {
-        return (String) get(2);
+    public Integer getTetheringSharingData() {
+        return (Integer) get(2);
     }
 
     /**
@@ -199,7 +199,7 @@ public class MobilePlanRecord extends UpdatableRecordImpl<MobilePlanRecord> {
     /**
      * Create a detached, initialised MobilePlanRecord
      */
-    public MobilePlanRecord(Long productId, String dataAmount, String tetheringSharingData, String benefitSms, String benefitVoiceCall, String benefitBrands, String benefitMedia, String benefitPremium, String benefitSignatureFamilyDiscount, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public MobilePlanRecord(Long productId, String dataAmount, Integer tetheringSharingData, String benefitSms, String benefitVoiceCall, String benefitBrands, String benefitMedia, String benefitPremium, String benefitSignatureFamilyDiscount, LocalDateTime createdAt, LocalDateTime updatedAt) {
         super(MobilePlan.MOBILE_PLAN);
 
         setProductId(productId);

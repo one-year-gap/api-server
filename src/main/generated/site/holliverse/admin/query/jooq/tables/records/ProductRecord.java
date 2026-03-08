@@ -6,6 +6,7 @@ package site.holliverse.admin.query.jooq.tables.records;
 
 import java.time.LocalDateTime;
 
+import org.jooq.JSONB;
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 
@@ -147,6 +148,60 @@ public class ProductRecord extends UpdatableRecordImpl<ProductRecord> {
         return (LocalDateTime) get(8);
     }
 
+    /**
+     * Setter for <code>public.product.tags</code>.
+     */
+    public void setTags(JSONB value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.product.tags</code>.
+     */
+    public JSONB getTags() {
+        return (JSONB) get(9);
+    }
+
+    /**
+     * Setter for <code>public.product.embedding_text</code>.
+     */
+    public void setEmbeddingText(String value) {
+        set(10, value);
+    }
+
+    /**
+     * Getter for <code>public.product.embedding_text</code>.
+     */
+    public String getEmbeddingText() {
+        return (String) get(10);
+    }
+
+    /**
+     * @deprecated Unknown data type. If this is a qualified, user-defined type,
+     * it may have been excluded from code generation. If this is a built-in
+     * type, you can define an explicit {@link org.jooq.Binding} to specify how
+     * this type should be handled. Deprecation can be turned off using
+     * {@literal <deprecationOnUnknownTypes/>} in your code generator
+     * configuration.
+     */
+    @Deprecated
+    public void setEmbeddingVector(Object value) {
+        set(11, value);
+    }
+
+    /**
+     * @deprecated Unknown data type. If this is a qualified, user-defined type,
+     * it may have been excluded from code generation. If this is a built-in
+     * type, you can define an explicit {@link org.jooq.Binding} to specify how
+     * this type should be handled. Deprecation can be turned off using
+     * {@literal <deprecationOnUnknownTypes/>} in your code generator
+     * configuration.
+     */
+    @Deprecated
+    public Object getEmbeddingVector() {
+        return get(11);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -170,7 +225,7 @@ public class ProductRecord extends UpdatableRecordImpl<ProductRecord> {
     /**
      * Create a detached, initialised ProductRecord
      */
-    public ProductRecord(Long productId, String productCode, String name, Integer price, Integer salePrice, ProductTypeEnum productType, String discountType, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ProductRecord(Long productId, String productCode, String name, Integer price, Integer salePrice, ProductTypeEnum productType, String discountType, LocalDateTime createdAt, LocalDateTime updatedAt, JSONB tags, String embeddingText, Object embeddingVector) {
         super(Product.PRODUCT);
 
         setProductId(productId);
@@ -182,6 +237,9 @@ public class ProductRecord extends UpdatableRecordImpl<ProductRecord> {
         setDiscountType(discountType);
         setCreatedAt(createdAt);
         setUpdatedAt(updatedAt);
+        setTags(tags);
+        setEmbeddingText(embeddingText);
+        setEmbeddingVector(embeddingVector);
         resetChangedOnNotNull();
     }
 }

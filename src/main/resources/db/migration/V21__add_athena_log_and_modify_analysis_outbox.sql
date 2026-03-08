@@ -45,7 +45,10 @@ CREATE TABLE IF NOT EXISTS index_raw_snapshot (
       internet_security_raw numeric NOT NULL,
       stability_raw numeric NOT NULL,
       created_at timestamptz NOT NULL DEFAULT now(),
-      CONSTRAINT pk_index_raw_snapshot PRIMARY KEY (snapshot_date, member_id)
+      CONSTRAINT pk_index_raw_snapshot PRIMARY KEY (snapshot_date, member_id),
+      CONSTRAINT fk_index_raw_snapshot_member
+          FOREIGN KEY (member_id) REFERENCES member (member_id)
+          ON UPDATE CASCADE ON DELETE CASCADE
   );
 CREATE INDEX IF NOT EXISTS idx_index_raw_snapshot_member ON index_raw_snapshot (member_id);
 
@@ -60,7 +63,10 @@ CREATE TABLE IF NOT EXISTS index_tscore_snapshot (
       internet_security_tscore numeric NOT NULL,
       stability_tscore numeric NOT NULL,
       created_at timestamptz NOT NULL DEFAULT now(),
-      CONSTRAINT pk_index_tscore_snapshot PRIMARY KEY (snapshot_date, member_id)
+      CONSTRAINT pk_index_tscore_snapshot PRIMARY KEY (snapshot_date, member_id),
+      CONSTRAINT fk_index_tscore_snapshot_member
+          FOREIGN KEY (member_id) REFERENCES member (member_id)
+          ON UPDATE CASCADE ON DELETE CASCADE
   );
 CREATE INDEX IF NOT EXISTS idx_index_tscore_snapshot_member ON index_tscore_snapshot (member_id);
 

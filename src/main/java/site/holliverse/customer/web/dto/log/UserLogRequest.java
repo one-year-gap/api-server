@@ -3,29 +3,31 @@ package site.holliverse.customer.web.dto.log;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import jakarta.validation.constraints.Size;
 
 import java.util.Map;
 
-@Data
-public class UserLogRequest {
+public record UserLogRequest(
+        @NotNull
+        @JsonProperty("event_id")
+        Long eventId,
 
-    @NotNull
-    @JsonProperty("event_id")
-    private Long eventId;
+        @NotBlank
+        @Size(max = 64)
+        String timestamp,
 
-    @NotBlank
-    private String timestamp;
+        @NotBlank
+        @Size(max = 64)
+        String event,
 
-    @NotBlank
-    private String event;
+        @NotBlank
+        @JsonProperty("event_name")
+        @Size(max = 128)
+        String eventName,
 
-    @NotBlank
-    @JsonProperty("event_name")
-    private String eventName;
-
-    @NotNull
-    @JsonProperty("event_properties")
-    private Map<String, Object> eventProperties;
+        @NotNull
+        @JsonProperty("event_properties")
+        Map<String, Object> eventProperties
+) {
 }
 

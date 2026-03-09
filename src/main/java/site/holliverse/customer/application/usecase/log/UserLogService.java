@@ -10,9 +10,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 @Slf4j
 @Service
 @Profile("customer")
@@ -24,16 +21,18 @@ public class UserLogService {
 
     @Value("${app.topic.client-events}")
     private String topic;
+
     public void publish(Long memberId, UserLogRequest request) {
         UserLogEventName eventName = UserLogEventName.from(request.eventName());
 
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("event_id", request.eventId());
-        payload.put("timestamp", request.timestamp());
-        payload.put("event", request.event());
-        payload.put("event_name", eventName.value());
-        payload.put("member_id", memberId);
-        payload.put("event_properties", request.eventProperties());
+        UserLogPayload payload = new UserLogPayload(
+                request.eventId(),
+                request.timestamp(),
+                request.event(),
+                eventName.value(),
+                memberId,
+                request.eventProperties()
+        );
 
         String json;
         try {

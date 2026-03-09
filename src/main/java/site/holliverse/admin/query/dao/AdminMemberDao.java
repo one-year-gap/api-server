@@ -24,6 +24,7 @@ import static site.holliverse.admin.query.jooq.Tables.SUPPORT_CASE;
 import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD;
 import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD_MAPPING_RESULT;
 import static site.holliverse.admin.query.jooq.Tables.CONSULTATION_ANALYSIS;
+import site.holliverse.admin.query.jooq.enums.MemberRoleType;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -255,6 +256,9 @@ public class AdminMemberDao {
         List<Condition> conditions = new ArrayList<>(); // Condition = SQL의 조건식
 
         LocalDate today = LocalDate.now();
+
+        // 기본 조건: 역할이 'CUSTOMER'인 회원만 조회
+        conditions.add(MEMBER.ROLE.eq(MemberRoleType.CUSTOMER));
 
         // 1. 검색어 (암호화 일치 검색)
         if (StringUtils.hasText(req.keyword())) {

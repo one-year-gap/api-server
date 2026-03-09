@@ -4,6 +4,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
     id 'nu.studer.jooq' version '9.0'
+    id 'org.flywaydb.flyway' version '11.7.2'
 }
 
 group = 'api-server'
@@ -31,6 +32,15 @@ repositories {
 }
 
 def xrayVersion = findProperty('xrayVersion') ?: '2.14.0'
+def envOrDefault = { String... keys ->
+    for (String key : keys) {
+        String value = System.getenv(key)
+        if (value != null && !value.isBlank()) {
+            return value
+        }
+    }
+    return null
+}
 
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:3.5.2')
@@ -111,18 +121,6 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy tasks.named("jacocoTestReport")
-}
-
-// CI 환경(GitHub Actions)에서는 generateJooq 태스크 실행 안 함
-// afterEvaluate로 감싸서 모든 태스크가 생성된 후 접근하도록 변경
-afterEvaluate {
-    if (tasks.findByName('generateJooq')) {
-        tasks.named('generateJooq') {
-            onlyIf {
-                System.getenv('CI') == null
-            }
-        }
-    }
 }
 
 /* Jacoco Test Setting */
@@ -233,9 +231,9 @@ jooq {
                 jdbc {
                     //
                     driver = 'org.postgresql.Driver'
-                    url = System.getenv('DB_URL') ?: 'jdbc:postgresql://localhost:5432/holliverse'
-                    user = System.getenv('DB_USER_ADMIN') ?: 'postgres'
-                    password = System.getenv('DB_PASS_ADMIN') ?: 'postgres'
+                    url = envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5432/holliverse'
+                    user = envOrDefault('DB_USER_ADMIN', 'SPRING_DATASOURCE_USERNAME') ?: 'postgres'
+                    password = envOrDefault('DB_PASS_ADMIN', 'SPRING_DATASOURCE_PASSWORD') ?: 'postgres'
                 }
                 generator {
                     name = 'org.jooq.codegen.DefaultGenerator'
@@ -256,6 +254,25 @@ jooq {
                 }
             }
         }
+    }
+}
+
+flyway {
+    configurations = ['runtimeClasspath']
+    url = envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5432/holliverse'
+    user = envOrDefault('FLYWAY_USER', 'DB_USER_MIGRATOR', 'SPRING_DATASOURCE_USERNAME', 'DB_USER_ADMIN') ?: 'postgres'
+    password = envOrDefault('FLYWAY_PASSWORD', 'DB_PASS_MIGRATOR', 'SPRING_DATASOURCE_PASSWORD', 'DB_PASS_ADMIN') ?: 'postgres'
+    locations = ['filesystem:src/main/resources/db/migration']
+    baselineOnMigrate = true
+    schemas = ['public']
+}
+
+if (System.getenv('CI') != null) {
+    tasks.named('generateJooq') {
+        dependsOn tasks.named('flywayMigrate')
+    }
+    tasks.named('compileJava') {
+        dependsOn tasks.named('generateJooq')
     }
 }
 

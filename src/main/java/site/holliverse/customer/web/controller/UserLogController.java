@@ -29,9 +29,6 @@ public class UserLogController {
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestBody @Valid UserLogRequest request
     ) {
-        if (customUserDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
-        }
         Long memberId = customUserDetails.getMemberId();
         userLogService.publish(memberId, request);
     }

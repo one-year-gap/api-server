@@ -270,17 +270,17 @@ public class AdminMemberDao {
                     .from(PRODUCT)
                     .where(PRODUCT.PRODUCT_CODE.in(req.planNames()));
 
-            // 이 회원이 가진 상품 중, 검색어와 일치하는 상품들의 '대분류' 개수 계산
-            var memberMatchedCategoryCount = DSL.select(DSL.countDistinct(PRODUCT.PRODUCT_TYPE))
+            // 조건에 맞는 회원 ID 집합
+            var matchedMemberIds = DSL.select(SUBSCRIPTION.MEMBER_ID)
                     .from(SUBSCRIPTION)
                     .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
-                    .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                    .and(PRODUCT.PRODUCT_CODE.in(req.planNames()));
+                    .where(PRODUCT.PRODUCT_CODE.in(req.planNames())) // 검색된 요금제만 일단 필터링
+                    .groupBy(SUBSCRIPTION.MEMBER_ID)                 // 회원별로 묶기
+                    // 묶은 결과 중에서, 카테고리 개수가 타겟 개수와 똑같은 사람만 남기기
+                    .having(DSL.countDistinct(PRODUCT.PRODUCT_TYPE).eq(targetCategoryCount));
 
-            // [결과] 두 개수가 완벽히 같으면 조건 만족
-            conditions.add(
-                    DSL.field(memberMatchedCategoryCount).eq(DSL.field(targetCategoryCount))
-            );
+            // 메인 쿼리의 회원 ID가, 아까 뽑아둔 "합격자 명단(matchedMemberIds)"에 들어있는가?
+            conditions.add(MEMBER.MEMBER_ID.in(matchedMemberIds));
         }
 
         // 5. 가입 기간 다중 필터링

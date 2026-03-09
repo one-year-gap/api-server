@@ -281,20 +281,24 @@ public class AdminMemberDao {
             conditions.add(MEMBER.GENDER.in(req.genders()));
         }
 
-        // 4. 요금제명 (다중 선택 가능)
+        // 4. 요금제명 (대분류 간 AND, 소분류 간 OR 필터링)
         // MEMBER 테이블에는 요금제 이름이 없어서, 위에서 조인한 PRODUCT 테이블 컬럼을 사용해야 함
         if (!CollectionUtils.isEmpty(req.planNames())) {
-            // 프론트에서 넘어온 요금제 배열에 포함된 회원의 '구독 요금제 개수'를 세서,
-            // 그 개수가 프론트에서 넘긴 배열의 크기(size)와 완벽히 일치하는 사람만 찾음
+            // 프론트에서 넘어온 상품들이 총 몇 개의 '대분류(PRODUCT_TYPE)'인지 계산 (예: 모바일, 부가서비스 = 2)
+            var targetCategoryCount = DSL.select(DSL.countDistinct(PRODUCT.PRODUCT_TYPE))
+                    .from(PRODUCT)
+                    .where(PRODUCT.PRODUCT_CODE.in(req.planNames()));
+
+            // 이 회원이 가진 상품 중, 검색어와 일치하는 상품들의 '대분류' 개수 계산
+            var memberMatchedCategoryCount = DSL.select(DSL.countDistinct(PRODUCT.PRODUCT_TYPE))
+                    .from(SUBSCRIPTION)
+                    .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
+                    .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                    .and(PRODUCT.PRODUCT_CODE.in(req.planNames()));
+
+            // [결과] 두 개수가 완벽히 같으면 조건 만족
             conditions.add(
-                    DSL.select(DSL.countDistinct(PRODUCT.PRODUCT_CODE))
-                            .from(SUBSCRIPTION)
-                            .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
-                            .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-//                            .and(SUBSCRIPTION.STATUS.isTrue())
-                            .and(PRODUCT.PRODUCT_CODE.in(req.planNames())) // 프론트에서 보낸 요금제 목록(IN)
-                            .asField()
-                            .eq(req.planNames().size()) // 보낸 배열의 길이와 똑같은지 비교
+                    DSL.field(memberMatchedCategoryCount).eq(DSL.field(targetCategoryCount))
             );
         }
 

@@ -16,7 +16,7 @@ import site.holliverse.customer.web.dto.log.UserLogRequest;
 import site.holliverse.shared.security.CustomUserDetails;
 
 @RestController
-@RequestMapping("/api/v1/user-logs")
+@RequestMapping("/api/v1/customer/user-logs")
 @Profile("customer")
 @RequiredArgsConstructor
 public class UserLogController {

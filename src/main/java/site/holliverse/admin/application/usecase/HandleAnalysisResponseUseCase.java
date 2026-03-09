@@ -11,10 +11,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.admin.application.usecase.dto.AnalysisResponseCommand;
 import site.holliverse.admin.query.jooq.enums.AnalysisStatus;
 import site.holliverse.admin.query.jooq.enums.DispatchOutboxType;
 import site.holliverse.admin.query.jooq.enums.DispatchStatus;
-import site.holliverse.infra.kafka.model.AnalysisResponsePayload;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import site.holliverse.infra.kafka.model.KeywordCountItem;
 
 import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.currentLocalDateTime;
@@ -48,7 +46,7 @@ public class HandleAnalysisResponseUseCase {
      * Kafka payload를 검증 -> outbox(request_id) 기준으로 멱등 처리
      */
     @Transactional
-    public void execute(AnalysisResponsePayload payload) {
+    public void execute(AnalysisResponseCommand payload) {
         validate(payload);
         try {
             Record5<String, String, Long, DispatchOutboxType, DispatchStatus> outbox = dsl
@@ -118,7 +116,7 @@ public class HandleAnalysisResponseUseCase {
      * 상담 분석 테이블 upsert
      */
     private Long upsertAnalysis(
-            AnalysisResponsePayload payload,
+            AnalysisResponseCommand payload,
             Long jobInstanceId
     ) {
         List<AnalysisUpsertRow> single = List.of(
@@ -199,7 +197,7 @@ public class HandleAnalysisResponseUseCase {
     /**
      * 완료 상태: 키워드 매핑 결과를 교체 저장
      */
-    private void replaceKeywordMappings(Long analysisId, List<KeywordCountItem> keywordCounts) {
+    private void replaceKeywordMappings(Long analysisId, List<AnalysisResponseCommand.KeywordCountCommand> keywordCounts) {
         dsl.deleteFrom(BUSINESS_KEYWORD_MAPPING_RESULT)
                 .where(BUSINESS_KEYWORD_MAPPING_RESULT.ANALYSIS_ID.eq(analysisId))
                 .execute();
@@ -209,7 +207,7 @@ public class HandleAnalysisResponseUseCase {
         }
 
         Map<Long, Integer> aggregated = new HashMap<>();
-        for (KeywordCountItem item : keywordCounts) {
+        for (AnalysisResponseCommand.KeywordCountCommand item : keywordCounts) {
             Long businessKeywordId = item.businessKeywordId() != null ? item.businessKeywordId() : item.keywordId();
             if (businessKeywordId == null) {
                 continue;
@@ -275,7 +273,7 @@ public class HandleAnalysisResponseUseCase {
     /**
      * payload의 필드와 스키마 검증
      */
-    private void validate(AnalysisResponsePayload payload) {
+    private void validate(AnalysisResponseCommand payload) {
         if (!supportedSchema.equals(payload.schema())) {
             throw new IllegalStateException("unsupported schema: " + payload.schema());
         }

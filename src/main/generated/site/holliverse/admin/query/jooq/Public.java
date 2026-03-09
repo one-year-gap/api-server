@@ -8,12 +8,19 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jooq.Catalog;
+import org.jooq.Sequence;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
 import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecution;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecutionContext;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecutionParams;
+import site.holliverse.admin.query.jooq.tables.BatchJobInstance;
+import site.holliverse.admin.query.jooq.tables.BatchStepExecution;
+import site.holliverse.admin.query.jooq.tables.BatchStepExecutionContext;
 import site.holliverse.admin.query.jooq.tables.Billing;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
@@ -65,6 +72,36 @@ public class Public extends SchemaImpl {
      * The table <code>public.analysis_dispatch_outbox</code>.
      */
     public final AnalysisDispatchOutbox ANALYSIS_DISPATCH_OUTBOX = AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX;
+
+    /**
+     * The table <code>public.batch_job_execution</code>.
+     */
+    public final BatchJobExecution BATCH_JOB_EXECUTION = BatchJobExecution.BATCH_JOB_EXECUTION;
+
+    /**
+     * The table <code>public.batch_job_execution_context</code>.
+     */
+    public final BatchJobExecutionContext BATCH_JOB_EXECUTION_CONTEXT = BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT;
+
+    /**
+     * The table <code>public.batch_job_execution_params</code>.
+     */
+    public final BatchJobExecutionParams BATCH_JOB_EXECUTION_PARAMS = BatchJobExecutionParams.BATCH_JOB_EXECUTION_PARAMS;
+
+    /**
+     * The table <code>public.batch_job_instance</code>.
+     */
+    public final BatchJobInstance BATCH_JOB_INSTANCE = BatchJobInstance.BATCH_JOB_INSTANCE;
+
+    /**
+     * The table <code>public.batch_step_execution</code>.
+     */
+    public final BatchStepExecution BATCH_STEP_EXECUTION = BatchStepExecution.BATCH_STEP_EXECUTION;
+
+    /**
+     * The table <code>public.batch_step_execution_context</code>.
+     */
+    public final BatchStepExecutionContext BATCH_STEP_EXECUTION_CONTEXT = BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT;
 
     /**
      * The table <code>public.billing</code>.
@@ -190,11 +227,26 @@ public class Public extends SchemaImpl {
     }
 
     @Override
+    public final List<Sequence<?>> getSequences() {
+        return Arrays.asList(
+            Sequences.BATCH_JOB_EXECUTION_SEQ,
+            Sequences.BATCH_JOB_SEQ,
+            Sequences.BATCH_STEP_EXECUTION_SEQ
+        );
+    }
+
+    @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             AddonService.ADDON_SERVICE,
             Address.ADDRESS,
             AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX,
+            BatchJobExecution.BATCH_JOB_EXECUTION,
+            BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT,
+            BatchJobExecutionParams.BATCH_JOB_EXECUTION_PARAMS,
+            BatchJobInstance.BATCH_JOB_INSTANCE,
+            BatchStepExecution.BATCH_STEP_EXECUTION,
+            BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT,
             Billing.BILLING,
             BusinessKeyword.BUSINESS_KEYWORD,
             BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS,

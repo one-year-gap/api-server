@@ -8,7 +8,10 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import site.holliverse.admin.application.usecase.HandleAnalysisResponseUseCase;
+import site.holliverse.admin.application.usecase.dto.AnalysisResponseCommand;
 import site.holliverse.infra.kafka.model.AnalysisResponsePayload;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,11 +35,41 @@ public class AnalysisResponseKafkaConsumer {
     ) {
         try {
             AnalysisResponsePayload message = mapper.readValue(payload, AnalysisResponsePayload.class);
-            useCase.execute(message);
+            useCase.execute(toCommand(message));
             ack.acknowledge();
         } catch (Exception e) {
             log.error("[Kafka][analysis-response] consume failed. topic={}, offset={}, raw={}", topic, offset, payload, e);
             throw new IllegalStateException("analysis-response consume failed", e);
         }
+    }
+
+    private AnalysisResponseCommand toCommand(AnalysisResponsePayload payload) {
+        List<AnalysisResponseCommand.KeywordCountCommand> keywordCounts = payload.keywordCounts() == null
+                ? null
+                : payload.keywordCounts().stream()
+                .map(item -> new AnalysisResponseCommand.KeywordCountCommand(
+                        item.keywordId(),
+                        item.businessKeywordId(),
+                        item.keywordCode(),
+                        item.keywordName(),
+                        item.count()
+                ))
+                .toList();
+
+        return new AnalysisResponseCommand(
+                payload.schema(),
+                payload.dispatchRequestId(),
+                payload.chunkId(),
+                payload.caseId(),
+                payload.analyzerVersion(),
+                payload.analysisId(),
+                payload.memberId(),
+                payload.status(),
+                payload.keywordTypes(),
+                payload.keywordHits(),
+                keywordCounts,
+                payload.error(),
+                payload.producedAt()
+        );
     }
 }

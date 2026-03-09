@@ -7,6 +7,12 @@ package site.holliverse.admin.query.jooq;
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
 import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecution;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecutionContext;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecutionParams;
+import site.holliverse.admin.query.jooq.tables.BatchJobInstance;
+import site.holliverse.admin.query.jooq.tables.BatchStepExecution;
+import site.holliverse.admin.query.jooq.tables.BatchStepExecutionContext;
 import site.holliverse.admin.query.jooq.tables.Billing;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
@@ -51,6 +57,36 @@ public class Tables {
      * The table <code>public.analysis_dispatch_outbox</code>.
      */
     public static final AnalysisDispatchOutbox ANALYSIS_DISPATCH_OUTBOX = AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX;
+
+    /**
+     * The table <code>public.batch_job_execution</code>.
+     */
+    public static final BatchJobExecution BATCH_JOB_EXECUTION = BatchJobExecution.BATCH_JOB_EXECUTION;
+
+    /**
+     * The table <code>public.batch_job_execution_context</code>.
+     */
+    public static final BatchJobExecutionContext BATCH_JOB_EXECUTION_CONTEXT = BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT;
+
+    /**
+     * The table <code>public.batch_job_execution_params</code>.
+     */
+    public static final BatchJobExecutionParams BATCH_JOB_EXECUTION_PARAMS = BatchJobExecutionParams.BATCH_JOB_EXECUTION_PARAMS;
+
+    /**
+     * The table <code>public.batch_job_instance</code>.
+     */
+    public static final BatchJobInstance BATCH_JOB_INSTANCE = BatchJobInstance.BATCH_JOB_INSTANCE;
+
+    /**
+     * The table <code>public.batch_step_execution</code>.
+     */
+    public static final BatchStepExecution BATCH_STEP_EXECUTION = BatchStepExecution.BATCH_STEP_EXECUTION;
+
+    /**
+     * The table <code>public.batch_step_execution_context</code>.
+     */
+    public static final BatchStepExecutionContext BATCH_STEP_EXECUTION_CONTEXT = BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT;
 
     /**
      * The table <code>public.billing</code>.

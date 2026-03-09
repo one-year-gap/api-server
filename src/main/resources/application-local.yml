@@ -1,2 +1,13 @@
 logging:
   config: classpath:logback-spring-local.xml
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  kafka:
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:AWS_MSK_IAM}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:"software.amazon.msk.auth.iam.IAMLoginModule required;"}
+      sasl.client.callback.handler.class: ${KAFKA_SASL_CALLBACK_HANDLER_CLASS:software.amazon.msk.auth.iam.IAMClientCallbackHandler}

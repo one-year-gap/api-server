@@ -12,7 +12,6 @@ import site.holliverse.customer.web.dto.log.UserLogRequest;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -20,31 +19,19 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserLogService {
 
-    private static final Set<String> ALLOWED_EVENT_NAMES = Set.of(
-            "click_product_detail",
-            "click_list_type",
-            "click_compare",
-            "click_change",
-            "click_change_success",
-            "click_penalty",
-            "click_coupon"
-    );
-
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${app.topic.client-events}")    
+    @Value("${app.topic.client-events}")
     private String topic;
     public void publish(Long memberId, UserLogRequest request) {
-        if (!ALLOWED_EVENT_NAMES.contains(request.eventName())) {
-            throw new IllegalArgumentException("허용되지 않는 event_name: " + request.getEventName());
-        }
+        UserLogEventName eventName = UserLogEventName.from(request.eventName());
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("event_id", request.eventId());
         payload.put("timestamp", request.timestamp());
         payload.put("event", request.event());
-        payload.put("event_name", request.eventName());
+        payload.put("event_name", eventName.value());
         payload.put("member_id", memberId);
         payload.put("event_properties", request.eventProperties());
 
@@ -60,7 +47,7 @@ public class UserLogService {
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
                         log.warn("[UserLog] Kafka 전송 실패 memberId={} eventName={}",
-                                memberId, request.eventName(), ex);
+                                memberId, eventName.value(), ex);
                     }
                 });
     }

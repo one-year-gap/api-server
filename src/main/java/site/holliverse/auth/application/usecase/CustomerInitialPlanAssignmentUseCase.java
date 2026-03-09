@@ -43,11 +43,14 @@ public class CustomerInitialPlanAssignmentUseCase implements InitialPlanAssignme
             return;
         }
 
+
+        //모바일플랜 요금제가 없을경우 에러처리
         long count = productRepository.countByProductType(ProductType.MOBILE_PLAN);
         if (count <= 0) {
             throw new CustomException(ErrorCode.NOT_FOUND, "mobilePlan");
         }
 
+        //요금제 하나 내려주기
         int randomPage = ThreadLocalRandom.current().nextInt(Math.toIntExact(count));
         Product randomPlan = productRepository
                 .findByProductType(ProductType.MOBILE_PLAN, PageRequest.of(randomPage, 1))

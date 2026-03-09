@@ -36,16 +36,23 @@ import org.jooq.impl.TableImpl;
 
 import site.holliverse.admin.query.jooq.Keys;
 import site.holliverse.admin.query.jooq.Public;
+import site.holliverse.admin.query.jooq.enums.FamilyRoleType;
 import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
 import site.holliverse.admin.query.jooq.enums.MemberRoleType;
 import site.holliverse.admin.query.jooq.enums.MemberSignupType;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.query.jooq.tables.Address.AddressPath;
+import site.holliverse.admin.query.jooq.tables.Billing.BillingPath;
+import site.holliverse.admin.query.jooq.tables.FamilyGroup.FamilyGroupPath;
+import site.holliverse.admin.query.jooq.tables.IndexPersonaSnapshot.IndexPersonaSnapshotPath;
+import site.holliverse.admin.query.jooq.tables.IndexRawSnapshot.IndexRawSnapshotPath;
+import site.holliverse.admin.query.jooq.tables.IndexTscoreSnapshot.IndexTscoreSnapshotPath;
 import site.holliverse.admin.query.jooq.tables.MemberCoupon.MemberCouponPath;
-import site.holliverse.admin.query.jooq.tables.ProductViewHistory.ProductViewHistoryPath;
+import site.holliverse.admin.query.jooq.tables.PersonaRecommendation.PersonaRecommendationPath;
 import site.holliverse.admin.query.jooq.tables.RefreshToken.RefreshTokenPath;
 import site.holliverse.admin.query.jooq.tables.Subscription.SubscriptionPath;
 import site.holliverse.admin.query.jooq.tables.SupportCase.SupportCasePath;
+import site.holliverse.admin.query.jooq.tables.UserEventFeatures_7d.UserEventFeatures_7dPath;
 import site.holliverse.admin.query.jooq.tables.records.MemberRecord;
 
 
@@ -155,6 +162,21 @@ public class Member extends TableImpl<MemberRecord> {
      */
     public final TableField<MemberRecord, MemberMembershipType> MEMBERSHIP = createField(DSL.name("membership"), SQLDataType.VARCHAR.asEnumDataType(MemberMembershipType.class), this, "");
 
+    /**
+     * The column <code>public.member.children_count</code>.
+     */
+    public final TableField<MemberRecord, Integer> CHILDREN_COUNT = createField(DSL.name("children_count"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
+
+    /**
+     * The column <code>public.member.family_group_id</code>.
+     */
+    public final TableField<MemberRecord, Long> FAMILY_GROUP_ID = createField(DSL.name("family_group_id"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.member.family_role</code>.
+     */
+    public final TableField<MemberRecord, FamilyRoleType> FAMILY_ROLE = createField(DSL.name("family_role"), SQLDataType.VARCHAR.asEnumDataType(FamilyRoleType.class), this, "");
+
     private Member(Name alias, Table<MemberRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -239,7 +261,7 @@ public class Member extends TableImpl<MemberRecord> {
 
     @Override
     public List<ForeignKey<MemberRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.MEMBER__FK_MEMBER_TO_ADDRESS);
+        return Arrays.asList(Keys.MEMBER__FK_MEMBER_TO_ADDRESS, Keys.MEMBER__FK_MEMBER_TO_FAMILY_GROUP);
     }
 
     private transient AddressPath _address;
@@ -252,6 +274,70 @@ public class Member extends TableImpl<MemberRecord> {
             _address = new AddressPath(this, Keys.MEMBER__FK_MEMBER_TO_ADDRESS, null);
 
         return _address;
+    }
+
+    private transient FamilyGroupPath _familyGroup;
+
+    /**
+     * Get the implicit join path to the <code>public.family_group</code> table.
+     */
+    public FamilyGroupPath familyGroup() {
+        if (_familyGroup == null)
+            _familyGroup = new FamilyGroupPath(this, Keys.MEMBER__FK_MEMBER_TO_FAMILY_GROUP, null);
+
+        return _familyGroup;
+    }
+
+    private transient BillingPath _billing;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.billing</code>
+     * table
+     */
+    public BillingPath billing() {
+        if (_billing == null)
+            _billing = new BillingPath(this, null, Keys.BILLING__FK_BILLING_TO_MEMBER.getInverseKey());
+
+        return _billing;
+    }
+
+    private transient IndexPersonaSnapshotPath _indexPersonaSnapshot;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.index_persona_snapshot</code> table
+     */
+    public IndexPersonaSnapshotPath indexPersonaSnapshot() {
+        if (_indexPersonaSnapshot == null)
+            _indexPersonaSnapshot = new IndexPersonaSnapshotPath(this, null, Keys.INDEX_PERSONA_SNAPSHOT__FK_INDEX_PERSONA_SNAPSHOT_MEMBER.getInverseKey());
+
+        return _indexPersonaSnapshot;
+    }
+
+    private transient IndexRawSnapshotPath _indexRawSnapshot;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.index_raw_snapshot</code> table
+     */
+    public IndexRawSnapshotPath indexRawSnapshot() {
+        if (_indexRawSnapshot == null)
+            _indexRawSnapshot = new IndexRawSnapshotPath(this, null, Keys.INDEX_RAW_SNAPSHOT__FK_INDEX_RAW_SNAPSHOT_MEMBER.getInverseKey());
+
+        return _indexRawSnapshot;
+    }
+
+    private transient IndexTscoreSnapshotPath _indexTscoreSnapshot;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.index_tscore_snapshot</code> table
+     */
+    public IndexTscoreSnapshotPath indexTscoreSnapshot() {
+        if (_indexTscoreSnapshot == null)
+            _indexTscoreSnapshot = new IndexTscoreSnapshotPath(this, null, Keys.INDEX_TSCORE_SNAPSHOT__FK_INDEX_TSCORE_SNAPSHOT_MEMBER.getInverseKey());
+
+        return _indexTscoreSnapshot;
     }
 
     private transient MemberCouponPath _memberCoupon;
@@ -267,17 +353,17 @@ public class Member extends TableImpl<MemberRecord> {
         return _memberCoupon;
     }
 
-    private transient ProductViewHistoryPath _productViewHistory;
+    private transient PersonaRecommendationPath _personaRecommendation;
 
     /**
      * Get the implicit to-many join path to the
-     * <code>public.product_view_history</code> table
+     * <code>public.persona_recommendation</code> table
      */
-    public ProductViewHistoryPath productViewHistory() {
-        if (_productViewHistory == null)
-            _productViewHistory = new ProductViewHistoryPath(this, null, Keys.PRODUCT_VIEW_HISTORY__FK_PRODUCT_VIEW_HISTORY_TO_MEMBER.getInverseKey());
+    public PersonaRecommendationPath personaRecommendation() {
+        if (_personaRecommendation == null)
+            _personaRecommendation = new PersonaRecommendationPath(this, null, Keys.PERSONA_RECOMMENDATION__FK_PERSONA_RECOMMENDATION_MEMBER.getInverseKey());
 
-        return _productViewHistory;
+        return _personaRecommendation;
     }
 
     private transient RefreshTokenPath _refreshToken;
@@ -332,6 +418,19 @@ public class Member extends TableImpl<MemberRecord> {
             _fkSupportCaseToMember = new SupportCasePath(this, null, Keys.SUPPORT_CASE__FK_SUPPORT_CASE_TO_MEMBER.getInverseKey());
 
         return _fkSupportCaseToMember;
+    }
+
+    private transient UserEventFeatures_7dPath _userEventFeatures_7d;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.user_event_features_7d</code> table
+     */
+    public UserEventFeatures_7dPath userEventFeatures_7d() {
+        if (_userEventFeatures_7d == null)
+            _userEventFeatures_7d = new UserEventFeatures_7dPath(this, null, Keys.USER_EVENT_FEATURES_7D__FK_USER_EVENT_FEATURES_7D_MEMBER.getInverseKey());
+
+        return _userEventFeatures_7d;
     }
 
     @Override

@@ -4,9 +4,10 @@
 package site.holliverse.admin.query.jooq.tables.records;
 
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
-import org.jooq.Record1;
+import org.jooq.JSONB;
+import org.jooq.Record2;
 import org.jooq.impl.UpdatableRecordImpl;
 
 import site.holliverse.admin.query.jooq.tables.ProductViewHistory;
@@ -21,87 +22,101 @@ public class ProductViewHistoryRecord extends UpdatableRecordImpl<ProductViewHis
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>public.product_view_history.view_id</code>.
-     */
-    public void setViewId(Long value) {
-        set(0, value);
-    }
-
-    /**
-     * Getter for <code>public.product_view_history.view_id</code>.
-     */
-    public Long getViewId() {
-        return (Long) get(0);
-    }
-
-    /**
      * Setter for <code>public.product_view_history.member_id</code>.
      */
     public void setMemberId(Long value) {
-        set(1, value);
+        set(0, value);
     }
 
     /**
      * Getter for <code>public.product_view_history.member_id</code>.
      */
     public Long getMemberId() {
-        return (Long) get(1);
+        return (Long) get(0);
     }
 
     /**
      * Setter for <code>public.product_view_history.product_id</code>.
      */
     public void setProductId(Long value) {
-        set(2, value);
+        set(1, value);
     }
 
     /**
      * Getter for <code>public.product_view_history.product_id</code>.
      */
     public Long getProductId() {
-        return (Long) get(2);
+        return (Long) get(1);
+    }
+
+    /**
+     * Setter for <code>public.product_view_history.product_name</code>.
+     */
+    public void setProductName(String value) {
+        set(2, value);
+    }
+
+    /**
+     * Getter for <code>public.product_view_history.product_name</code>.
+     */
+    public String getProductName() {
+        return (String) get(2);
+    }
+
+    /**
+     * Setter for <code>public.product_view_history.product_type</code>.
+     */
+    public void setProductType(String value) {
+        set(3, value);
+    }
+
+    /**
+     * Getter for <code>public.product_view_history.product_type</code>.
+     */
+    public String getProductType() {
+        return (String) get(3);
+    }
+
+    /**
+     * Setter for <code>public.product_view_history.tags</code>.
+     */
+    public void setTags(JSONB value) {
+        set(4, value);
+    }
+
+    /**
+     * Getter for <code>public.product_view_history.tags</code>.
+     */
+    public JSONB getTags() {
+        return (JSONB) get(4);
     }
 
     /**
      * Setter for <code>public.product_view_history.viewed_at</code>.
      */
-    public void setViewedAt(LocalDateTime value) {
-        set(3, value);
+    public void setViewedAt(OffsetDateTime value) {
+        set(5, value);
     }
 
     /**
      * Getter for <code>public.product_view_history.viewed_at</code>.
      */
-    public LocalDateTime getViewedAt() {
-        return (LocalDateTime) get(3);
+    public OffsetDateTime getViewedAt() {
+        return (OffsetDateTime) get(5);
     }
 
     /**
-     * Setter for <code>public.product_view_history.created_at</code>.
+     * Setter for <code>public.product_view_history.last_event_id</code>.
      */
-    public void setCreatedAt(LocalDateTime value) {
-        set(4, value);
+    public void setLastEventId(Long value) {
+        set(6, value);
     }
 
     /**
-     * Getter for <code>public.product_view_history.created_at</code>.
+     * Getter for <code>public.product_view_history.last_event_id</code>.
      */
-    public LocalDateTime getCreatedAt() {
-        return (LocalDateTime) get(4);
-    }
-
-    /**
-     * Setter for <code>public.product_view_history.updated_at</code>.
-     */
-    public void setUpdatedAt(LocalDateTime value) {
-        set(5, value);
-    }
-
-    /**
-     * Getter for <code>public.product_view_history.updated_at</code>.
-     */
-    public LocalDateTime getUpdatedAt() {
-        return (LocalDateTime) get(5);
+    public Long getLastEventId() {
+        return (Long) get(6);
     }
 
     // -------------------------------------------------------------------------
@@ -109,8 +124,8 @@ public class ProductViewHistoryRecord extends UpdatableRecordImpl<ProductViewHis
     // -------------------------------------------------------------------------
 
     @Override
-    public Record1<Long> key() {
-        return (Record1) super.key();
+    public Record2<Long, Long> key() {
+        return (Record2) super.key();
     }
 
     // -------------------------------------------------------------------------
@@ -127,15 +142,16 @@ public class ProductViewHistoryRecord extends UpdatableRecordImpl<ProductViewHis
     /**
      * Create a detached, initialised ProductViewHistoryRecord
      */
-    public ProductViewHistoryRecord(Long viewId, Long memberId, Long productId, LocalDateTime viewedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ProductViewHistoryRecord(Long memberId, Long productId, String productName, String productType, JSONB tags, OffsetDateTime viewedAt, Long lastEventId) {
         super(ProductViewHistory.PRODUCT_VIEW_HISTORY);
 
-        setViewId(viewId);
         setMemberId(memberId);
         setProductId(productId);
+        setProductName(productName);
+        setProductType(productType);
+        setTags(tags);
         setViewedAt(viewedAt);
-        setCreatedAt(createdAt);
-        setUpdatedAt(updatedAt);
+        setLastEventId(lastEventId);
         resetChangedOnNotNull();
     }
 }

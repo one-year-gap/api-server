@@ -14,6 +14,7 @@ import site.holliverse.customer.web.dto.product.MobileContent;
 import site.holliverse.customer.web.dto.product.ProductContent;
 import site.holliverse.customer.web.dto.product.ProductDetailResponse;
 import site.holliverse.customer.web.dto.product.TabWatchContent;
+import site.holliverse.customer.web.util.BenefitDisplayUtil;
 
 public class ProductResponseMapper {
 
@@ -54,8 +55,8 @@ public class ProductResponseMapper {
                 m.dataAmount(),
                 m.tetheringSharingData(),
                 m.benefitBrands(),
-                m.benefitVoiceCall(),
-                m.benefitSms(),
+                BenefitDisplayUtil.normalizeBenefitForDisplay(m.benefitVoiceCall()),
+                BenefitDisplayUtil.normalizeBenefitForDisplay(m.benefitSms()),
                 m.benefitMedia(),
                 m.benefitPremium(),
                 m.benefitSignatureFamilyDiscount()
@@ -75,6 +76,10 @@ public class ProductResponseMapper {
     }
 
     public TabWatchContent toTabWatchContent(TabWatchPlanDetailDto t) {
-        return new TabWatchContent(t.dataAmount(), t.benefitVoiceCall(), t.benefitSms());
+        return new TabWatchContent(
+                t.dataAmount(),
+                BenefitDisplayUtil.normalizeBenefitForDisplay(t.benefitVoiceCall()),
+                BenefitDisplayUtil.normalizeBenefitForDisplay(t.benefitSms())
+        );
     }
 }

@@ -26,7 +26,9 @@ import org.jooq.impl.TableImpl;
 
 import site.holliverse.admin.query.jooq.Keys;
 import site.holliverse.admin.query.jooq.Public;
-import site.holliverse.admin.query.jooq.enums.DispatchOutboxStatus;
+import site.holliverse.admin.query.jooq.enums.AnalysisStatus;
+import site.holliverse.admin.query.jooq.enums.DispatchOutboxType;
+import site.holliverse.admin.query.jooq.enums.DispatchStatus;
 import site.holliverse.admin.query.jooq.tables.records.AnalysisDispatchOutboxRecord;
 
 
@@ -67,24 +69,9 @@ public class AnalysisDispatchOutbox extends TableImpl<AnalysisDispatchOutboxReco
     public final TableField<AnalysisDispatchOutboxRecord, String> CHUNK_ID = createField(DSL.name("chunk_id"), SQLDataType.VARCHAR(100).nullable(false), this, "");
 
     /**
-     * The column <code>public.analysis_dispatch_outbox.efs_path_counsel</code>.
-     */
-    public final TableField<AnalysisDispatchOutboxRecord, String> EFS_PATH_COUNSEL = createField(DSL.name("efs_path_counsel"), SQLDataType.VARCHAR(255).nullable(false), this, "");
-
-    /**
-     * The column <code>public.analysis_dispatch_outbox.efs_path_alias</code>.
-     */
-    public final TableField<AnalysisDispatchOutboxRecord, String> EFS_PATH_ALIAS = createField(DSL.name("efs_path_alias"), SQLDataType.VARCHAR(255).nullable(false), this, "");
-
-    /**
      * The column <code>public.analysis_dispatch_outbox.analysis_version</code>.
      */
     public final TableField<AnalysisDispatchOutboxRecord, String> ANALYSIS_VERSION = createField(DSL.name("analysis_version"), SQLDataType.VARCHAR(50).nullable(false), this, "");
-
-    /**
-     * The column <code>public.analysis_dispatch_outbox.status</code>.
-     */
-    public final TableField<AnalysisDispatchOutboxRecord, DispatchOutboxStatus> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR.nullable(false).defaultValue(DSL.field(DSL.raw("'READY'::dispatch_outbox_status"), SQLDataType.VARCHAR)).asEnumDataType(DispatchOutboxStatus.class), this, "");
 
     /**
      * The column <code>public.analysis_dispatch_outbox.attempt_count</code>.
@@ -110,6 +97,37 @@ public class AnalysisDispatchOutbox extends TableImpl<AnalysisDispatchOutboxReco
      * The column <code>public.analysis_dispatch_outbox.updated_at</code>.
      */
     public final TableField<AnalysisDispatchOutboxRecord, LocalDateTime> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
+
+    /**
+     * The column <code>public.analysis_dispatch_outbox.type</code>.
+     */
+    public final TableField<AnalysisDispatchOutboxRecord, DispatchOutboxType> TYPE = createField(DSL.name("type"), SQLDataType.VARCHAR.nullable(false).asEnumDataType(DispatchOutboxType.class), this, "");
+
+    /**
+     * The column <code>public.analysis_dispatch_outbox.claim_token</code>.
+     */
+    public final TableField<AnalysisDispatchOutboxRecord, Long> CLAIM_TOKEN = createField(DSL.name("claim_token"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column
+     * <code>public.analysis_dispatch_outbox.claimed_started_at</code>.
+     */
+    public final TableField<AnalysisDispatchOutboxRecord, LocalDateTime> CLAIMED_STARTED_AT = createField(DSL.name("claimed_started_at"), SQLDataType.LOCALDATETIME(6), this, "");
+
+    /**
+     * The column <code>public.analysis_dispatch_outbox.claimed_done_at</code>.
+     */
+    public final TableField<AnalysisDispatchOutboxRecord, LocalDateTime> CLAIMED_DONE_AT = createField(DSL.name("claimed_done_at"), SQLDataType.LOCALDATETIME(6), this, "");
+
+    /**
+     * The column <code>public.analysis_dispatch_outbox.analysis_status</code>.
+     */
+    public final TableField<AnalysisDispatchOutboxRecord, AnalysisStatus> ANALYSIS_STATUS = createField(DSL.name("analysis_status"), SQLDataType.VARCHAR.asEnumDataType(AnalysisStatus.class), this, "");
+
+    /**
+     * The column <code>public.analysis_dispatch_outbox.dispatch_status</code>.
+     */
+    public final TableField<AnalysisDispatchOutboxRecord, DispatchStatus> DISPATCH_STATUS = createField(DSL.name("dispatch_status"), SQLDataType.VARCHAR.asEnumDataType(DispatchStatus.class), this, "");
 
     private AnalysisDispatchOutbox(Name alias, Table<AnalysisDispatchOutboxRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);

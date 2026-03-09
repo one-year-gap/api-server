@@ -21,7 +21,9 @@ public enum AddonTypeEnum implements EnumType {
 
     PHONE_CARE("PHONE_CARE"),
 
-    DIGITAL("DIGITAL");
+    DIGITAL("DIGITAL"),
+
+    SECURITY("SECURITY");
 
     private final String literal;
 

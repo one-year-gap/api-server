@@ -1,0 +1,41 @@
+########################################
+# Kafka Setting
+########################################
+spring:
+  kafka:
+    topic:
+      analysis-response: ${WORKER_KAFKA_TOPIC_ANALYSIS_RESPONSE:${WORKER_KAFKA_TOPIC_ANALYSIS_REQUEST:analysis.response.v1}}
+    bootstrap-servers: ${MSK_BOOTSTRAP_SERVERS:localhost:19092}
+    consumer:
+      group-id: ${WORKER_KAFKA_CONSUMER_GROUP_ID:api-server-analysis}
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      acks: all
+      retries: 10
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        delivery.timeout.ms: 120000
+        request.timeout.ms: 30000
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+
+app:
+  kafka:
+    analysis-response-schema: ${WORKER_KAFKA_SCHEMA_ANALYSIS_RESPONSE:analysis.response.v1}
+  topic:
+    client-events: ${KAFKA_TOPIC_CLIENT_EVENTS:client-event-logs}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  kafka:
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:AWS_MSK_IAM}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:software.amazon.msk.auth.iam.IAMLoginModule required;}
+      sasl.client.callback.handler.class: ${KAFKA_SASL_CALLBACK_HANDLER_CLASS:software.amazon.msk.auth.iam.IAMClientCallbackHandler}

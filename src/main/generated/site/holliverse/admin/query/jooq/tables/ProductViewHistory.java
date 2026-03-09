@@ -4,21 +4,18 @@
 package site.holliverse.admin.query.jooq.tables;
 
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.jooq.Condition;
 import org.jooq.Field;
-import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.InverseForeignKey;
+import org.jooq.Index;
+import org.jooq.JSONB;
 import org.jooq.Name;
-import org.jooq.Path;
 import org.jooq.PlainSQL;
 import org.jooq.QueryPart;
-import org.jooq.Record;
 import org.jooq.SQL;
 import org.jooq.Schema;
 import org.jooq.Select;
@@ -31,10 +28,9 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
+import site.holliverse.admin.query.jooq.Indexes;
 import site.holliverse.admin.query.jooq.Keys;
 import site.holliverse.admin.query.jooq.Public;
-import site.holliverse.admin.query.jooq.tables.Member.MemberPath;
-import site.holliverse.admin.query.jooq.tables.Product.ProductPath;
 import site.holliverse.admin.query.jooq.tables.records.ProductViewHistoryRecord;
 
 
@@ -60,11 +56,6 @@ public class ProductViewHistory extends TableImpl<ProductViewHistoryRecord> {
     }
 
     /**
-     * The column <code>public.product_view_history.view_id</code>.
-     */
-    public final TableField<ProductViewHistoryRecord, Long> VIEW_ID = createField(DSL.name("view_id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
-
-    /**
      * The column <code>public.product_view_history.member_id</code>.
      */
     public final TableField<ProductViewHistoryRecord, Long> MEMBER_ID = createField(DSL.name("member_id"), SQLDataType.BIGINT.nullable(false), this, "");
@@ -75,19 +66,29 @@ public class ProductViewHistory extends TableImpl<ProductViewHistoryRecord> {
     public final TableField<ProductViewHistoryRecord, Long> PRODUCT_ID = createField(DSL.name("product_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
+     * The column <code>public.product_view_history.product_name</code>.
+     */
+    public final TableField<ProductViewHistoryRecord, String> PRODUCT_NAME = createField(DSL.name("product_name"), SQLDataType.VARCHAR(100).nullable(false), this, "");
+
+    /**
+     * The column <code>public.product_view_history.product_type</code>.
+     */
+    public final TableField<ProductViewHistoryRecord, String> PRODUCT_TYPE = createField(DSL.name("product_type"), SQLDataType.VARCHAR(50).nullable(false), this, "");
+
+    /**
+     * The column <code>public.product_view_history.tags</code>.
+     */
+    public final TableField<ProductViewHistoryRecord, JSONB> TAGS = createField(DSL.name("tags"), SQLDataType.JSONB, this, "");
+
+    /**
      * The column <code>public.product_view_history.viewed_at</code>.
      */
-    public final TableField<ProductViewHistoryRecord, LocalDateTime> VIEWED_AT = createField(DSL.name("viewed_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
+    public final TableField<ProductViewHistoryRecord, OffsetDateTime> VIEWED_AT = createField(DSL.name("viewed_at"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "");
 
     /**
-     * The column <code>public.product_view_history.created_at</code>.
+     * The column <code>public.product_view_history.last_event_id</code>.
      */
-    public final TableField<ProductViewHistoryRecord, LocalDateTime> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
-
-    /**
-     * The column <code>public.product_view_history.updated_at</code>.
-     */
-    public final TableField<ProductViewHistoryRecord, LocalDateTime> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("now()"), SQLDataType.LOCALDATETIME)), this, "");
+    public final TableField<ProductViewHistoryRecord, Long> LAST_EVENT_ID = createField(DSL.name("last_event_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     private ProductViewHistory(Name alias, Table<ProductViewHistoryRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -120,81 +121,19 @@ public class ProductViewHistory extends TableImpl<ProductViewHistoryRecord> {
         this(DSL.name("product_view_history"), null);
     }
 
-    public <O extends Record> ProductViewHistory(Table<O> path, ForeignKey<O, ProductViewHistoryRecord> childPath, InverseForeignKey<O, ProductViewHistoryRecord> parentPath) {
-        super(path, childPath, parentPath, PRODUCT_VIEW_HISTORY);
-    }
-
-    /**
-     * A subtype implementing {@link Path} for simplified path-based joins.
-     */
-    public static class ProductViewHistoryPath extends ProductViewHistory implements Path<ProductViewHistoryRecord> {
-
-        private static final long serialVersionUID = 1L;
-        public <O extends Record> ProductViewHistoryPath(Table<O> path, ForeignKey<O, ProductViewHistoryRecord> childPath, InverseForeignKey<O, ProductViewHistoryRecord> parentPath) {
-            super(path, childPath, parentPath);
-        }
-        private ProductViewHistoryPath(Name alias, Table<ProductViewHistoryRecord> aliased) {
-            super(alias, aliased);
-        }
-
-        @Override
-        public ProductViewHistoryPath as(String alias) {
-            return new ProductViewHistoryPath(DSL.name(alias), this);
-        }
-
-        @Override
-        public ProductViewHistoryPath as(Name alias) {
-            return new ProductViewHistoryPath(alias, this);
-        }
-
-        @Override
-        public ProductViewHistoryPath as(Table<?> alias) {
-            return new ProductViewHistoryPath(alias.getQualifiedName(), this);
-        }
-    }
-
     @Override
     public Schema getSchema() {
         return aliased() ? null : Public.PUBLIC;
     }
 
     @Override
-    public Identity<ProductViewHistoryRecord, Long> getIdentity() {
-        return (Identity<ProductViewHistoryRecord, Long>) super.getIdentity();
+    public List<Index> getIndexes() {
+        return Arrays.asList(Indexes.IDX_PVH_MEMBER_VIEWED);
     }
 
     @Override
     public UniqueKey<ProductViewHistoryRecord> getPrimaryKey() {
-        return Keys.PK_PRODUCT_VIEW_HISTORY;
-    }
-
-    @Override
-    public List<ForeignKey<ProductViewHistoryRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.PRODUCT_VIEW_HISTORY__FK_PRODUCT_VIEW_HISTORY_TO_MEMBER, Keys.PRODUCT_VIEW_HISTORY__FK_PRODUCT_VIEW_HISTORY_TO_PRODUCT);
-    }
-
-    private transient MemberPath _member;
-
-    /**
-     * Get the implicit join path to the <code>public.member</code> table.
-     */
-    public MemberPath member() {
-        if (_member == null)
-            _member = new MemberPath(this, Keys.PRODUCT_VIEW_HISTORY__FK_PRODUCT_VIEW_HISTORY_TO_MEMBER, null);
-
-        return _member;
-    }
-
-    private transient ProductPath _product;
-
-    /**
-     * Get the implicit join path to the <code>public.product</code> table.
-     */
-    public ProductPath product() {
-        if (_product == null)
-            _product = new ProductPath(this, Keys.PRODUCT_VIEW_HISTORY__FK_PRODUCT_VIEW_HISTORY_TO_PRODUCT, null);
-
-        return _product;
+        return Keys.PK_MEMBER_PRODUCT;
     }
 
     @Override

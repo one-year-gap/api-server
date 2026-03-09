@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 
-import site.holliverse.admin.query.jooq.enums.AnalysisStatus;
 import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis;
 
 
@@ -78,73 +77,31 @@ public class ConsultationAnalysisRecord extends UpdatableRecordImpl<Consultation
     }
 
     /**
-     * Setter for <code>public.consultation_analysis.analysis_status</code>.
-     */
-    public void setAnalysisStatus(AnalysisStatus value) {
-        set(4, value);
-    }
-
-    /**
-     * Getter for <code>public.consultation_analysis.analysis_status</code>.
-     */
-    public AnalysisStatus getAnalysisStatus() {
-        return (AnalysisStatus) get(4);
-    }
-
-    /**
-     * Setter for <code>public.consultation_analysis.error_message</code>.
-     */
-    public void setErrorMessage(String value) {
-        set(5, value);
-    }
-
-    /**
-     * Getter for <code>public.consultation_analysis.error_message</code>.
-     */
-    public String getErrorMessage() {
-        return (String) get(5);
-    }
-
-    /**
-     * Setter for <code>public.consultation_analysis.processed_at</code>.
-     */
-    public void setProcessedAt(LocalDateTime value) {
-        set(6, value);
-    }
-
-    /**
-     * Getter for <code>public.consultation_analysis.processed_at</code>.
-     */
-    public LocalDateTime getProcessedAt() {
-        return (LocalDateTime) get(6);
-    }
-
-    /**
      * Setter for <code>public.consultation_analysis.created_at</code>.
      */
     public void setCreatedAt(LocalDateTime value) {
-        set(7, value);
+        set(4, value);
     }
 
     /**
      * Getter for <code>public.consultation_analysis.created_at</code>.
      */
     public LocalDateTime getCreatedAt() {
-        return (LocalDateTime) get(7);
+        return (LocalDateTime) get(4);
     }
 
     /**
      * Setter for <code>public.consultation_analysis.updated_at</code>.
      */
     public void setUpdatedAt(LocalDateTime value) {
-        set(8, value);
+        set(5, value);
     }
 
     /**
      * Getter for <code>public.consultation_analysis.updated_at</code>.
      */
     public LocalDateTime getUpdatedAt() {
-        return (LocalDateTime) get(8);
+        return (LocalDateTime) get(5);
     }
 
     // -------------------------------------------------------------------------
@@ -170,16 +127,13 @@ public class ConsultationAnalysisRecord extends UpdatableRecordImpl<Consultation
     /**
      * Create a detached, initialised ConsultationAnalysisRecord
      */
-    public ConsultationAnalysisRecord(Long analysisId, Long caseId, Long jobInstanceId, Long analyzerVersion, AnalysisStatus analysisStatus, String errorMessage, LocalDateTime processedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ConsultationAnalysisRecord(Long analysisId, Long caseId, Long jobInstanceId, Long analyzerVersion, LocalDateTime createdAt, LocalDateTime updatedAt) {
         super(ConsultationAnalysis.CONSULTATION_ANALYSIS);
 
         setAnalysisId(analysisId);
         setCaseId(caseId);
         setJobInstanceId(jobInstanceId);
         setAnalyzerVersion(analyzerVersion);
-        setAnalysisStatus(analysisStatus);
-        setErrorMessage(errorMessage);
-        setProcessedAt(processedAt);
         setCreatedAt(createdAt);
         setUpdatedAt(updatedAt);
         resetChangedOnNotNull();

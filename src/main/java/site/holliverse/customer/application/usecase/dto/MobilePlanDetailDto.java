@@ -3,7 +3,7 @@ package site.holliverse.customer.application.usecase.dto;
 public record MobilePlanDetailDto(
         Long productId,
         String dataAmount,
-        String tetheringSharingData,
+        Integer tetheringSharingData,
         String benefitBrands,
         String benefitVoiceCall,
         String benefitSms,

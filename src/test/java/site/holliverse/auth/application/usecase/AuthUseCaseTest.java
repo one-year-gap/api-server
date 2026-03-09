@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+import site.holliverse.auth.application.port.InitialPlanAssignmentService;
 import site.holliverse.auth.dto.OnboardingCompleteRequestDto;
 import site.holliverse.auth.dto.OnboardingPrefillResponseDto;
 import site.holliverse.auth.dto.SignUpRequestDto;
@@ -57,6 +58,8 @@ class AuthUseCaseTest {
     private RefreshTokenHashService refreshTokenHashService;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private InitialPlanAssignmentService initialPlanAssignmentService;
     @Mock
     private EncryptionTool encryptionTool;
     @Mock
@@ -119,6 +122,8 @@ class AuthUseCaseTest {
             assertThat(savedMember.getStatus()).isEqualTo(MemberStatus.ACTIVE);
             assertThat(savedMember.getType()).isEqualTo(MemberSignupType.FORM);
             assertThat(savedMember.getMembership()).isEqualTo(MemberMembership.GOLD);
+            // 회원가입 성공 시 초기 요금제 자동 할당이 호출되어야 한다.
+            verify(initialPlanAssignmentService).assignForNewMember(savedMember);
         }
 
         @Test
@@ -161,6 +166,8 @@ class AuthUseCaseTest {
             Member savedMember = memberCaptor.getValue();
             assertThat(savedMember.getName()).isEqualTo("encrypted-name");
             assertThat(savedMember.getPhone()).isEqualTo("encrypted-phone");
+            // 회원가입 성공 시 초기 요금제 자동 할당이 호출되어야 한다.
+            verify(initialPlanAssignmentService).assignForNewMember(savedMember);
         }
 
         @Test
@@ -178,6 +185,8 @@ class AuthUseCaseTest {
                         assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.DUPLICATED_EMAIL);
                         assertThat(custom.getField()).isEqualTo("email");
                     });
+            // 가입 실패 시 자동 할당은 호출되지 않아야 한다.
+            verifyNoInteractions(initialPlanAssignmentService);
         }
 
         @Test
@@ -200,6 +209,8 @@ class AuthUseCaseTest {
                         assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.DUPLICATED_PHONE);
                         assertThat(custom.getField()).isEqualTo("phone");
                     });
+            // 가입 실패 시 자동 할당은 호출되지 않아야 한다.
+            verifyNoInteractions(initialPlanAssignmentService);
         }
     }
 
@@ -320,6 +331,8 @@ class AuthUseCaseTest {
             assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
             assertThat(member.getStatusUpdatedAt()).isAfter(oldStatusUpdatedAt);
             verify(addressRepository, never()).save(any(Address.class));
+            // 온보딩 완료 성공 시 초기 요금제 자동 할당이 호출되어야 한다.
+            verify(initialPlanAssignmentService).assignForNewMember(member);
         }
 
         @Test
@@ -351,6 +364,8 @@ class AuthUseCaseTest {
             // then
             assertThat(member.getAddress()).isEqualTo(savedAddress);
             verify(addressRepository).save(any(Address.class));
+            // 온보딩 완료 성공 시 초기 요금제 자동 할당이 호출되어야 한다.
+            verify(initialPlanAssignmentService).assignForNewMember(member);
         }
 
         @Test
@@ -371,6 +386,8 @@ class AuthUseCaseTest {
                         assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT);
                         assertThat(custom.getField()).isEqualTo("memberStatus");
                     });
+            // 온보딩 실패 시 자동 할당은 호출되지 않아야 한다.
+            verifyNoInteractions(initialPlanAssignmentService);
         }
 
         @Test
@@ -393,6 +410,8 @@ class AuthUseCaseTest {
                         assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.DUPLICATED_PHONE);
                         assertThat(custom.getField()).isEqualTo("phone");
                     });
+            // 온보딩 실패 시 자동 할당은 호출되지 않아야 한다.
+            verifyNoInteractions(initialPlanAssignmentService);
         }
     }
 

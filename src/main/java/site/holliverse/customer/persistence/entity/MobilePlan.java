@@ -28,9 +28,9 @@ public class MobilePlan extends BaseEntity {
     @Column(name = "data_amount", nullable = false, length = 100)
     private String dataAmount;
 
-    // 테더링+쉐어링 데이터
-    @Column(name = "tethering_sharing_data", length = 100)
-    private String tetheringSharingData;
+    // 테더링+쉐어링 데이터 (GB 단위 정수)
+    @Column(name = "tethering_sharing_data")
+    private Integer tetheringSharingData;
 
     @Column(name = "benefit_brands", length = 100)
     private String benefitBrands;

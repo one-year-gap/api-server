@@ -44,4 +44,3 @@ node_modules/
 # Querydsl generated sources
 src/main/generated/**/Q*.java
 src/main/generated/**/Q*.kt
-/src/main/generated/

@@ -263,6 +263,10 @@ jooq {
                     target {
                         packageName = 'site.holliverse.admin.query.jooq'
                         directory = 'src/main/generated'
+                        clean = true
+                    }
+                    generate {
+                        routines = false
                     }
                     strategy {
                         name = 'org.jooq.codegen.DefaultGeneratorStrategy'
@@ -283,13 +287,25 @@ flyway {
     schemas = ['public']
 }
 
-if (System.getenv('CI') != null) {
-    tasks.named('generateJooq') {
-        dependsOn tasks.named('flywayMigrate')
+def hasJooqGenerationEnv = {
+    envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') != null
+}
+
+tasks.named('generateJooq') {
+    onlyIf {
+        hasJooqGenerationEnv()
     }
-    tasks.named('compileJava') {
-        dependsOn tasks.named('generateJooq')
+    dependsOn tasks.named('flywayMigrate')
+}
+
+tasks.named('flywayMigrate') {
+    onlyIf {
+        hasJooqGenerationEnv()
     }
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateJooq')
 }
 
 sourceSets {

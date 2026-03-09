@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.flywaydb:flyway-database-postgresql:11.7.2"
+        classpath "org.postgresql:postgresql:42.7.7"
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.2'

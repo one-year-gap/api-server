@@ -3,6 +3,7 @@ package site.holliverse.auth.application.usecase;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.auth.application.port.InitialPlanAssignmentService;
 import site.holliverse.auth.dto.OnboardingCompleteRequestDto;
 import site.holliverse.auth.dto.OnboardingPrefillResponseDto;
 import site.holliverse.auth.dto.SignUpRequestDto;
@@ -43,6 +44,7 @@ public class AuthUseCase {
     private final RefreshTokenHashService refreshTokenHashService;
     /** 원문 비밀번호를 안전하게 인코딩하는 컴포넌트. */
     private final PasswordEncoder passwordEncoder;
+    private final InitialPlanAssignmentService initialPlanAssignmentService;
     /** 개인정보(이름, 폰번호) 암호화를 위한 도구. */
     private final EncryptionTool encryptionTool;
     private final DecryptionTool decryptionTool;
@@ -53,6 +55,7 @@ public class AuthUseCase {
             RefreshTokenRepository refreshTokenRepository,
             RefreshTokenHashService refreshTokenHashService,
             PasswordEncoder passwordEncoder,
+            InitialPlanAssignmentService initialPlanAssignmentService,
             EncryptionTool encryptionTool, DecryptionTool decryptionTool
     ) {
         this.memberRepository = memberRepository;
@@ -60,6 +63,7 @@ public class AuthUseCase {
         this.refreshTokenRepository = refreshTokenRepository;
         this.refreshTokenHashService = refreshTokenHashService;
         this.passwordEncoder = passwordEncoder;
+        this.initialPlanAssignmentService = initialPlanAssignmentService;
         this.encryptionTool = encryptionTool;
         this.decryptionTool = decryptionTool;
     }
@@ -132,6 +136,9 @@ public class AuthUseCase {
                 .build();
 
         Member saved = memberRepository.save(member);
+        
+        //요금제 자동 주입
+        initialPlanAssignmentService.assignForNewMember(saved);
         return new SignUpResponseDto(saved.getId());
     }
 
@@ -207,5 +214,7 @@ public class AuthUseCase {
                 request.birthDate(),
                 request.gender()
         );
+        //요금제 자동 주입
+        initialPlanAssignmentService.assignForNewMember(member);
     }
 }

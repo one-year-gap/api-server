@@ -7,12 +7,6 @@ package site.holliverse.admin.query.jooq;
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
 import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
-import site.holliverse.admin.query.jooq.tables.BatchJobExecution;
-import site.holliverse.admin.query.jooq.tables.BatchJobExecutionContext;
-import site.holliverse.admin.query.jooq.tables.BatchJobExecutionParams;
-import site.holliverse.admin.query.jooq.tables.BatchJobInstance;
-import site.holliverse.admin.query.jooq.tables.BatchStepExecution;
-import site.holliverse.admin.query.jooq.tables.BatchStepExecutionContext;
 import site.holliverse.admin.query.jooq.tables.Billing;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
@@ -22,6 +16,9 @@ import site.holliverse.admin.query.jooq.tables.CategoryGroup;
 import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis;
 import site.holliverse.admin.query.jooq.tables.Coupon;
 import site.holliverse.admin.query.jooq.tables.FamilyGroup;
+import site.holliverse.admin.query.jooq.tables.IndexPersonaSnapshot;
+import site.holliverse.admin.query.jooq.tables.IndexRawSnapshot;
+import site.holliverse.admin.query.jooq.tables.IndexTscoreSnapshot;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
 import site.holliverse.admin.query.jooq.tables.Member;
@@ -35,6 +32,7 @@ import site.holliverse.admin.query.jooq.tables.Subscription;
 import site.holliverse.admin.query.jooq.tables.SupportCase;
 import site.holliverse.admin.query.jooq.tables.TabWatchPlan;
 import site.holliverse.admin.query.jooq.tables.UsageMonthly;
+import site.holliverse.admin.query.jooq.tables.UserEventFeatures_7d;
 
 
 /**
@@ -57,36 +55,6 @@ public class Tables {
      * The table <code>public.analysis_dispatch_outbox</code>.
      */
     public static final AnalysisDispatchOutbox ANALYSIS_DISPATCH_OUTBOX = AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX;
-
-    /**
-     * The table <code>public.batch_job_execution</code>.
-     */
-    public static final BatchJobExecution BATCH_JOB_EXECUTION = BatchJobExecution.BATCH_JOB_EXECUTION;
-
-    /**
-     * The table <code>public.batch_job_execution_context</code>.
-     */
-    public static final BatchJobExecutionContext BATCH_JOB_EXECUTION_CONTEXT = BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT;
-
-    /**
-     * The table <code>public.batch_job_execution_params</code>.
-     */
-    public static final BatchJobExecutionParams BATCH_JOB_EXECUTION_PARAMS = BatchJobExecutionParams.BATCH_JOB_EXECUTION_PARAMS;
-
-    /**
-     * The table <code>public.batch_job_instance</code>.
-     */
-    public static final BatchJobInstance BATCH_JOB_INSTANCE = BatchJobInstance.BATCH_JOB_INSTANCE;
-
-    /**
-     * The table <code>public.batch_step_execution</code>.
-     */
-    public static final BatchStepExecution BATCH_STEP_EXECUTION = BatchStepExecution.BATCH_STEP_EXECUTION;
-
-    /**
-     * The table <code>public.batch_step_execution_context</code>.
-     */
-    public static final BatchStepExecutionContext BATCH_STEP_EXECUTION_CONTEXT = BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT;
 
     /**
      * The table <code>public.billing</code>.
@@ -132,6 +100,21 @@ public class Tables {
      * The table <code>public.family_group</code>.
      */
     public static final FamilyGroup FAMILY_GROUP = FamilyGroup.FAMILY_GROUP;
+
+    /**
+     * The table <code>public.index_persona_snapshot</code>.
+     */
+    public static final IndexPersonaSnapshot INDEX_PERSONA_SNAPSHOT = IndexPersonaSnapshot.INDEX_PERSONA_SNAPSHOT;
+
+    /**
+     * The table <code>public.index_raw_snapshot</code>.
+     */
+    public static final IndexRawSnapshot INDEX_RAW_SNAPSHOT = IndexRawSnapshot.INDEX_RAW_SNAPSHOT;
+
+    /**
+     * The table <code>public.index_tscore_snapshot</code>.
+     */
+    public static final IndexTscoreSnapshot INDEX_TSCORE_SNAPSHOT = IndexTscoreSnapshot.INDEX_TSCORE_SNAPSHOT;
 
     /**
      * The table <code>public.internet</code>.
@@ -197,4 +180,9 @@ public class Tables {
      * The table <code>public.usage_monthly</code>.
      */
     public static final UsageMonthly USAGE_MONTHLY = UsageMonthly.USAGE_MONTHLY;
+
+    /**
+     * The table <code>public.user_event_features_7d</code>.
+     */
+    public static final UserEventFeatures_7d USER_EVENT_FEATURES_7D = UserEventFeatures_7d.USER_EVENT_FEATURES_7D;
 }

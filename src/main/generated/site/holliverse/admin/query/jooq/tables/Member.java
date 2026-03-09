@@ -44,11 +44,15 @@ import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.query.jooq.tables.Address.AddressPath;
 import site.holliverse.admin.query.jooq.tables.Billing.BillingPath;
 import site.holliverse.admin.query.jooq.tables.FamilyGroup.FamilyGroupPath;
+import site.holliverse.admin.query.jooq.tables.IndexPersonaSnapshot.IndexPersonaSnapshotPath;
+import site.holliverse.admin.query.jooq.tables.IndexRawSnapshot.IndexRawSnapshotPath;
+import site.holliverse.admin.query.jooq.tables.IndexTscoreSnapshot.IndexTscoreSnapshotPath;
 import site.holliverse.admin.query.jooq.tables.MemberCoupon.MemberCouponPath;
 import site.holliverse.admin.query.jooq.tables.PersonaRecommendation.PersonaRecommendationPath;
 import site.holliverse.admin.query.jooq.tables.RefreshToken.RefreshTokenPath;
 import site.holliverse.admin.query.jooq.tables.Subscription.SubscriptionPath;
 import site.holliverse.admin.query.jooq.tables.SupportCase.SupportCasePath;
+import site.holliverse.admin.query.jooq.tables.UserEventFeatures_7d.UserEventFeatures_7dPath;
 import site.holliverse.admin.query.jooq.tables.records.MemberRecord;
 
 
@@ -297,6 +301,45 @@ public class Member extends TableImpl<MemberRecord> {
         return _billing;
     }
 
+    private transient IndexPersonaSnapshotPath _indexPersonaSnapshot;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.index_persona_snapshot</code> table
+     */
+    public IndexPersonaSnapshotPath indexPersonaSnapshot() {
+        if (_indexPersonaSnapshot == null)
+            _indexPersonaSnapshot = new IndexPersonaSnapshotPath(this, null, Keys.INDEX_PERSONA_SNAPSHOT__FK_INDEX_PERSONA_SNAPSHOT_MEMBER.getInverseKey());
+
+        return _indexPersonaSnapshot;
+    }
+
+    private transient IndexRawSnapshotPath _indexRawSnapshot;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.index_raw_snapshot</code> table
+     */
+    public IndexRawSnapshotPath indexRawSnapshot() {
+        if (_indexRawSnapshot == null)
+            _indexRawSnapshot = new IndexRawSnapshotPath(this, null, Keys.INDEX_RAW_SNAPSHOT__FK_INDEX_RAW_SNAPSHOT_MEMBER.getInverseKey());
+
+        return _indexRawSnapshot;
+    }
+
+    private transient IndexTscoreSnapshotPath _indexTscoreSnapshot;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.index_tscore_snapshot</code> table
+     */
+    public IndexTscoreSnapshotPath indexTscoreSnapshot() {
+        if (_indexTscoreSnapshot == null)
+            _indexTscoreSnapshot = new IndexTscoreSnapshotPath(this, null, Keys.INDEX_TSCORE_SNAPSHOT__FK_INDEX_TSCORE_SNAPSHOT_MEMBER.getInverseKey());
+
+        return _indexTscoreSnapshot;
+    }
+
     private transient MemberCouponPath _memberCoupon;
 
     /**
@@ -375,6 +418,19 @@ public class Member extends TableImpl<MemberRecord> {
             _fkSupportCaseToMember = new SupportCasePath(this, null, Keys.SUPPORT_CASE__FK_SUPPORT_CASE_TO_MEMBER.getInverseKey());
 
         return _fkSupportCaseToMember;
+    }
+
+    private transient UserEventFeatures_7dPath _userEventFeatures_7d;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.user_event_features_7d</code> table
+     */
+    public UserEventFeatures_7dPath userEventFeatures_7d() {
+        if (_userEventFeatures_7d == null)
+            _userEventFeatures_7d = new UserEventFeatures_7dPath(this, null, Keys.USER_EVENT_FEATURES_7D__FK_USER_EVENT_FEATURES_7D_MEMBER.getInverseKey());
+
+        return _userEventFeatures_7d;
     }
 
     @Override

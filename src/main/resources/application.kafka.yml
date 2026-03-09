@@ -25,6 +25,8 @@ spring:
 app:
   kafka:
     analysis-response-schema: ${WORKER_KAFKA_SCHEMA_ANALYSIS_RESPONSE:analysis.response.v1}
+  topic:
+    client-events: ${KAFKA_TOPIC_CLIENT_EVENTS:client-event-logs}
 
 ---
 spring:

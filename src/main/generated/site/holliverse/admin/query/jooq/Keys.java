@@ -13,12 +13,6 @@ import org.jooq.impl.Internal;
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
 import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
-import site.holliverse.admin.query.jooq.tables.BatchJobExecution;
-import site.holliverse.admin.query.jooq.tables.BatchJobExecutionContext;
-import site.holliverse.admin.query.jooq.tables.BatchJobExecutionParams;
-import site.holliverse.admin.query.jooq.tables.BatchJobInstance;
-import site.holliverse.admin.query.jooq.tables.BatchStepExecution;
-import site.holliverse.admin.query.jooq.tables.BatchStepExecutionContext;
 import site.holliverse.admin.query.jooq.tables.Billing;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
@@ -28,6 +22,9 @@ import site.holliverse.admin.query.jooq.tables.CategoryGroup;
 import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis;
 import site.holliverse.admin.query.jooq.tables.Coupon;
 import site.holliverse.admin.query.jooq.tables.FamilyGroup;
+import site.holliverse.admin.query.jooq.tables.IndexPersonaSnapshot;
+import site.holliverse.admin.query.jooq.tables.IndexRawSnapshot;
+import site.holliverse.admin.query.jooq.tables.IndexTscoreSnapshot;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
 import site.holliverse.admin.query.jooq.tables.Member;
@@ -41,15 +38,10 @@ import site.holliverse.admin.query.jooq.tables.Subscription;
 import site.holliverse.admin.query.jooq.tables.SupportCase;
 import site.holliverse.admin.query.jooq.tables.TabWatchPlan;
 import site.holliverse.admin.query.jooq.tables.UsageMonthly;
+import site.holliverse.admin.query.jooq.tables.UserEventFeatures_7d;
 import site.holliverse.admin.query.jooq.tables.records.AddonServiceRecord;
 import site.holliverse.admin.query.jooq.tables.records.AddressRecord;
 import site.holliverse.admin.query.jooq.tables.records.AnalysisDispatchOutboxRecord;
-import site.holliverse.admin.query.jooq.tables.records.BatchJobExecutionContextRecord;
-import site.holliverse.admin.query.jooq.tables.records.BatchJobExecutionParamsRecord;
-import site.holliverse.admin.query.jooq.tables.records.BatchJobExecutionRecord;
-import site.holliverse.admin.query.jooq.tables.records.BatchJobInstanceRecord;
-import site.holliverse.admin.query.jooq.tables.records.BatchStepExecutionContextRecord;
-import site.holliverse.admin.query.jooq.tables.records.BatchStepExecutionRecord;
 import site.holliverse.admin.query.jooq.tables.records.BillingRecord;
 import site.holliverse.admin.query.jooq.tables.records.BusinessKeywordAliasRecord;
 import site.holliverse.admin.query.jooq.tables.records.BusinessKeywordMappingResultRecord;
@@ -59,6 +51,9 @@ import site.holliverse.admin.query.jooq.tables.records.CategoryRecord;
 import site.holliverse.admin.query.jooq.tables.records.ConsultationAnalysisRecord;
 import site.holliverse.admin.query.jooq.tables.records.CouponRecord;
 import site.holliverse.admin.query.jooq.tables.records.FamilyGroupRecord;
+import site.holliverse.admin.query.jooq.tables.records.IndexPersonaSnapshotRecord;
+import site.holliverse.admin.query.jooq.tables.records.IndexRawSnapshotRecord;
+import site.holliverse.admin.query.jooq.tables.records.IndexTscoreSnapshotRecord;
 import site.holliverse.admin.query.jooq.tables.records.InternetRecord;
 import site.holliverse.admin.query.jooq.tables.records.IptvRecord;
 import site.holliverse.admin.query.jooq.tables.records.MemberCouponRecord;
@@ -72,6 +67,7 @@ import site.holliverse.admin.query.jooq.tables.records.SubscriptionRecord;
 import site.holliverse.admin.query.jooq.tables.records.SupportCaseRecord;
 import site.holliverse.admin.query.jooq.tables.records.TabWatchPlanRecord;
 import site.holliverse.admin.query.jooq.tables.records.UsageMonthlyRecord;
+import site.holliverse.admin.query.jooq.tables.records.UserEventFeatures_7dRecord;
 
 
 /**
@@ -89,12 +85,6 @@ public class Keys {
     public static final UniqueKey<AddressRecord> PK_ADDRESS = Internal.createUniqueKey(Address.ADDRESS, DSL.name("pk_address"), new TableField[] { Address.ADDRESS.ADDRESS_ID }, true);
     public static final UniqueKey<AddressRecord> UK_ADDRESS_UNIQUE = Internal.createUniqueKey(Address.ADDRESS, DSL.name("uk_address_unique"), new TableField[] { Address.ADDRESS.PROVINCE, Address.ADDRESS.CITY, Address.ADDRESS.STREET_ADDRESS }, true);
     public static final UniqueKey<AnalysisDispatchOutboxRecord> PK_ANALYSIS_DISPATCH_OUTBOX = Internal.createUniqueKey(AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX, DSL.name("pk_analysis_dispatch_outbox"), new TableField[] { AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX.REQUEST_ID }, true);
-    public static final UniqueKey<BatchJobExecutionRecord> BATCH_JOB_EXECUTION_PKEY = Internal.createUniqueKey(BatchJobExecution.BATCH_JOB_EXECUTION, DSL.name("batch_job_execution_pkey"), new TableField[] { BatchJobExecution.BATCH_JOB_EXECUTION.JOB_EXECUTION_ID }, true);
-    public static final UniqueKey<BatchJobExecutionContextRecord> BATCH_JOB_EXECUTION_CONTEXT_PKEY = Internal.createUniqueKey(BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT, DSL.name("batch_job_execution_context_pkey"), new TableField[] { BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT.JOB_EXECUTION_ID }, true);
-    public static final UniqueKey<BatchJobInstanceRecord> BATCH_JOB_INSTANCE_PKEY = Internal.createUniqueKey(BatchJobInstance.BATCH_JOB_INSTANCE, DSL.name("batch_job_instance_pkey"), new TableField[] { BatchJobInstance.BATCH_JOB_INSTANCE.JOB_INSTANCE_ID }, true);
-    public static final UniqueKey<BatchJobInstanceRecord> JOB_INST_UN = Internal.createUniqueKey(BatchJobInstance.BATCH_JOB_INSTANCE, DSL.name("job_inst_un"), new TableField[] { BatchJobInstance.BATCH_JOB_INSTANCE.JOB_NAME, BatchJobInstance.BATCH_JOB_INSTANCE.JOB_KEY }, true);
-    public static final UniqueKey<BatchStepExecutionRecord> BATCH_STEP_EXECUTION_PKEY = Internal.createUniqueKey(BatchStepExecution.BATCH_STEP_EXECUTION, DSL.name("batch_step_execution_pkey"), new TableField[] { BatchStepExecution.BATCH_STEP_EXECUTION.STEP_EXECUTION_ID }, true);
-    public static final UniqueKey<BatchStepExecutionContextRecord> BATCH_STEP_EXECUTION_CONTEXT_PKEY = Internal.createUniqueKey(BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT, DSL.name("batch_step_execution_context_pkey"), new TableField[] { BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT.STEP_EXECUTION_ID }, true);
     public static final UniqueKey<BillingRecord> PK_BILLING = Internal.createUniqueKey(Billing.BILLING, DSL.name("pk_billing"), new TableField[] { Billing.BILLING.BILLING_ID }, true);
     public static final UniqueKey<BillingRecord> UK_BILLING_MEMBER_MONTH = Internal.createUniqueKey(Billing.BILLING, DSL.name("uk_billing_member_month"), new TableField[] { Billing.BILLING.MEMBER_ID, Billing.BILLING.YYYYMM }, true);
     public static final UniqueKey<BusinessKeywordRecord> PK_BUSINESS_KEYWORD = Internal.createUniqueKey(BusinessKeyword.BUSINESS_KEYWORD, DSL.name("pk_business_keyword"), new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID }, true);
@@ -108,6 +98,9 @@ public class Keys {
     public static final UniqueKey<ConsultationAnalysisRecord> UK_CASE_VERSION = Internal.createUniqueKey(ConsultationAnalysis.CONSULTATION_ANALYSIS, DSL.name("uk_case_version"), new TableField[] { ConsultationAnalysis.CONSULTATION_ANALYSIS.CASE_ID, ConsultationAnalysis.CONSULTATION_ANALYSIS.ANALYZER_VERSION }, true);
     public static final UniqueKey<CouponRecord> PK_COUPON = Internal.createUniqueKey(Coupon.COUPON, DSL.name("pk_coupon"), new TableField[] { Coupon.COUPON.COUPON_ID }, true);
     public static final UniqueKey<FamilyGroupRecord> PK_FAMILY_GROUP = Internal.createUniqueKey(FamilyGroup.FAMILY_GROUP, DSL.name("pk_family_group"), new TableField[] { FamilyGroup.FAMILY_GROUP.FAMILY_GROUP_ID }, true);
+    public static final UniqueKey<IndexPersonaSnapshotRecord> PK_INDEX_PERSONA_SNAPSHOT = Internal.createUniqueKey(IndexPersonaSnapshot.INDEX_PERSONA_SNAPSHOT, DSL.name("pk_index_persona_snapshot"), new TableField[] { IndexPersonaSnapshot.INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE, IndexPersonaSnapshot.INDEX_PERSONA_SNAPSHOT.MEMBER_ID }, true);
+    public static final UniqueKey<IndexRawSnapshotRecord> PK_INDEX_RAW_SNAPSHOT = Internal.createUniqueKey(IndexRawSnapshot.INDEX_RAW_SNAPSHOT, DSL.name("pk_index_raw_snapshot"), new TableField[] { IndexRawSnapshot.INDEX_RAW_SNAPSHOT.SNAPSHOT_DATE, IndexRawSnapshot.INDEX_RAW_SNAPSHOT.MEMBER_ID }, true);
+    public static final UniqueKey<IndexTscoreSnapshotRecord> PK_INDEX_TSCORE_SNAPSHOT = Internal.createUniqueKey(IndexTscoreSnapshot.INDEX_TSCORE_SNAPSHOT, DSL.name("pk_index_tscore_snapshot"), new TableField[] { IndexTscoreSnapshot.INDEX_TSCORE_SNAPSHOT.SNAPSHOT_DATE, IndexTscoreSnapshot.INDEX_TSCORE_SNAPSHOT.MEMBER_ID }, true);
     public static final UniqueKey<InternetRecord> PK_INTERNET = Internal.createUniqueKey(Internet.INTERNET, DSL.name("pk_internet"), new TableField[] { Internet.INTERNET.PRODUCT_ID }, true);
     public static final UniqueKey<IptvRecord> PK_IPTV = Internal.createUniqueKey(Iptv.IPTV, DSL.name("pk_iptv"), new TableField[] { Iptv.IPTV.PRODUCT_ID }, true);
     public static final UniqueKey<MemberRecord> PK_MEMBER = Internal.createUniqueKey(Member.MEMBER, DSL.name("pk_member"), new TableField[] { Member.MEMBER.MEMBER_ID }, true);
@@ -125,23 +118,22 @@ public class Keys {
     public static final UniqueKey<SupportCaseRecord> PK_SUPPORT_CASE = Internal.createUniqueKey(SupportCase.SUPPORT_CASE, DSL.name("pk_support_case"), new TableField[] { SupportCase.SUPPORT_CASE.CASE_ID }, true);
     public static final UniqueKey<TabWatchPlanRecord> PK_TAB_WATCH_PLAN = Internal.createUniqueKey(TabWatchPlan.TAB_WATCH_PLAN, DSL.name("pk_tab_watch_plan"), new TableField[] { TabWatchPlan.TAB_WATCH_PLAN.PRODUCT_ID }, true);
     public static final UniqueKey<UsageMonthlyRecord> PK_USAGE_MONTHLY = Internal.createUniqueKey(UsageMonthly.USAGE_MONTHLY, DSL.name("pk_usage_monthly"), new TableField[] { UsageMonthly.USAGE_MONTHLY.USAGE_ID }, true);
+    public static final UniqueKey<UserEventFeatures_7dRecord> USER_EVENT_FEATURES_7D_PKEY = Internal.createUniqueKey(UserEventFeatures_7d.USER_EVENT_FEATURES_7D, DSL.name("user_event_features_7d_pkey"), new TableField[] { UserEventFeatures_7d.USER_EVENT_FEATURES_7D.SNAPSHOT_DATE, UserEventFeatures_7d.USER_EVENT_FEATURES_7D.MEMBER_ID }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
     public static final ForeignKey<AddonServiceRecord, ProductRecord> ADDON_SERVICE__FK_ADDON_SERVICE_TO_PRODUCT = Internal.createForeignKey(AddonService.ADDON_SERVICE, DSL.name("fk_addon_service_to_product"), new TableField[] { AddonService.ADDON_SERVICE.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
-    public static final ForeignKey<BatchJobExecutionRecord, BatchJobInstanceRecord> BATCH_JOB_EXECUTION__JOB_INST_EXEC_FK = Internal.createForeignKey(BatchJobExecution.BATCH_JOB_EXECUTION, DSL.name("job_inst_exec_fk"), new TableField[] { BatchJobExecution.BATCH_JOB_EXECUTION.JOB_INSTANCE_ID }, Keys.BATCH_JOB_INSTANCE_PKEY, new TableField[] { BatchJobInstance.BATCH_JOB_INSTANCE.JOB_INSTANCE_ID }, true);
-    public static final ForeignKey<BatchJobExecutionContextRecord, BatchJobExecutionRecord> BATCH_JOB_EXECUTION_CONTEXT__JOB_EXEC_CTX_FK = Internal.createForeignKey(BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT, DSL.name("job_exec_ctx_fk"), new TableField[] { BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT.JOB_EXECUTION_ID }, Keys.BATCH_JOB_EXECUTION_PKEY, new TableField[] { BatchJobExecution.BATCH_JOB_EXECUTION.JOB_EXECUTION_ID }, true);
-    public static final ForeignKey<BatchJobExecutionParamsRecord, BatchJobExecutionRecord> BATCH_JOB_EXECUTION_PARAMS__JOB_EXEC_PARAMS_FK = Internal.createForeignKey(BatchJobExecutionParams.BATCH_JOB_EXECUTION_PARAMS, DSL.name("job_exec_params_fk"), new TableField[] { BatchJobExecutionParams.BATCH_JOB_EXECUTION_PARAMS.JOB_EXECUTION_ID }, Keys.BATCH_JOB_EXECUTION_PKEY, new TableField[] { BatchJobExecution.BATCH_JOB_EXECUTION.JOB_EXECUTION_ID }, true);
-    public static final ForeignKey<BatchStepExecutionRecord, BatchJobExecutionRecord> BATCH_STEP_EXECUTION__JOB_EXEC_STEP_FK = Internal.createForeignKey(BatchStepExecution.BATCH_STEP_EXECUTION, DSL.name("job_exec_step_fk"), new TableField[] { BatchStepExecution.BATCH_STEP_EXECUTION.JOB_EXECUTION_ID }, Keys.BATCH_JOB_EXECUTION_PKEY, new TableField[] { BatchJobExecution.BATCH_JOB_EXECUTION.JOB_EXECUTION_ID }, true);
-    public static final ForeignKey<BatchStepExecutionContextRecord, BatchStepExecutionRecord> BATCH_STEP_EXECUTION_CONTEXT__STEP_EXEC_CTX_FK = Internal.createForeignKey(BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT, DSL.name("step_exec_ctx_fk"), new TableField[] { BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT.STEP_EXECUTION_ID }, Keys.BATCH_STEP_EXECUTION_PKEY, new TableField[] { BatchStepExecution.BATCH_STEP_EXECUTION.STEP_EXECUTION_ID }, true);
     public static final ForeignKey<BillingRecord, MemberRecord> BILLING__FK_BILLING_TO_MEMBER = Internal.createForeignKey(Billing.BILLING, DSL.name("fk_billing_to_member"), new TableField[] { Billing.BILLING.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
     public static final ForeignKey<BusinessKeywordAliasRecord, BusinessKeywordRecord> BUSINESS_KEYWORD_ALIAS__FK_ALIAS_TO_KEYWORD = Internal.createForeignKey(BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS, DSL.name("fk_alias_to_keyword"), new TableField[] { BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS.BUSINESS_KEYWORD_ID }, Keys.PK_BUSINESS_KEYWORD, new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID }, true);
     public static final ForeignKey<BusinessKeywordMappingResultRecord, ConsultationAnalysisRecord> BUSINESS_KEYWORD_MAPPING_RESULT__FK_MAPPING_TO_ANALYSIS = Internal.createForeignKey(BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT, DSL.name("fk_mapping_to_analysis"), new TableField[] { BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT.ANALYSIS_ID }, Keys.PK_CONSULTATION_ANALYSIS, new TableField[] { ConsultationAnalysis.CONSULTATION_ANALYSIS.ANALYSIS_ID }, true);
     public static final ForeignKey<BusinessKeywordMappingResultRecord, BusinessKeywordRecord> BUSINESS_KEYWORD_MAPPING_RESULT__FK_MAPPING_TO_KEYWORD = Internal.createForeignKey(BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT, DSL.name("fk_mapping_to_keyword"), new TableField[] { BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT.BUSINESS_KEYWORD_ID }, Keys.PK_BUSINESS_KEYWORD, new TableField[] { BusinessKeyword.BUSINESS_KEYWORD.BUSINESS_KEYWORD_ID }, true);
     public static final ForeignKey<CategoryRecord, CategoryGroupRecord> CATEGORY__FK_CATEGORY_TO_GROUP = Internal.createForeignKey(Category.CATEGORY, DSL.name("fk_category_to_group"), new TableField[] { Category.CATEGORY.CATEGORY_GROUP_CODE }, Keys.PK_CATEGORY_GROUP, new TableField[] { CategoryGroup.CATEGORY_GROUP.CATEGORY_GROUP_CODE }, true);
     public static final ForeignKey<ConsultationAnalysisRecord, SupportCaseRecord> CONSULTATION_ANALYSIS__FK_ANALYSIS_TO_CASE = Internal.createForeignKey(ConsultationAnalysis.CONSULTATION_ANALYSIS, DSL.name("fk_analysis_to_case"), new TableField[] { ConsultationAnalysis.CONSULTATION_ANALYSIS.CASE_ID }, Keys.PK_SUPPORT_CASE, new TableField[] { SupportCase.SUPPORT_CASE.CASE_ID }, true);
+    public static final ForeignKey<IndexPersonaSnapshotRecord, MemberRecord> INDEX_PERSONA_SNAPSHOT__FK_INDEX_PERSONA_SNAPSHOT_MEMBER = Internal.createForeignKey(IndexPersonaSnapshot.INDEX_PERSONA_SNAPSHOT, DSL.name("fk_index_persona_snapshot_member"), new TableField[] { IndexPersonaSnapshot.INDEX_PERSONA_SNAPSHOT.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
+    public static final ForeignKey<IndexRawSnapshotRecord, MemberRecord> INDEX_RAW_SNAPSHOT__FK_INDEX_RAW_SNAPSHOT_MEMBER = Internal.createForeignKey(IndexRawSnapshot.INDEX_RAW_SNAPSHOT, DSL.name("fk_index_raw_snapshot_member"), new TableField[] { IndexRawSnapshot.INDEX_RAW_SNAPSHOT.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
+    public static final ForeignKey<IndexTscoreSnapshotRecord, MemberRecord> INDEX_TSCORE_SNAPSHOT__FK_INDEX_TSCORE_SNAPSHOT_MEMBER = Internal.createForeignKey(IndexTscoreSnapshot.INDEX_TSCORE_SNAPSHOT, DSL.name("fk_index_tscore_snapshot_member"), new TableField[] { IndexTscoreSnapshot.INDEX_TSCORE_SNAPSHOT.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
     public static final ForeignKey<InternetRecord, ProductRecord> INTERNET__FK_INTERNET_TO_PRODUCT = Internal.createForeignKey(Internet.INTERNET, DSL.name("fk_internet_to_product"), new TableField[] { Internet.INTERNET.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
     public static final ForeignKey<IptvRecord, ProductRecord> IPTV__FK_IPTV_TO_PRODUCT = Internal.createForeignKey(Iptv.IPTV, DSL.name("fk_iptv_to_product"), new TableField[] { Iptv.IPTV.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
     public static final ForeignKey<MemberRecord, AddressRecord> MEMBER__FK_MEMBER_TO_ADDRESS = Internal.createForeignKey(Member.MEMBER, DSL.name("fk_member_to_address"), new TableField[] { Member.MEMBER.ADDRESS_ID }, Keys.PK_ADDRESS, new TableField[] { Address.ADDRESS.ADDRESS_ID }, true);
@@ -158,4 +150,5 @@ public class Keys {
     public static final ForeignKey<SupportCaseRecord, MemberRecord> SUPPORT_CASE__FK_SUPPORT_CASE_TO_MEMBER = Internal.createForeignKey(SupportCase.SUPPORT_CASE, DSL.name("fk_support_case_to_member"), new TableField[] { SupportCase.SUPPORT_CASE.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
     public static final ForeignKey<TabWatchPlanRecord, ProductRecord> TAB_WATCH_PLAN__FK_TAB_WATCH_PLAN_TO_PRODUCT = Internal.createForeignKey(TabWatchPlan.TAB_WATCH_PLAN, DSL.name("fk_tab_watch_plan_to_product"), new TableField[] { TabWatchPlan.TAB_WATCH_PLAN.PRODUCT_ID }, Keys.PK_PRODUCT, new TableField[] { Product.PRODUCT.PRODUCT_ID }, true);
     public static final ForeignKey<UsageMonthlyRecord, SubscriptionRecord> USAGE_MONTHLY__FK_USAGE_MONTHLY_TO_SUBSCRIPTION = Internal.createForeignKey(UsageMonthly.USAGE_MONTHLY, DSL.name("fk_usage_monthly_to_subscription"), new TableField[] { UsageMonthly.USAGE_MONTHLY.SUBSCRIPTION_ID }, Keys.PK_SUBSCRIPTION, new TableField[] { Subscription.SUBSCRIPTION.SUBSCRIPTION_ID }, true);
+    public static final ForeignKey<UserEventFeatures_7dRecord, MemberRecord> USER_EVENT_FEATURES_7D__FK_USER_EVENT_FEATURES_7D_MEMBER = Internal.createForeignKey(UserEventFeatures_7d.USER_EVENT_FEATURES_7D, DSL.name("fk_user_event_features_7d_member"), new TableField[] { UserEventFeatures_7d.USER_EVENT_FEATURES_7D.MEMBER_ID }, Keys.PK_MEMBER, new TableField[] { Member.MEMBER.MEMBER_ID }, true);
 }

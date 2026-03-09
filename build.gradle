@@ -73,6 +73,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
+    // aws sdk bom: 버전 관리
+    implementation platform('software.amazon.awssdk:bom:2.27.21') // 최신 안정화 버전 권장
+    // 2. 개별 의존성에서 버전 번호 제거 (BOM이 결정하도록 함)
+    implementation 'software.amazon.awssdk:sts'
+    implementation 'software.amazon.awssdk:secretsmanager'
+
     /* Querydsl */
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
     annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"

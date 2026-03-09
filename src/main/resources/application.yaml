@@ -1,7 +1,10 @@
 spring:
   #AWS Secret Manager
   config:
-    import: "optional:aws-secretsmanager:holliverse/api-server/runtime"
+    import:
+      - optional:aws-secretsmanager:holliverse/api-server/runtime
+      - optional:aws-secretsmanager:${KAFKA_SECRET_NAME:holliverse/api-server/kafka}
+      - optional:classpath:application.kafka.yml
   cloud:
     aws:
       region:

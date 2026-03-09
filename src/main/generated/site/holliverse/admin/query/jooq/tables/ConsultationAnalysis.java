@@ -33,7 +33,6 @@ import org.jooq.impl.TableImpl;
 
 import site.holliverse.admin.query.jooq.Keys;
 import site.holliverse.admin.query.jooq.Public;
-import site.holliverse.admin.query.jooq.enums.AnalysisStatus;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult.BusinessKeywordMappingResultPath;
 import site.holliverse.admin.query.jooq.tables.SupportCase.SupportCasePath;
 import site.holliverse.admin.query.jooq.tables.records.ConsultationAnalysisRecord;
@@ -79,21 +78,6 @@ public class ConsultationAnalysis extends TableImpl<ConsultationAnalysisRecord> 
      * The column <code>public.consultation_analysis.analyzer_version</code>.
      */
     public final TableField<ConsultationAnalysisRecord, Long> ANALYZER_VERSION = createField(DSL.name("analyzer_version"), SQLDataType.BIGINT.nullable(false), this, "");
-
-    /**
-     * The column <code>public.consultation_analysis.analysis_status</code>.
-     */
-    public final TableField<ConsultationAnalysisRecord, AnalysisStatus> ANALYSIS_STATUS = createField(DSL.name("analysis_status"), SQLDataType.VARCHAR.nullable(false).defaultValue(DSL.field(DSL.raw("'READY'::analysis_status"), SQLDataType.VARCHAR)).asEnumDataType(AnalysisStatus.class), this, "");
-
-    /**
-     * The column <code>public.consultation_analysis.error_message</code>.
-     */
-    public final TableField<ConsultationAnalysisRecord, String> ERROR_MESSAGE = createField(DSL.name("error_message"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>public.consultation_analysis.processed_at</code>.
-     */
-    public final TableField<ConsultationAnalysisRecord, LocalDateTime> PROCESSED_AT = createField(DSL.name("processed_at"), SQLDataType.LOCALDATETIME(6), this, "");
 
     /**
      * The column <code>public.consultation_analysis.created_at</code>.
@@ -182,6 +166,11 @@ public class ConsultationAnalysis extends TableImpl<ConsultationAnalysisRecord> 
     @Override
     public UniqueKey<ConsultationAnalysisRecord> getPrimaryKey() {
         return Keys.PK_CONSULTATION_ANALYSIS;
+    }
+
+    @Override
+    public List<UniqueKey<ConsultationAnalysisRecord>> getUniqueKeys() {
+        return Arrays.asList(Keys.UK_CASE_VERSION);
     }
 
     @Override

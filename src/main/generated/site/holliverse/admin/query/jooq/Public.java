@@ -8,12 +8,20 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jooq.Catalog;
+import org.jooq.Sequence;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
 
 import site.holliverse.admin.query.jooq.tables.AddonService;
 import site.holliverse.admin.query.jooq.tables.Address;
 import site.holliverse.admin.query.jooq.tables.AnalysisDispatchOutbox;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecution;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecutionContext;
+import site.holliverse.admin.query.jooq.tables.BatchJobExecutionParams;
+import site.holliverse.admin.query.jooq.tables.BatchJobInstance;
+import site.holliverse.admin.query.jooq.tables.BatchStepExecution;
+import site.holliverse.admin.query.jooq.tables.BatchStepExecutionContext;
+import site.holliverse.admin.query.jooq.tables.Billing;
 import site.holliverse.admin.query.jooq.tables.BusinessKeyword;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordAlias;
 import site.holliverse.admin.query.jooq.tables.BusinessKeywordMappingResult;
@@ -21,11 +29,13 @@ import site.holliverse.admin.query.jooq.tables.Category;
 import site.holliverse.admin.query.jooq.tables.CategoryGroup;
 import site.holliverse.admin.query.jooq.tables.ConsultationAnalysis;
 import site.holliverse.admin.query.jooq.tables.Coupon;
+import site.holliverse.admin.query.jooq.tables.FamilyGroup;
 import site.holliverse.admin.query.jooq.tables.Internet;
 import site.holliverse.admin.query.jooq.tables.Iptv;
 import site.holliverse.admin.query.jooq.tables.Member;
 import site.holliverse.admin.query.jooq.tables.MemberCoupon;
 import site.holliverse.admin.query.jooq.tables.MobilePlan;
+import site.holliverse.admin.query.jooq.tables.PersonaRecommendation;
 import site.holliverse.admin.query.jooq.tables.Product;
 import site.holliverse.admin.query.jooq.tables.ProductViewHistory;
 import site.holliverse.admin.query.jooq.tables.RefreshToken;
@@ -64,6 +74,41 @@ public class Public extends SchemaImpl {
     public final AnalysisDispatchOutbox ANALYSIS_DISPATCH_OUTBOX = AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX;
 
     /**
+     * The table <code>public.batch_job_execution</code>.
+     */
+    public final BatchJobExecution BATCH_JOB_EXECUTION = BatchJobExecution.BATCH_JOB_EXECUTION;
+
+    /**
+     * The table <code>public.batch_job_execution_context</code>.
+     */
+    public final BatchJobExecutionContext BATCH_JOB_EXECUTION_CONTEXT = BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT;
+
+    /**
+     * The table <code>public.batch_job_execution_params</code>.
+     */
+    public final BatchJobExecutionParams BATCH_JOB_EXECUTION_PARAMS = BatchJobExecutionParams.BATCH_JOB_EXECUTION_PARAMS;
+
+    /**
+     * The table <code>public.batch_job_instance</code>.
+     */
+    public final BatchJobInstance BATCH_JOB_INSTANCE = BatchJobInstance.BATCH_JOB_INSTANCE;
+
+    /**
+     * The table <code>public.batch_step_execution</code>.
+     */
+    public final BatchStepExecution BATCH_STEP_EXECUTION = BatchStepExecution.BATCH_STEP_EXECUTION;
+
+    /**
+     * The table <code>public.batch_step_execution_context</code>.
+     */
+    public final BatchStepExecutionContext BATCH_STEP_EXECUTION_CONTEXT = BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT;
+
+    /**
+     * The table <code>public.billing</code>.
+     */
+    public final Billing BILLING = Billing.BILLING;
+
+    /**
      * The table <code>public.business_keyword</code>.
      */
     public final BusinessKeyword BUSINESS_KEYWORD = BusinessKeyword.BUSINESS_KEYWORD;
@@ -99,6 +144,11 @@ public class Public extends SchemaImpl {
     public final Coupon COUPON = Coupon.COUPON;
 
     /**
+     * The table <code>public.family_group</code>.
+     */
+    public final FamilyGroup FAMILY_GROUP = FamilyGroup.FAMILY_GROUP;
+
+    /**
      * The table <code>public.internet</code>.
      */
     public final Internet INTERNET = Internet.INTERNET;
@@ -122,6 +172,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.mobile_plan</code>.
      */
     public final MobilePlan MOBILE_PLAN = MobilePlan.MOBILE_PLAN;
+
+    /**
+     * The table <code>public.persona_recommendation</code>.
+     */
+    public final PersonaRecommendation PERSONA_RECOMMENDATION = PersonaRecommendation.PERSONA_RECOMMENDATION;
 
     /**
      * The table <code>public.product</code>.
@@ -172,11 +227,27 @@ public class Public extends SchemaImpl {
     }
 
     @Override
+    public final List<Sequence<?>> getSequences() {
+        return Arrays.asList(
+            Sequences.BATCH_JOB_EXECUTION_SEQ,
+            Sequences.BATCH_JOB_SEQ,
+            Sequences.BATCH_STEP_EXECUTION_SEQ
+        );
+    }
+
+    @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             AddonService.ADDON_SERVICE,
             Address.ADDRESS,
             AnalysisDispatchOutbox.ANALYSIS_DISPATCH_OUTBOX,
+            BatchJobExecution.BATCH_JOB_EXECUTION,
+            BatchJobExecutionContext.BATCH_JOB_EXECUTION_CONTEXT,
+            BatchJobExecutionParams.BATCH_JOB_EXECUTION_PARAMS,
+            BatchJobInstance.BATCH_JOB_INSTANCE,
+            BatchStepExecution.BATCH_STEP_EXECUTION,
+            BatchStepExecutionContext.BATCH_STEP_EXECUTION_CONTEXT,
+            Billing.BILLING,
             BusinessKeyword.BUSINESS_KEYWORD,
             BusinessKeywordAlias.BUSINESS_KEYWORD_ALIAS,
             BusinessKeywordMappingResult.BUSINESS_KEYWORD_MAPPING_RESULT,
@@ -184,11 +255,13 @@ public class Public extends SchemaImpl {
             CategoryGroup.CATEGORY_GROUP,
             ConsultationAnalysis.CONSULTATION_ANALYSIS,
             Coupon.COUPON,
+            FamilyGroup.FAMILY_GROUP,
             Internet.INTERNET,
             Iptv.IPTV,
             Member.MEMBER,
             MemberCoupon.MEMBER_COUPON,
             MobilePlan.MOBILE_PLAN,
+            PersonaRecommendation.PERSONA_RECOMMENDATION,
             Product.PRODUCT,
             ProductViewHistory.PRODUCT_VIEW_HISTORY,
             RefreshToken.REFRESH_TOKEN,

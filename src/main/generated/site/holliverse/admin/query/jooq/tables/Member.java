@@ -36,13 +36,16 @@ import org.jooq.impl.TableImpl;
 
 import site.holliverse.admin.query.jooq.Keys;
 import site.holliverse.admin.query.jooq.Public;
+import site.holliverse.admin.query.jooq.enums.FamilyRoleType;
 import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
 import site.holliverse.admin.query.jooq.enums.MemberRoleType;
 import site.holliverse.admin.query.jooq.enums.MemberSignupType;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.query.jooq.tables.Address.AddressPath;
+import site.holliverse.admin.query.jooq.tables.Billing.BillingPath;
+import site.holliverse.admin.query.jooq.tables.FamilyGroup.FamilyGroupPath;
 import site.holliverse.admin.query.jooq.tables.MemberCoupon.MemberCouponPath;
-import site.holliverse.admin.query.jooq.tables.ProductViewHistory.ProductViewHistoryPath;
+import site.holliverse.admin.query.jooq.tables.PersonaRecommendation.PersonaRecommendationPath;
 import site.holliverse.admin.query.jooq.tables.RefreshToken.RefreshTokenPath;
 import site.holliverse.admin.query.jooq.tables.Subscription.SubscriptionPath;
 import site.holliverse.admin.query.jooq.tables.SupportCase.SupportCasePath;
@@ -155,6 +158,21 @@ public class Member extends TableImpl<MemberRecord> {
      */
     public final TableField<MemberRecord, MemberMembershipType> MEMBERSHIP = createField(DSL.name("membership"), SQLDataType.VARCHAR.asEnumDataType(MemberMembershipType.class), this, "");
 
+    /**
+     * The column <code>public.member.children_count</code>.
+     */
+    public final TableField<MemberRecord, Integer> CHILDREN_COUNT = createField(DSL.name("children_count"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
+
+    /**
+     * The column <code>public.member.family_group_id</code>.
+     */
+    public final TableField<MemberRecord, Long> FAMILY_GROUP_ID = createField(DSL.name("family_group_id"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.member.family_role</code>.
+     */
+    public final TableField<MemberRecord, FamilyRoleType> FAMILY_ROLE = createField(DSL.name("family_role"), SQLDataType.VARCHAR.asEnumDataType(FamilyRoleType.class), this, "");
+
     private Member(Name alias, Table<MemberRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -239,7 +257,7 @@ public class Member extends TableImpl<MemberRecord> {
 
     @Override
     public List<ForeignKey<MemberRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.MEMBER__FK_MEMBER_TO_ADDRESS);
+        return Arrays.asList(Keys.MEMBER__FK_MEMBER_TO_ADDRESS, Keys.MEMBER__FK_MEMBER_TO_FAMILY_GROUP);
     }
 
     private transient AddressPath _address;
@@ -252,6 +270,31 @@ public class Member extends TableImpl<MemberRecord> {
             _address = new AddressPath(this, Keys.MEMBER__FK_MEMBER_TO_ADDRESS, null);
 
         return _address;
+    }
+
+    private transient FamilyGroupPath _familyGroup;
+
+    /**
+     * Get the implicit join path to the <code>public.family_group</code> table.
+     */
+    public FamilyGroupPath familyGroup() {
+        if (_familyGroup == null)
+            _familyGroup = new FamilyGroupPath(this, Keys.MEMBER__FK_MEMBER_TO_FAMILY_GROUP, null);
+
+        return _familyGroup;
+    }
+
+    private transient BillingPath _billing;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.billing</code>
+     * table
+     */
+    public BillingPath billing() {
+        if (_billing == null)
+            _billing = new BillingPath(this, null, Keys.BILLING__FK_BILLING_TO_MEMBER.getInverseKey());
+
+        return _billing;
     }
 
     private transient MemberCouponPath _memberCoupon;
@@ -267,17 +310,17 @@ public class Member extends TableImpl<MemberRecord> {
         return _memberCoupon;
     }
 
-    private transient ProductViewHistoryPath _productViewHistory;
+    private transient PersonaRecommendationPath _personaRecommendation;
 
     /**
      * Get the implicit to-many join path to the
-     * <code>public.product_view_history</code> table
+     * <code>public.persona_recommendation</code> table
      */
-    public ProductViewHistoryPath productViewHistory() {
-        if (_productViewHistory == null)
-            _productViewHistory = new ProductViewHistoryPath(this, null, Keys.PRODUCT_VIEW_HISTORY__FK_PRODUCT_VIEW_HISTORY_TO_MEMBER.getInverseKey());
+    public PersonaRecommendationPath personaRecommendation() {
+        if (_personaRecommendation == null)
+            _personaRecommendation = new PersonaRecommendationPath(this, null, Keys.PERSONA_RECOMMENDATION__FK_PERSONA_RECOMMENDATION_MEMBER.getInverseKey());
 
-        return _productViewHistory;
+        return _personaRecommendation;
     }
 
     private transient RefreshTokenPath _refreshToken;

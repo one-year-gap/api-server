@@ -11,4 +11,6 @@ import site.holliverse.shared.domain.model.ProductType;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findByProductType(ProductType productType, Pageable pageable);
+
+    long countByProductType(ProductType productType);
 }

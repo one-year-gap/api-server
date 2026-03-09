@@ -29,7 +29,7 @@ public class CustomerProfileResponseMapper {
         return new CustomerProfileResponse(
                 result.name(),
                 result.membership(),
-                maskPhone(result.phone()),
+                result.phone(),
                 subscriptions,
                 mobilePlan
         );
@@ -44,20 +44,5 @@ public class CustomerProfileResponseMapper {
                 details.smsCnt(),
                 details.voiceMin()
         );
-    }
-
-    private String maskPhone(String phone) {
-        if (phone == null || phone.isBlank()) {
-            return null;
-        }
-
-        String digits = phone.replaceAll("\\D", "");
-        if (digits.length() < 7) {
-            return "****";
-        }
-
-        String prefix = digits.substring(0, Math.min(3, digits.length()));
-        String suffix = digits.substring(digits.length() - 4);
-        return prefix + "-****-" + suffix;
     }
 }

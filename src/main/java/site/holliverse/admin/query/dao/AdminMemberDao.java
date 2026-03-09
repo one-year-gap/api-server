@@ -98,7 +98,7 @@ public class AdminMemberDao {
                 // (INNER JOIN을 쓰면 구독 안 한 회원은 목록에서 아예 사라짐)
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
-                                .and(SUBSCRIPTION.STATUS.isTrue())
+//                                .and(SUBSCRIPTION.STATUS.isTrue())
                                 .and(SUBSCRIPTION.PRODUCT_ID.in(
                                         DSL.select(PRODUCT.PRODUCT_ID)
                                                 .from(PRODUCT)
@@ -126,7 +126,7 @@ public class AdminMemberDao {
                 .from(MEMBER)
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
-                                .and(SUBSCRIPTION.STATUS.isTrue())
+//                                .and(SUBSCRIPTION.STATUS.isTrue())
                                 .and(SUBSCRIPTION.PRODUCT_ID.in(
                                         DSL.select(PRODUCT.PRODUCT_ID)
                                                 .from(PRODUCT)
@@ -210,7 +210,7 @@ public class AdminMemberDao {
                 // 무조건 활성화된 구독을 다 가져오는 게 아니라, '모바일 요금제(MOBILE_PLAN)'인 것만 가져오도록 제한
                 .leftJoin(SUBSCRIPTION).on(
                         MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
-                                .and(SUBSCRIPTION.STATUS.isTrue())
+//                                .and(SUBSCRIPTION.STATUS.isTrue())
                                 .and(SUBSCRIPTION.PRODUCT_ID.in(
                                         // 서브쿼리: PRODUCT 테이블에서 타입이 MOBILE_PLAN인 상품 ID들만 추출
                                         DSL.select(PRODUCT.PRODUCT_ID)
@@ -291,7 +291,7 @@ public class AdminMemberDao {
                             .from(SUBSCRIPTION)
                             .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
                             .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                            .and(SUBSCRIPTION.STATUS.isTrue())
+//                            .and(SUBSCRIPTION.STATUS.isTrue())
                             .and(PRODUCT.PRODUCT_CODE.in(req.planNames())) // 프론트에서 보낸 요금제 목록(IN)
                             .asField()
                             .eq(req.planNames().size()) // 보낸 배열의 길이와 똑같은지 비교

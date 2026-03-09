@@ -25,6 +25,7 @@ import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD;
 import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD_MAPPING_RESULT;
 import static site.holliverse.admin.query.jooq.Tables.CONSULTATION_ANALYSIS;
 import site.holliverse.admin.query.jooq.enums.MemberRoleType;
+import org.jooq.Table;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -144,6 +145,20 @@ public class AdminMemberDao {
      * - 반환값이 없을 수 있으므로 Optional로 감싸서 반환
      */
     public Optional<MemberDetailRawData> findDetailById(Long memberId) {
+
+        // [최적화] LATERAL JOIN에 사용할 파생 테이블(Subquery) 미리 정의
+        // 이 회원의 가장 최신 상담 내역 딱 1줄만 가져오는 쿼리
+        Table<?> RECENT_SUPPORT = DSL.select(
+                        SUPPORT_CASE.CREATED_AT.as("lastSupportDate"),
+                        SUPPORT_CASE.STATUS.cast(String.class).as("recentSupportStatus"),
+                        SUPPORT_CASE.SATISFACTION_SCORE.as("recentSatisfactionScore")
+                )
+                .from(SUPPORT_CASE)
+                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                .orderBy(SUPPORT_CASE.CREATED_AT.desc())
+                .limit(1)
+                .asTable("recent_support");
+
         return dsl.select(
                         // 1. 회원 기본 정보
                         MEMBER.NAME.as("encryptedName"),
@@ -174,27 +189,10 @@ public class AdminMemberDao {
                                 .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
                                 .asField("totalSupportCount"),
 
-                        DSL.select(DSL.max(SUPPORT_CASE.CREATED_AT))
-                                .from(SUPPORT_CASE)
-                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                                .asField("lastSupportDate"),
-
-                        // 최근 상담 결과 (가장 최근에 생성된 상담의 status 1개)
-                        DSL.select(SUPPORT_CASE.STATUS.cast(String.class)) // Enum -> String 변환
-                                .from(SUPPORT_CASE)
-                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                                .orderBy(SUPPORT_CASE.CREATED_AT.desc())
-                                .limit(1)
-                                .asField("recentSupportStatus"),
-
-                        // 최근 상담 만족도 점수
-                        DSL.select(SUPPORT_CASE.SATISFACTION_SCORE)
-                                .from(SUPPORT_CASE)
-                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                                .orderBy(SUPPORT_CASE.CREATED_AT.desc())
-                                .limit(1)
-                                .asField("recentSatisfactionScore"),
-
+                        RECENT_SUPPORT.field("lastSupportDate", java.time.LocalDateTime.class),
+                        RECENT_SUPPORT.field("recentSupportStatus", String.class),
+                        RECENT_SUPPORT.field("recentSatisfactionScore", Integer.class),
+                        
                         // 상담 평점 (모든 만족도 점수의 평균)
                         DSL.select(DSL.avg(SUPPORT_CASE.SATISFACTION_SCORE).cast(Double.class)) // 소수점 반환
                                 .from(SUPPORT_CASE)
@@ -224,6 +222,9 @@ public class AdminMemberDao {
                 .leftJoin(PRODUCT).on(
                         SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID)
                 )
+
+                // [최적화 조인] RECENT_SUPPORT 서브쿼리를 LATERAL JOIN으로 연결
+                .leftJoin(DSL.lateral(RECENT_SUPPORT)).on(DSL.trueCondition())
 
                 // 검색 조건: 대상 회원의 ID
                 .where(MEMBER.MEMBER_ID.eq(memberId))

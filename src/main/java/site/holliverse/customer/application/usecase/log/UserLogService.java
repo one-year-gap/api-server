@@ -33,21 +33,20 @@ public class UserLogService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${kafka.topic.client-events:client-event-logs}")
+    @Value("${app.topic.client-events}")    
     private String topic;
-
     public void publish(Long memberId, UserLogRequest request) {
-        if (!ALLOWED_EVENT_NAMES.contains(request.getEventName())) {
+        if (!ALLOWED_EVENT_NAMES.contains(request.eventName())) {
             throw new IllegalArgumentException("허용되지 않는 event_name: " + request.getEventName());
         }
 
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("event_id", request.getEventId());
-        payload.put("timestamp", request.getTimestamp());
-        payload.put("event", request.getEvent());
-        payload.put("event_name", request.getEventName());
+        payload.put("event_id", request.eventId());
+        payload.put("timestamp", request.timestamp());
+        payload.put("event", request.event());
+        payload.put("event_name", request.eventName());
         payload.put("member_id", memberId);
-        payload.put("event_properties", request.getEventProperties());
+        payload.put("event_properties", request.eventProperties());
 
         String json;
         try {
@@ -61,7 +60,7 @@ public class UserLogService {
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
                         log.warn("[UserLog] Kafka 전송 실패 memberId={} eventName={}",
-                                memberId, request.getEventName(), ex);
+                                memberId, request.eventName(), ex);
                     }
                 });
     }

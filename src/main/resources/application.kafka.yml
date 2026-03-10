@@ -19,6 +19,7 @@ spring:
         max.in.flight.requests.per.connection: 5
         delivery.timeout.ms: 120000
         request.timeout.ms: 30000
+        max.block.ms: 3000  # metadata fetch 대기 시간 제한
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
 

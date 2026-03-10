@@ -24,6 +24,8 @@ import static site.holliverse.admin.query.jooq.Tables.SUPPORT_CASE;
 import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD;
 import static site.holliverse.admin.query.jooq.Tables.BUSINESS_KEYWORD_MAPPING_RESULT;
 import static site.holliverse.admin.query.jooq.Tables.CONSULTATION_ANALYSIS;
+import site.holliverse.admin.query.jooq.enums.MemberRoleType;
+import org.jooq.Table;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -75,6 +77,17 @@ public class AdminMemberDao {
      * -> 회원의 요금제 이름을 알기 위해 3개의 테이블을 연결해야 함.
      */
     public List<MemberRawData> findAll(AdminMemberListRequestDto req) {
+
+        // 가장 최근에 가입한 모바일 요금제 1건만 가져오기
+        Table<?> RECENT_MOBILE_PLAN = DSL.select(PRODUCT.NAME.as("planName"))
+                .from(SUBSCRIPTION)
+                .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
+                .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                .and(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                .orderBy(SUBSCRIPTION.START_DATE.desc())
+                .limit(1)
+                .asTable("recent_mobile_plan");
+
         return dsl.select(
                         // 1. 회원 기본 정보 매핑
                         MEMBER.MEMBER_ID.as("id"),          // POJO의 'id' 필드에 넣기 위해 별칭 지정
@@ -86,33 +99,16 @@ public class AdminMemberDao {
                         MEMBER.MEMBERSHIP,
                         MEMBER.JOIN_DATE,
                         MEMBER.STATUS,
-                        // 2. 요금제 정보 (Product 테이블에서 가져옴)
-                        // 구독이 없으면 NULL이 들어갈 수 있음
-                        PRODUCT.NAME.as("planName")
+                        // 2. 요금제 정보
+                        RECENT_MOBILE_PLAN.field("planName", String.class)
                 )
                 .from(MEMBER) // 메인 테이블: 회원
-
-                // [조인 1] 회원 -> 구독 (현재 구독 중인 것만 연결)
-                // LEFT JOIN 이유: 요금제 없는(구독 안 한) 회원도 목록에는 나와야 하니까!
-                // (INNER JOIN을 쓰면 구독 안 한 회원은 목록에서 아예 사라짐)
-                .leftJoin(SUBSCRIPTION).on(
-                        MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
-                                .and(SUBSCRIPTION.STATUS.isTrue())
-                                .and(SUBSCRIPTION.PRODUCT_ID.in(
-                                        DSL.select(PRODUCT.PRODUCT_ID)
-                                                .from(PRODUCT)
-                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
-                                ))
-                )
-
-                // [조인 2] 구독 -> 상품 (요금제 이름을 가져오기 위해 연결)
-                .leftJoin(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
-
-                .where(createConditions(req)) // 아래 만들어둔 동적 필터 조건 적용
-                .orderBy(MEMBER.MEMBER_ID.desc())    // 최신 가입자가 먼저 나오도록 내림차순 정렬
-                .limit(req.size())            // 몇 개 가져올지 (예: 10개)
-                .offset(req.getOffset())      // 앞에서 몇 개 건너뛸지
-                .fetchInto(MemberRawData.class); // 결과를 POJO 객체 리스트로 변환
+                .leftJoin(DSL.lateral(RECENT_MOBILE_PLAN)).on(DSL.trueCondition())
+                .where(createConditions(req))
+                .orderBy(MEMBER.MEMBER_ID.desc())
+                .limit(req.size())
+                .offset(req.getOffset())
+                .fetchInto(MemberRawData.class);
     }
 
     /**
@@ -123,16 +119,6 @@ public class AdminMemberDao {
     public long count(AdminMemberListRequestDto req) {
         Long totalCount = dsl.selectCount()
                 .from(MEMBER)
-                .leftJoin(SUBSCRIPTION).on(
-                        MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
-                                .and(SUBSCRIPTION.STATUS.isTrue())
-                                .and(SUBSCRIPTION.PRODUCT_ID.in(
-                                        DSL.select(PRODUCT.PRODUCT_ID)
-                                                .from(PRODUCT)
-                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
-                                ))
-                )
-                .leftJoin(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
                 .where(createConditions(req))
                 .fetchOne(0, Long.class); // 결과가 1행 1열(숫자)이므로 Long으로 변환해서 반환
         return totalCount != null ? totalCount : 0L; // null이면 0L(0)을 반환하고, 아니면 값을 반환
@@ -143,6 +129,35 @@ public class AdminMemberDao {
      * - 반환값이 없을 수 있으므로 Optional로 감싸서 반환
      */
     public Optional<MemberDetailRawData> findDetailById(Long memberId) {
+
+        // [최적화] LATERAL JOIN에 사용할 파생 테이블(Subquery) 미리 정의
+        // 이 회원의 가장 최신 상담 내역 딱 1줄만 가져오는 쿼리
+        Table<?> RECENT_SUPPORT = DSL.select(
+                        SUPPORT_CASE.CREATED_AT.as("lastSupportDate"),
+                        SUPPORT_CASE.STATUS.cast(String.class).as("recentSupportStatus"),
+                        SUPPORT_CASE.SATISFACTION_SCORE.as("recentSatisfactionScore")
+                )
+                .from(SUPPORT_CASE)
+                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                .orderBy(SUPPORT_CASE.CREATED_AT.desc())
+                .limit(1)
+                .asTable("recent_support");
+
+        // 가장 최근에 가입한 모바일 요금제 1건만 가져오기
+        Table<?> RECENT_MOBILE_PLAN = DSL.select(
+                        PRODUCT.NAME.as("currentMobilePlan"),
+                        SUBSCRIPTION.START_DATE.as("contractStartDate"),
+                        SUBSCRIPTION.CONTRACT_MONTHS.as("contractMonths"),
+                        SUBSCRIPTION.CONTRACT_END_DATE.as("contractEndDate")
+                )
+                .from(SUBSCRIPTION)
+                .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
+                .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
+                .and(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
+                .orderBy(SUBSCRIPTION.START_DATE.desc()) // 가장 최근 시작일 기준 내림차순
+                .limit(1)                                // 무조건 1개만
+                .asTable("recent_mobile_plan");
+
         return dsl.select(
                         // 1. 회원 기본 정보
                         MEMBER.NAME.as("encryptedName"),
@@ -160,12 +175,12 @@ public class AdminMemberDao {
                         ADDRESS.STREET_ADDRESS,
 
                         // 3. 모바일 요금제 정보
-                        PRODUCT.NAME.as("currentMobilePlan"),
+                        RECENT_MOBILE_PLAN.field("currentMobilePlan", String.class),
 
-                        // 4. 약정 정보 추가
-                        SUBSCRIPTION.START_DATE.as("contractStartDate"),
-                        SUBSCRIPTION.CONTRACT_MONTHS,
-                        SUBSCRIPTION.CONTRACT_END_DATE,
+                        // 4. 약정 정보
+                        RECENT_MOBILE_PLAN.field("contractStartDate", java.time.LocalDateTime.class),
+                        RECENT_MOBILE_PLAN.field("contractMonths", Integer.class),
+                        RECENT_MOBILE_PLAN.field("contractEndDate", java.time.LocalDateTime.class),
 
                         // 5. 상담 이력 통계
                         DSL.selectCount()
@@ -173,26 +188,9 @@ public class AdminMemberDao {
                                 .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
                                 .asField("totalSupportCount"),
 
-                        DSL.select(DSL.max(SUPPORT_CASE.CREATED_AT))
-                                .from(SUPPORT_CASE)
-                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                                .asField("lastSupportDate"),
-
-                        // 최근 상담 결과 (가장 최근에 생성된 상담의 status 1개)
-                        DSL.select(SUPPORT_CASE.STATUS.cast(String.class)) // Enum -> String 변환
-                                .from(SUPPORT_CASE)
-                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                                .orderBy(SUPPORT_CASE.CREATED_AT.desc())
-                                .limit(1)
-                                .asField("recentSupportStatus"),
-
-                        // 최근 상담 만족도 점수
-                        DSL.select(SUPPORT_CASE.SATISFACTION_SCORE)
-                                .from(SUPPORT_CASE)
-                                .where(SUPPORT_CASE.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                                .orderBy(SUPPORT_CASE.CREATED_AT.desc())
-                                .limit(1)
-                                .asField("recentSatisfactionScore"),
+                        RECENT_SUPPORT.field("lastSupportDate", java.time.LocalDateTime.class),
+                        RECENT_SUPPORT.field("recentSupportStatus", String.class),
+                        RECENT_SUPPORT.field("recentSatisfactionScore", Integer.class),
 
                         // 상담 평점 (모든 만족도 점수의 평균)
                         DSL.select(DSL.avg(SUPPORT_CASE.SATISFACTION_SCORE).cast(Double.class)) // 소수점 반환
@@ -202,27 +200,11 @@ public class AdminMemberDao {
                 )
                 .from(MEMBER)
 
-                // [조인 1] 회원 -> 주소
+                // 회원 -> 주소
                 .leftJoin(ADDRESS).on(MEMBER.ADDRESS_ID.eq(ADDRESS.ADDRESS_ID))
 
-                // [조인 2] 회원 -> 구독 (현재 활성화된 구독만)
-                // 무조건 활성화된 구독을 다 가져오는 게 아니라, '모바일 요금제(MOBILE_PLAN)'인 것만 가져오도록 제한
-                .leftJoin(SUBSCRIPTION).on(
-                        MEMBER.MEMBER_ID.eq(SUBSCRIPTION.MEMBER_ID)
-                                .and(SUBSCRIPTION.STATUS.isTrue())
-                                .and(SUBSCRIPTION.PRODUCT_ID.in(
-                                        // 서브쿼리: PRODUCT 테이블에서 타입이 MOBILE_PLAN인 상품 ID들만 추출
-                                        DSL.select(PRODUCT.PRODUCT_ID)
-                                                .from(PRODUCT)
-                                                .where(PRODUCT.PRODUCT_TYPE.eq(MOBILE_PLAN))
-                                ))
-                )
-
-                // [조인 3] 구독 -> 상품 (MOBILE_PLAN 만)
-                // 이미 위에서 모바일 요금제만 걸러냈으므로, 여기서는 단순히 ID만 매핑
-                .leftJoin(PRODUCT).on(
-                        SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID)
-                )
+                .leftJoin(DSL.lateral(RECENT_SUPPORT)).on(DSL.trueCondition())
+                .leftJoin(DSL.lateral(RECENT_MOBILE_PLAN)).on(DSL.trueCondition())
 
                 // 검색 조건: 대상 회원의 ID
                 .where(MEMBER.MEMBER_ID.eq(memberId))
@@ -256,6 +238,9 @@ public class AdminMemberDao {
 
         LocalDate today = LocalDate.now();
 
+        // 기본 조건: 역할이 'CUSTOMER'인 회원만 조회
+        conditions.add(MEMBER.ROLE.eq(MemberRoleType.CUSTOMER));
+
         // 1. 검색어 (암호화 일치 검색)
         if (StringUtils.hasText(req.keyword())) {
             String encryptedKeyword = encryptionTool.encrypt(req.keyword());
@@ -277,21 +262,25 @@ public class AdminMemberDao {
             conditions.add(MEMBER.GENDER.in(req.genders()));
         }
 
-        // 4. 요금제명 (다중 선택 가능)
+        // 4. 요금제명 (대분류 간 AND, 소분류 간 OR 필터링)
         // MEMBER 테이블에는 요금제 이름이 없어서, 위에서 조인한 PRODUCT 테이블 컬럼을 사용해야 함
         if (!CollectionUtils.isEmpty(req.planNames())) {
-            // 프론트에서 넘어온 요금제 배열에 포함된 회원의 '구독 요금제 개수'를 세서,
-            // 그 개수가 프론트에서 넘긴 배열의 크기(size)와 완벽히 일치하는 사람만 찾음
-            conditions.add(
-                    DSL.select(DSL.countDistinct(PRODUCT.PRODUCT_CODE))
-                            .from(SUBSCRIPTION)
-                            .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
-                            .where(SUBSCRIPTION.MEMBER_ID.eq(MEMBER.MEMBER_ID))
-                            .and(SUBSCRIPTION.STATUS.isTrue())
-                            .and(PRODUCT.PRODUCT_CODE.in(req.planNames())) // 프론트에서 보낸 요금제 목록(IN)
-                            .asField()
-                            .eq(req.planNames().size()) // 보낸 배열의 길이와 똑같은지 비교
-            );
+            // 프론트에서 넘어온 상품들이 총 몇 개의 '대분류(PRODUCT_TYPE)'인지 계산 (예: 모바일, 부가서비스 = 2)
+            var targetCategoryCount = DSL.select(DSL.countDistinct(PRODUCT.PRODUCT_TYPE))
+                    .from(PRODUCT)
+                    .where(PRODUCT.PRODUCT_CODE.in(req.planNames()));
+
+            // 조건에 맞는 회원 ID 집합
+            var matchedMemberIds = DSL.select(SUBSCRIPTION.MEMBER_ID)
+                    .from(SUBSCRIPTION)
+                    .join(PRODUCT).on(SUBSCRIPTION.PRODUCT_ID.eq(PRODUCT.PRODUCT_ID))
+                    .where(PRODUCT.PRODUCT_CODE.in(req.planNames())) // 검색된 요금제만 일단 필터링
+                    .groupBy(SUBSCRIPTION.MEMBER_ID)                 // 회원별로 묶기
+                    // 묶은 결과 중에서, 카테고리 개수가 타겟 개수와 똑같은 사람만 남기기
+                    .having(DSL.countDistinct(PRODUCT.PRODUCT_TYPE).eq(targetCategoryCount));
+
+            // 메인 쿼리의 회원 ID가, 아까 뽑아둔 "합격자 명단(matchedMemberIds)"에 들어있는가?
+            conditions.add(MEMBER.MEMBER_ID.in(matchedMemberIds));
         }
 
         // 5. 가입 기간 다중 필터링

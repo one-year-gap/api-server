@@ -1,8 +1,6 @@
 package site.holliverse.infra.kafka.config;
 
 import java.util.Map;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +16,6 @@ public class KafkaProducerConfiguration {
     @Bean
     public ProducerFactory<String, String> producerFactory(KafkaProperties kafkaProperties) {
         Map<String, Object> props = kafkaProperties.buildProducerProperties(null);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return new DefaultKafkaProducerFactory<>(props);
     }
 

@@ -283,13 +283,12 @@ flyway {
     schemas = ['public']
 }
 
-if (System.getenv('CI') != null) {
-    tasks.named('generateJooq') {
-        dependsOn tasks.named('flywayMigrate')
-    }
-    tasks.named('compileJava') {
-        dependsOn tasks.named('generateJooq')
-    }
+tasks.named('generateJooq') {
+    dependsOn tasks.named('flywayMigrate')
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateJooq')
 }
 
 sourceSets {

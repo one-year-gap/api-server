@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
 
@@ -22,6 +23,7 @@ public class UserLogService {
     @Value("${app.topic.client-events}")
     private String topic;
 
+    @Async("userLogTaskExecutor")
     public void publish(Long memberId, UserLogRequest request) {
         UserLogEventName eventName = UserLogEventName.from(request.eventName());
 

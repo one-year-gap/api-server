@@ -2,11 +2,9 @@ package site.holliverse.customer.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.context.annotation.Profile;
 import site.holliverse.customer.integration.kafka.RecommendationKafkaConsumer;
 
 /**
@@ -14,8 +12,6 @@ import site.holliverse.customer.integration.kafka.RecommendationKafkaConsumer;
  * 단일 인스턴스 전제로 동작 (다중 인스턴스 시 대기 중인 Future가 다른 서버에 있어 응답 불가).
  */
 @Configuration
-@Profile("customer")
-@EnableKafka
 public class RecommendationKafkaConfig {
 
     @Bean(name = "recommendationKafkaListenerContainerFactory")

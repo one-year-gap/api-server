@@ -24,10 +24,10 @@ public class PersonaType {
     @Column(name = "character_name", nullable = false, length = 100)
     private String characterName;
 
-    @Column(name = "short_desc")
+    @Column(name = "short_desc",columnDefinition = "TEXT")
     private String shortDesc;
 
-    @Column(name = "character_description")
+    @Column(name = "character_description",columnDefinition = "TEXT")
     private String characterDescription;
 
     @Column(name = "version", nullable = false)

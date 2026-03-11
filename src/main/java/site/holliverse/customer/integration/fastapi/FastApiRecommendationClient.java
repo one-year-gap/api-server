@@ -2,14 +2,15 @@ package site.holliverse.customer.integration.fastapi;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 import site.holliverse.customer.config.FastApiProperties;
 import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationRequest;
-import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationResponse;
 
 /**
  * FastAPI(LLM 추천) 호출용 클라이언트. RestTemplate 동기 호출.
+ * FastAPI는 요청 수신 즉시 202 Accepted를 반환하고, 결과는 Kafka로 발행.
  * Bean 등록은 IntegrationConfig에서 수행.
  */
 public class FastApiRecommendationClient {
@@ -26,9 +27,11 @@ public class FastApiRecommendationClient {
     }
 
     /**
-     * 회원 ID로 추천 요청. FastAPI가 segment, 캐시 문구, 추천 상품 목록 반환.
+     * 회원 ID로 추천 요청 트리거. FastAPI는 202 Accepted를 즉시 반환하고,
+     * 백그라운드에서 LLM 처리 후 결과를 Kafka recommendation-topic으로 발행.
+     * 202가 아니면 예외를 던짐 (Spring에서 해당 Future completeExceptionally 처리).
      */
-    public FastApiRecommendationResponse fetchRecommendation(Long memberId) {
+    public void triggerRecommendation(Long memberId) {
         String url = baseUrl + RECOMMEND_PATH;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -36,6 +39,10 @@ public class FastApiRecommendationClient {
                 new FastApiRecommendationRequest(memberId),
                 headers
         );
-        return restTemplate.postForObject(url, request, FastApiRecommendationResponse.class);
+        var response = restTemplate.postForEntity(url, request, Void.class);
+        if (response.getStatusCode() != HttpStatusCode.valueOf(202)) {
+            throw new IllegalStateException(
+                    "FastAPI expected 202 Accepted but got " + response.getStatusCode());
+        }
     }
 }

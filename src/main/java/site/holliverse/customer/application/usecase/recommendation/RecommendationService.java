@@ -1,5 +1,6 @@
 package site.holliverse.customer.application.usecase.recommendation;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,6 @@ import site.holliverse.shared.persistence.repository.MemberRepository;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -41,12 +41,13 @@ public class RecommendationService {
                                 PersonaRecommendationRepository personaRecommendationRepository,
                                 FastApiRecommendationClient fastApiRecommendationClient,
                                 RecommendationPendingFutureRegistry pendingFutureRegistry,
+                                @Qualifier("recommendationTaskExecutor") Executor recommendationTaskExecutor,
                                 @Value("${app.recommendation.await-timeout-seconds:90}") long awaitTimeoutSeconds) {
         this.memberRepository = memberRepository;
         this.personaRecommendationRepository = personaRecommendationRepository;
         this.fastApiRecommendationClient = fastApiRecommendationClient;
         this.pendingFutureRegistry = pendingFutureRegistry;
-        this.recommendationTaskExecutor = new SameThreadExecutor();
+        this.recommendationTaskExecutor = recommendationTaskExecutor;
         this.awaitTimeoutSeconds = awaitTimeoutSeconds;
     }
 
@@ -60,7 +61,7 @@ public class RecommendationService {
         Instant cacheExpiry = Instant.now().minus(CACHE_TTL_DAYS, ChronoUnit.DAYS);
         Optional<RecommendationResult> cached = personaRecommendationRepository.findById(memberId)
                 .filter(entity -> entity.getUpdatedAt().isAfter(cacheExpiry))
-                .map(entity -> toResult(entity, RecommendationResult.RecommendationSource.CACHE));
+                .map(entity -> RecommendationResult.fromEntity(entity, RecommendationResult.RecommendationSource.CACHE));
 
         if (cached.isPresent()) {
             return cached.get();
@@ -100,22 +101,4 @@ public class RecommendationService {
         }
     }
 
-    static RecommendationResult toResult(PersonaRecommendation entity,
-                                         RecommendationResult.RecommendationSource source) {
-        return new RecommendationResult(
-                entity.getSegment(),
-                entity.getCachedLlmRecommendation(),
-                new ArrayList<>(entity.getRecommendedProducts()),
-                source,
-                entity.getUpdatedAt()
-        );
-    }
-
-    /** 동기 트리거 후 Future 대기이므로, 호출 스레드에서 FastAPI 호출만 별도 실행할 때 사용. */
-    private static final class SameThreadExecutor implements Executor {
-        @Override
-        public void execute(Runnable command) {
-            command.run();
-        }
-    }
 }

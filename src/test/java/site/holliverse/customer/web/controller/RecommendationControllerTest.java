@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,7 +28,6 @@ import java.util.List;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = RecommendationController.class)
@@ -97,31 +95,6 @@ class RecommendationControllerTest {
         @DisplayName("미인증 시 401")
         void unauthenticated_returns401() throws Exception {
             mockMvc.perform(get("/api/v1/customer/recommendations"))
-                    .andExpect(status().isUnauthorized());
-        }
-    }
-
-    @Nested
-    @DisplayName("POST /api/v1/customer/recommendations/refresh")
-    class RefreshRecommendations {
-
-        @Test
-        @DisplayName("인증 시 200, FASTAPI 소스 반환")
-        void authenticated_returns200() throws Exception {
-            setAuthentication(testPrincipal());
-            given(recommendationService.refreshRecommendations(1L)).willReturn(result(RecommendationResult.RecommendationSource.FASTAPI));
-
-            mockMvc.perform(post("/api/v1/customer/recommendations/refresh")
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.source").value("FASTAPI"));
-        }
-
-        @Test
-        @DisplayName("미인증 시 401")
-        void unauthenticated_returns401() throws Exception {
-            mockMvc.perform(post("/api/v1/customer/recommendations/refresh")
-                            .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isUnauthorized());
         }
     }

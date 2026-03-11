@@ -16,3 +16,10 @@ app:
     secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}
     access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:604800000}
     refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:1209600000}
+
+logging:
+  level:
+    # 추천 서비스 전체 흐름 추적용
+    site.holliverse.customer.application.usecase.recommendation.RecommendationService: INFO
+    # Kafka recommendation-topic Consumer 동작 확인용
+    site.holliverse.infra.kafka.consumer.RecommendationKafkaConsumer: DEBUG

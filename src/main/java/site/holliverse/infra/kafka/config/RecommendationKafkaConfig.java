@@ -1,11 +1,14 @@
-package site.holliverse.customer.config;
+package site.holliverse.infra.kafka.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
-import site.holliverse.customer.integration.kafka.RecommendationKafkaConsumer;
+import site.holliverse.customer.application.usecase.recommendation.RecommendationPendingFutureRegistry;
+import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
+import site.holliverse.infra.kafka.consumer.RecommendationKafkaConsumer;
 
 /**
  * Customer 프로필에서 recommendation-topic 구독을 위한 Kafka 설정.
@@ -28,10 +31,11 @@ public class RecommendationKafkaConfig {
 
     @Bean
     public RecommendationKafkaConsumer recommendationKafkaConsumer(
-            com.fasterxml.jackson.databind.ObjectMapper objectMapper,
-            site.holliverse.customer.persistence.repository.PersonaRecommendationRepository personaRecommendationRepository,
-            site.holliverse.customer.application.usecase.recommendation.RecommendationPendingFutureRegistry pendingFutureRegistry
+            ObjectMapper objectMapper,
+            PersonaRecommendationRepository personaRecommendationRepository,
+            RecommendationPendingFutureRegistry pendingFutureRegistry
     ) {
         return new RecommendationKafkaConsumer(objectMapper, personaRecommendationRepository, pendingFutureRegistry);
     }
 }
+

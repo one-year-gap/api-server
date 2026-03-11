@@ -1,15 +1,13 @@
 package site.holliverse.customer.application.usecase.recommendation;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
-import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationResponse;
-import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendedProductItem;
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
@@ -28,6 +26,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RecommendationServiceTest {
 
+    private static final int NO_DELAY_MS = 0;
+    private static final Long MEMBER_ID = 1L;
+
     @Mock
     private MemberRepository memberRepository;
     @Mock
@@ -35,12 +36,20 @@ class RecommendationServiceTest {
     @Mock
     private FastApiRecommendationClient fastApiRecommendationClient;
     @Mock
-    private RecommendationTxService recommendationTxService;
+    private RecommendationRefreshTrigger recommendationRefreshTrigger;
 
-    @InjectMocks
     private RecommendationService recommendationService;
 
-    private static final Long MEMBER_ID = 1L;
+    @BeforeEach
+    void setUp() {
+        recommendationService = new RecommendationService(
+                memberRepository,
+                personaRecommendationRepository,
+                fastApiRecommendationClient,
+                recommendationRefreshTrigger,
+                NO_DELAY_MS
+        );
+    }
 
     @Nested
     @DisplayName("getRecommendations (캐시 우선)")
@@ -61,32 +70,18 @@ class RecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("캐시 miss 시 FastAPI 호출 후 저장·반환, FASTAPI 소스")
-        void cacheMiss_callsFastApi_savesAndReturnsFastApiSource() {
+        @DisplayName("캐시 miss 시 비동기 트리거만 호출하고 즉시 PENDING 반환")
+        void cacheMiss_triggersAsync_returnsPending() {
             when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
             when(personaRecommendationRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
-            FastApiRecommendationResponse apiResponse = new FastApiRecommendationResponse(
-                    PersonaSegment.UPSELL,
-                    "추천 문구",
-                    List.of(new FastApiRecommendedProductItem(10L, "이유1"))
-            );
-            when(fastApiRecommendationClient.fetchRecommendation(MEMBER_ID)).thenReturn(apiResponse);
-            PersonaRecommendation saved = PersonaRecommendation.builder()
-                    .memberId(MEMBER_ID)
-                    .segment(apiResponse.segment())
-                    .cachedLlmRecommendation(apiResponse.cachedLlmRecommendation())
-                    .recommendedProducts(List.of(new RecommendedProductItem(10L, "이유1")))
-                    .updatedAt(Instant.now())
-                    .build();
-            when(recommendationTxService.upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
-                    eq(apiResponse.cachedLlmRecommendation()), anyList())).thenReturn(saved);
 
             RecommendationResult result = recommendationService.getRecommendations(MEMBER_ID);
 
-            assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.FASTAPI);
-            verify(fastApiRecommendationClient).fetchRecommendation(MEMBER_ID);
-            verify(recommendationTxService).upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
-                    eq(apiResponse.cachedLlmRecommendation()), anyList());
+            assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.PENDING);
+            assertThat(result.recommendedProducts()).isEmpty();
+            assertThat(result.cachedLlmRecommendation()).contains("생성 중");
+            verify(recommendationRefreshTrigger).triggerFetchAndStore(MEMBER_ID);
+            verify(fastApiRecommendationClient, never()).fetchRecommendation(any());
         }
 
         @Test
@@ -105,32 +100,38 @@ class RecommendationServiceTest {
     class RefreshRecommendations {
 
         @Test
-        @DisplayName("항상 FastAPI 호출 후 저장·반환")
-        void alwaysCallsFastApi_savesAndReturns() {
+        @DisplayName("FastAPI 동기 호출 후 DB 조회해 FASTAPI 소스 반환")
+        void callsFastApi_thenReadsDb_returnsFastApiSource() {
             when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
-            FastApiRecommendationResponse apiResponse = new FastApiRecommendationResponse(
-                    PersonaSegment.CHURN_RISK,
-                    "채널이탈 추천",
-                    List.of(new FastApiRecommendedProductItem(20L, "이유2"))
-            );
-            when(fastApiRecommendationClient.fetchRecommendation(MEMBER_ID)).thenReturn(apiResponse);
+            when(fastApiRecommendationClient.fetchRecommendation(MEMBER_ID)).thenReturn(null);
             PersonaRecommendation saved = PersonaRecommendation.builder()
                     .memberId(MEMBER_ID)
-                    .segment(apiResponse.segment())
-                    .cachedLlmRecommendation(apiResponse.cachedLlmRecommendation())
+                    .segment(PersonaSegment.CHURN_RISK)
+                    .cachedLlmRecommendation("채널이탈 추천")
                     .recommendedProducts(List.of(new RecommendedProductItem(20L, "이유2")))
                     .updatedAt(Instant.now())
                     .build();
-            when(recommendationTxService.upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
-                    eq(apiResponse.cachedLlmRecommendation()), anyList())).thenReturn(saved);
+            when(personaRecommendationRepository.findById(MEMBER_ID)).thenReturn(Optional.of(saved));
 
             RecommendationResult result = recommendationService.refreshRecommendations(MEMBER_ID);
 
             assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.FASTAPI);
             assertThat(result.segment()).isEqualTo(PersonaSegment.CHURN_RISK);
             verify(fastApiRecommendationClient).fetchRecommendation(MEMBER_ID);
-            verify(recommendationTxService).upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
-                    eq(apiResponse.cachedLlmRecommendation()), anyList());
+            verify(personaRecommendationRepository).findById(MEMBER_ID);
+        }
+
+        @Test
+        @DisplayName("FastAPI 호출 후 DB에 없으면 PENDING 반환")
+        void callsFastApi_dbEmpty_returnsPending() {
+            when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
+            when(fastApiRecommendationClient.fetchRecommendation(MEMBER_ID)).thenReturn(null);
+            when(personaRecommendationRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
+
+            RecommendationResult result = recommendationService.refreshRecommendations(MEMBER_ID);
+
+            assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.PENDING);
+            assertThat(result.recommendedProducts()).isEmpty();
         }
     }
 

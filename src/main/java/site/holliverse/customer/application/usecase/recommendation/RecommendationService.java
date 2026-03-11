@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
-import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;

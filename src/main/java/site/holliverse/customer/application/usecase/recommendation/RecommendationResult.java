@@ -1,9 +1,11 @@
 package site.holliverse.customer.application.usecase.recommendation;
 
+import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.shared.domain.model.PersonaSegment;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +32,17 @@ public record RecommendationResult(
                 List.of(),
                 RecommendationSource.PENDING,
                 java.time.Instant.now()
+        );
+    }
+
+    /** Kafka Consumer 등에서 PersonaRecommendation 엔티티로 결과 생성 시 사용. */
+    public static RecommendationResult fromEntity(PersonaRecommendation entity, RecommendationSource source) {
+        return new RecommendationResult(
+                entity.getSegment(),
+                entity.getCachedLlmRecommendation(),
+                new ArrayList<>(entity.getRecommendedProducts()),
+                source,
+                entity.getUpdatedAt()
         );
     }
 }

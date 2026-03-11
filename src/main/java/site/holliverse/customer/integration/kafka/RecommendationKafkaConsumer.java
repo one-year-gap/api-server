@@ -7,7 +7,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.stereotype.Component;
 import site.holliverse.customer.application.usecase.recommendation.RecommendationPendingFutureRegistry;
 import site.holliverse.customer.application.usecase.recommendation.RecommendationResult;
 import site.holliverse.customer.integration.kafka.dto.RecommendationMessagePayload;
@@ -23,7 +22,6 @@ import java.util.concurrent.CompletableFuture;
  * recommendation-topic 메시지 수신 → persona_recommendation upsert → 대기 중인 CompletableFuture 완료.
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class RecommendationKafkaConsumer {
 
@@ -52,21 +50,20 @@ public class RecommendationKafkaConsumer {
                     .map(p -> new RecommendedProductItem(p.productId(), p.reason()))
                     .toList();
 
-            PersonaRecommendation entity = personaRecommendationRepository
+            String cachedText = message.cachedLlmRecommendation() != null ? message.cachedLlmRecommendation() : "";
+            PersonaRecommendation saved = personaRecommendationRepository
                     .findById(message.memberId())
-                    .orElseGet(() -> PersonaRecommendation.builder()
-                            .memberId(message.memberId())
-                            .segment(message.segment())
-                            .cachedLlmRecommendation(message.cachedLlmRecommendation() != null
-                                    ? message.cachedLlmRecommendation() : "")
-                            .recommendedProducts(new ArrayList<>())
-                            .build());
-
-            entity.updateRecommendation(
-                    message.segment(),
-                    message.cachedLlmRecommendation() != null ? message.cachedLlmRecommendation() : "",
-                    products);
-            PersonaRecommendation saved = personaRecommendationRepository.save(entity);
+                    .map(entity -> {
+                        entity.updateRecommendation(message.segment(), cachedText, products);
+                        return personaRecommendationRepository.save(entity);
+                    })
+                    .orElseGet(() -> personaRecommendationRepository.save(
+                            PersonaRecommendation.builder()
+                                    .memberId(message.memberId())
+                                    .segment(message.segment())
+                                    .cachedLlmRecommendation(cachedText)
+                                    .recommendedProducts(products)
+                                    .build()));
 
             CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(message.memberId());
             if (future != null) {

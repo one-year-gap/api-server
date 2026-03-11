@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
+import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationResponse;
+import site.holliverse.customer.persistence.entity.PersonaRecommendation;
+import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
@@ -12,6 +15,8 @@ import site.holliverse.shared.persistence.repository.MemberRepository;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -69,7 +74,30 @@ public class RecommendationService {
         CompletableFuture<RecommendationResult> future = pendingFutureRegistry.getOrCreate(memberId);
         recommendationTaskExecutor.execute(() -> {
             try {
-                fastApiRecommendationClient.triggerRecommendation(memberId);
+                Optional<FastApiRecommendationResponse> syncResponse = fastApiRecommendationClient.triggerRecommendation(memberId);
+                if (syncResponse.isPresent()) {
+                    // 200 OK 동기 응답: DB 저장 후 Future 즉시 완료
+                    FastApiRecommendationResponse r = syncResponse.get();
+                    List<RecommendedProductItem> products = r.recommendedProducts() == null
+                            ? new ArrayList<>()
+                            : r.recommendedProducts().stream()
+                            .map(p -> new RecommendedProductItem(p.productId(), p.reason()))
+                            .toList();
+                    String cachedText = r.cachedLlmRecommendation() != null ? r.cachedLlmRecommendation() : "";
+                    PersonaRecommendation entity = personaRecommendationRepository.findById(memberId)
+                            .orElseGet(() -> PersonaRecommendation.builder()
+                                    .memberId(memberId)
+                                    .segment(r.segment())
+                                    .cachedLlmRecommendation(cachedText)
+                                    .recommendedProducts(products)
+                                    .build());
+                    entity.updateRecommendation(r.segment(), cachedText, products);
+                    PersonaRecommendation saved = personaRecommendationRepository.save(entity);
+                    CompletableFuture<RecommendationResult> removed = pendingFutureRegistry.remove(memberId);
+                    if (removed != null) {
+                        removed.complete(RecommendationResult.fromEntity(saved, RecommendationResult.RecommendationSource.FASTAPI));
+                    }
+                }
             } catch (Exception e) {
                 CompletableFuture<RecommendationResult> removed = pendingFutureRegistry.remove(memberId);
                 if (removed != null) {

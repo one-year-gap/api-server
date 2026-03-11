@@ -4,7 +4,8 @@ package site.holliverse.shared.config.runtime;
 import site.holliverse.infra.kafka.AnalysisResponseKafkaInfraConfig;
 
 public enum AdminInfraImports {
-    ANALYSIS_RESPONSE_KAFKA(AnalysisResponseKafkaInfraConfig.class);
+    ANALYSIS_RESPONSE_KAFKA(AnalysisResponseKafkaInfraConfig.class),
+    ;
 
     private final Class<?> configClass;
 

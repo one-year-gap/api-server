@@ -111,7 +111,7 @@ class RecommendationServiceTest {
             when(pendingFutureRegistry.getOrCreate(MEMBER_ID)).thenReturn(future);
             doAnswer(inv -> {
                 future.complete(RecommendationResult.fromEntity(saved, RecommendationResult.RecommendationSource.FASTAPI));
-                return null;
+                return Optional.empty();
             }).when(fastApiRecommendationClient).triggerRecommendation(MEMBER_ID);
 
             RecommendationResult result = recommendationService.getRecommendations(MEMBER_ID);

@@ -26,7 +26,11 @@ CREATE TABLE member_llm_context (
     
     current_product_types   JSONB   NOT NULL DEFAULT '{}'::jsonb,
     -- 예: {"MOBILE_PLAN": true, "INTERNET": true}
-    
+
+    product_type_clicks     JSONB,
+    -- 예: {"INTERNET": 3}
+    -- NULL일 수 있음
+
     current_data_usage_ratio INTEGER,   -- (사용량/제공량)*100, 예: 110.2
     data_usage_pattern       VARCHAR(10)
         CHECK (data_usage_pattern IN ('OVER', 'FIT', 'UNDER') OR data_usage_pattern IS NULL),

@@ -384,7 +384,7 @@ class AdminMemberControllerTest {
                 .andExpect(status().isOk())
                 // ApiResponse 규격 검증
                 .andExpect(jsonPath("$.status").value("success"))
-                .andExpect(jsonPath("$.message").value("월별 회원 통계 조회가 완료되었습니다."))
+                .andExpect(jsonPath("$.message").value("월별 가입자/탈퇴자 통계 조회가 완료되었습니다."))
                 // 데이터 검증
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].month").value(currentMonth))

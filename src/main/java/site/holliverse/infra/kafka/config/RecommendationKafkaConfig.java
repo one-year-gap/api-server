@@ -9,12 +9,13 @@ import org.springframework.kafka.listener.ContainerProperties;
 import site.holliverse.customer.application.usecase.recommendation.RecommendationPendingFutureRegistry;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
 import site.holliverse.infra.kafka.consumer.RecommendationKafkaConsumer;
-
+import org.springframework.context.annotation.Profile;
 /**
  * Customer 프로필에서 recommendation-topic 구독을 위한 Kafka 설정.
  * 단일 인스턴스 전제로 동작 (다중 인스턴스 시 대기 중인 Future가 다른 서버에 있어 응답 불가).
  */
 @Configuration
+@Profile("customer")
 public class RecommendationKafkaConfig {
 
     @Bean(name = "recommendationKafkaListenerContainerFactory")

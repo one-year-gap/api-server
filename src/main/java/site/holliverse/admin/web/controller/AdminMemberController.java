@@ -132,6 +132,6 @@ public class AdminMemberController {
         // 2. Assembler 호출: UseCase에서 반환된 결과를 프론트엔드 응답용 DTO 리스트로 일괄 변환
         List<MonthlyMemberStatResponseDto> data = memberStatisticsAssembler.toResponseList(statsList);
 
-        return ResponseEntity.ok(ApiResponse.success("월별 가입자/탈퇴자 조회가 완료되었습니다.", data));
+        return ResponseEntity.ok(ApiResponse.success("월별 가입자/탈퇴자 통계 조회가 완료되었습니다.", data));
     }
 }

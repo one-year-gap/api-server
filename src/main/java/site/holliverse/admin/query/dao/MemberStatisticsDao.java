@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import static site.holliverse.admin.query.jooq.Tables.MEMBER;
 import static site.holliverse.admin.query.jooq.Tables.SUBSCRIPTION;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 
+@Profile("admin")
 @Repository
 @RequiredArgsConstructor
 public class MemberStatisticsDao {

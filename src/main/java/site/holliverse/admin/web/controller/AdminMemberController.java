@@ -12,6 +12,9 @@ import site.holliverse.admin.web.mapper.AdminMemberMapper;
 import site.holliverse.shared.web.response.ApiResponse;
 import jakarta.validation.Valid;
 import site.holliverse.admin.application.usecase.GetMemberDetailUseCase.GetMemberDetailResult;
+import site.holliverse.admin.web.assembler.MemberStatisticsAssembler;
+import site.holliverse.admin.web.dto.member.MonthlyMemberStatResponseDto;
+import java.util.List;
 
 /**
  * 관리자 회원 관리 API 컨트롤러
@@ -30,6 +33,8 @@ public class AdminMemberController {
     private final UpdateMemberUseCase updateMemberUseCase;
     private final BulkUpdateMemberStatusUseCase bulkUpdateMemberStatusUseCase;
     private final GetMembershipCountUseCase getMembershipCountUseCase;
+    private final GetMonthlyMemberStatisticsUseCase getMonthlyMemberStatisticsUseCase;
+    private final MemberStatisticsAssembler memberStatisticsAssembler;
 
     /**
      * 회원 목록 조회 API
@@ -113,5 +118,20 @@ public class AdminMemberController {
 
         TotalMembershipResponseDto data = getMembershipCountUseCase.execute();
         return ResponseEntity.ok(ApiResponse.success("멤버십 통계 조회가 완료되었습니다.", data));
+    }
+
+    /**
+     * 최근 9개월 월별 가입자/탈퇴자 통계 조회 API
+     */
+    @GetMapping("/statistics/monthly")
+    public ResponseEntity<ApiResponse<List<MonthlyMemberStatResponseDto>>> getMonthlyMemberStats() {
+
+        // 1. UseCase 호출: DB에서 최근 9개월 치 통계 데이터를 병합 및 계산하여 수집
+        var statsList = getMonthlyMemberStatisticsUseCase.execute();
+
+        // 2. Assembler 호출: UseCase에서 반환된 결과를 프론트엔드 응답용 DTO 리스트로 일괄 변환
+        List<MonthlyMemberStatResponseDto> data = memberStatisticsAssembler.toResponseList(statsList);
+
+        return ResponseEntity.ok(ApiResponse.success("월별 가입자/탈퇴자 조회가 완료되었습니다.", data));
     }
 }

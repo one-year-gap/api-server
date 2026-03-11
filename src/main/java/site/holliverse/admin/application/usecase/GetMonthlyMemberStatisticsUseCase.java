@@ -1,6 +1,7 @@
 package site.holliverse.admin.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.MemberStatisticsDao;
@@ -16,6 +17,7 @@ import java.util.Map;
 /**
  * 최근 9개월 월별 가입자/탈퇴자 통계 조회 UseCase
  */
+@Profile("admin")
 @Service
 @RequiredArgsConstructor
 public class GetMonthlyMemberStatisticsUseCase {

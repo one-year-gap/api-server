@@ -9,17 +9,18 @@ import java.util.List;
  * FastAPI가 recommendation-topic으로 발행하는 메시지 스키마.
  */
 public record RecommendationMessagePayload(
-        @JsonProperty("member_id")
+        @JsonProperty("memberId")
         Long memberId,
         PersonaSegment segment,
-        @JsonProperty("cached_llm_recommendation")
+        @JsonProperty("cachedLlmRecommendation")
         String cachedLlmRecommendation,
-        @JsonProperty("recommended_products")
+        @JsonProperty("recommendedProducts")
         List<RecommendationProductItemPayload> recommendedProducts
 ) {
     public record RecommendationProductItemPayload(
-            @JsonProperty("product_id")
+            @JsonProperty("productId")
             Long productId,
+            @JsonProperty("llmReason")
             String reason
     ) {}
 }

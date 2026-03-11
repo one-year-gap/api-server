@@ -1,4 +1,4 @@
-package site.holliverse.customer.integration.kafka;
+package site.holliverse.infra.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -40,9 +40,15 @@ public class RecommendationKafkaConsumer {
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
+        Long memberIdForCleanup = null;
         try {
+            // 수신 로그
+            log.debug("[Kafka][recommendation] received. topic={}, offset={}, raw={}", topic, offset, payload);
+
             RecommendationMessagePayload message = objectMapper.readValue(
                     payload, RecommendationMessagePayload.class);
+
+            memberIdForCleanup = message.memberId();
 
             List<RecommendedProductItem> products = message.recommendedProducts() == null
                     ? new ArrayList<>()
@@ -51,6 +57,13 @@ public class RecommendationKafkaConsumer {
                     .toList();
 
             String cachedText = message.cachedLlmRecommendation() != null ? message.cachedLlmRecommendation() : "";
+
+            // upsert 요약 로그
+            log.info(
+                    "[Kafka][recommendation] upsert. memberId={}, segment={}, productCount={}",
+                    message.memberId(), message.segment(), products.size()
+            );
+
             PersonaRecommendation saved = personaRecommendationRepository
                     .findById(message.memberId())
                     .map(entity -> {
@@ -68,12 +81,29 @@ public class RecommendationKafkaConsumer {
             CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(message.memberId());
             if (future != null) {
                 future.complete(RecommendationResult.fromEntity(saved, RecommendationResult.RecommendationSource.FASTAPI));
+                log.debug(
+                        "[Kafka][recommendation] future completed. memberId={}, updatedAt={}",
+                        message.memberId(), saved.getUpdatedAt()
+                );
+            } else {
+                log.debug(
+                        "[Kafka][recommendation] no pending future. memberId={}, updatedAt={}",
+                        message.memberId(), saved.getUpdatedAt()
+                );
             }
 
             ack.acknowledge();
+            log.debug("[Kafka][recommendation] acked. topic={}, offset={}", topic, offset);
         } catch (Exception e) {
+            if (memberIdForCleanup != null) {
+                CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(memberIdForCleanup);
+                if (future != null) {
+                    future.completeExceptionally(e);
+                }
+            }
             log.error("[Kafka][recommendation] consume failed. topic={}, offset={}, raw={}", topic, offset, payload, e);
             throw new IllegalStateException("recommendation consume failed", e);
         }
     }
 }
+

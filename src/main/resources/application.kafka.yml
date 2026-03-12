@@ -5,6 +5,7 @@ spring:
   kafka:
     topic:
       analysis-response: ${WORKER_KAFKA_TOPIC_ANALYSIS_RESPONSE:${WORKER_KAFKA_TOPIC_ANALYSIS_REQUEST:analysis.response.v1}}
+      recommendation: ${KAFKA_TOPIC_RECOMMENDATION:recommendation-topic}
     bootstrap-servers: ${MSK_BOOTSTRAP_SERVERS:localhost:19092}
     consumer:
       group-id: ${WORKER_KAFKA_CONSUMER_GROUP_ID:api-server-analysis}
@@ -28,8 +29,10 @@ spring:
 app:
   kafka:
     analysis-response-schema: ${WORKER_KAFKA_SCHEMA_ANALYSIS_RESPONSE:analysis.response.v1}
+    recommendation-consumer-group-id: ${KAFKA_CONSUMER_GROUP_RECOMMENDATION:api-server-recommendation}
   topic:
     client-events: ${KAFKA_TOPIC_CLIENT_EVENTS:client-event-logs}
+    recommendation: ${KAFKA_TOPIC_RECOMMENDATION:recommendation-topic}
 
 ---
 spring:

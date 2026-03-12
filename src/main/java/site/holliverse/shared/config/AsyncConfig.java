@@ -9,7 +9,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
  * 비동기 실행 설정.
- * UserLog publish 등 즉시 202 응답이 필요한 요청에서 Kafka 전송을 별도 스레드로 위임.
+ * UserLog publish, 추천 FastAPI 트리거 등 요청별로 전용 Executor를 둠.
  */
 @Configuration
 @EnableAsync
@@ -23,6 +23,19 @@ public class AsyncConfig {
         executor.setMaxPoolSize(16);
         executor.setQueueCapacity(512);
         executor.setThreadNamePrefix("user-log-");
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
+
+    /** 추천 캐시 미스 시 FastAPI 202 트리거 전용. 로그 태스크와 분리해 부하·튜닝을 나눔. */
+    @Bean(name = "recommendationTaskExecutor")
+    public Executor recommendationTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(128);
+        executor.setThreadNamePrefix("recommendation-trigger-");
         executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;

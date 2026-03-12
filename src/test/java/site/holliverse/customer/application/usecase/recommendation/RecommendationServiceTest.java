@@ -1,15 +1,13 @@
 package site.holliverse.customer.application.usecase.recommendation;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
-import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationResponse;
-import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendedProductItem;
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
@@ -20,13 +18,18 @@ import site.holliverse.shared.persistence.repository.MemberRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RecommendationServiceTest {
+
+    private static final Long MEMBER_ID = 1L;
 
     @Mock
     private MemberRepository memberRepository;
@@ -35,12 +38,24 @@ class RecommendationServiceTest {
     @Mock
     private FastApiRecommendationClient fastApiRecommendationClient;
     @Mock
-    private RecommendationTxService recommendationTxService;
+    private RecommendationPendingFutureRegistry pendingFutureRegistry;
 
-    @InjectMocks
+    /** 테스트에서 동기 실행해 trigger 호출 후 Future 완료 제어 가능하게 함 */
+    private final Executor sameThreadExecutor = Runnable::run;
+
     private RecommendationService recommendationService;
 
-    private static final Long MEMBER_ID = 1L;
+    @BeforeEach
+    void setUp() {
+        recommendationService = new RecommendationService(
+                memberRepository,
+                personaRecommendationRepository,
+                fastApiRecommendationClient,
+                pendingFutureRegistry,
+                sameThreadExecutor,
+                90L
+        );
+    }
 
     @Nested
     @DisplayName("getRecommendations (캐시 우선)")
@@ -57,36 +72,53 @@ class RecommendationServiceTest {
 
             assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.CACHE);
             assertThat(result.segment()).isEqualTo(PersonaSegment.NORMAL);
-            verify(fastApiRecommendationClient, never()).fetchRecommendation(any());
+            verify(fastApiRecommendationClient, never()).triggerRecommendation(any());
         }
 
         @Test
-        @DisplayName("캐시 miss 시 FastAPI 호출 후 저장·반환, FASTAPI 소스")
-        void cacheMiss_callsFastApi_savesAndReturnsFastApiSource() {
+        @DisplayName("캐시 miss 시 Future 등록 후 trigger 호출, 타임아웃 시 PENDING 반환")
+        void cacheMiss_triggersFastApi_awaitsFuture_returnsPendingOnTimeout() {
             when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
             when(personaRecommendationRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
-            FastApiRecommendationResponse apiResponse = new FastApiRecommendationResponse(
-                    PersonaSegment.UPSELL,
-                    "추천 문구",
-                    List.of(new FastApiRecommendedProductItem(10L, "이유1"))
+            CompletableFuture<RecommendationResult> future = new CompletableFuture<>();
+            when(pendingFutureRegistry.getOrCreate(MEMBER_ID)).thenReturn(future);
+
+            RecommendationService shortTimeoutService = new RecommendationService(
+                    memberRepository,
+                    personaRecommendationRepository,
+                    fastApiRecommendationClient,
+                    pendingFutureRegistry,
+                    sameThreadExecutor,
+                    1L
             );
-            when(fastApiRecommendationClient.fetchRecommendation(MEMBER_ID)).thenReturn(apiResponse);
-            PersonaRecommendation saved = PersonaRecommendation.builder()
-                    .memberId(MEMBER_ID)
-                    .segment(apiResponse.segment())
-                    .cachedLlmRecommendation(apiResponse.cachedLlmRecommendation())
-                    .recommendedProducts(List.of(new RecommendedProductItem(10L, "이유1")))
-                    .updatedAt(Instant.now())
-                    .build();
-            when(recommendationTxService.upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
-                    eq(apiResponse.cachedLlmRecommendation()), anyList())).thenReturn(saved);
+
+            RecommendationResult result = shortTimeoutService.getRecommendations(MEMBER_ID);
+
+            assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.PENDING);
+            assertThat(result.recommendedProducts()).isEmpty();
+            assertThat(result.cachedLlmRecommendation()).contains("생성 중");
+            verify(fastApiRecommendationClient).triggerRecommendation(MEMBER_ID);
+        }
+
+        @Test
+        @DisplayName("캐시 miss 후 Kafka로 Future 완료되면 FASTAPI 소스 반환")
+        void cacheMiss_futureCompletedByConsumer_returnsFastApiSource() {
+            when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
+            when(personaRecommendationRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
+            PersonaRecommendation saved = validCachedEntity(MEMBER_ID);
+            saved.updateRecommendation(PersonaSegment.CHURN_RISK, "추천 문구", List.of(new RecommendedProductItem(2L, "이유2")));
+            CompletableFuture<RecommendationResult> future = new CompletableFuture<>();
+            when(pendingFutureRegistry.getOrCreate(MEMBER_ID)).thenReturn(future);
+            doAnswer(inv -> {
+                future.complete(RecommendationResult.fromEntity(saved, RecommendationResult.RecommendationSource.FASTAPI));
+                return Optional.empty();
+            }).when(fastApiRecommendationClient).triggerRecommendation(MEMBER_ID);
 
             RecommendationResult result = recommendationService.getRecommendations(MEMBER_ID);
 
             assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.FASTAPI);
-            verify(fastApiRecommendationClient).fetchRecommendation(MEMBER_ID);
-            verify(recommendationTxService).upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
-                    eq(apiResponse.cachedLlmRecommendation()), anyList());
+            assertThat(result.segment()).isEqualTo(PersonaSegment.CHURN_RISK);
+            verify(fastApiRecommendationClient).triggerRecommendation(MEMBER_ID);
         }
 
         @Test
@@ -97,40 +129,6 @@ class RecommendationServiceTest {
             assertThatThrownBy(() -> recommendationService.getRecommendations(MEMBER_ID))
                     .isInstanceOf(CustomException.class)
                     .hasMessageContaining("멤버");
-        }
-    }
-
-    @Nested
-    @DisplayName("refreshRecommendations (강제 갱신)")
-    class RefreshRecommendations {
-
-        @Test
-        @DisplayName("항상 FastAPI 호출 후 저장·반환")
-        void alwaysCallsFastApi_savesAndReturns() {
-            when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
-            FastApiRecommendationResponse apiResponse = new FastApiRecommendationResponse(
-                    PersonaSegment.CHURN_RISK,
-                    "채널이탈 추천",
-                    List.of(new FastApiRecommendedProductItem(20L, "이유2"))
-            );
-            when(fastApiRecommendationClient.fetchRecommendation(MEMBER_ID)).thenReturn(apiResponse);
-            PersonaRecommendation saved = PersonaRecommendation.builder()
-                    .memberId(MEMBER_ID)
-                    .segment(apiResponse.segment())
-                    .cachedLlmRecommendation(apiResponse.cachedLlmRecommendation())
-                    .recommendedProducts(List.of(new RecommendedProductItem(20L, "이유2")))
-                    .updatedAt(Instant.now())
-                    .build();
-            when(recommendationTxService.upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
-                    eq(apiResponse.cachedLlmRecommendation()), anyList())).thenReturn(saved);
-
-            RecommendationResult result = recommendationService.refreshRecommendations(MEMBER_ID);
-
-            assertThat(result.source()).isEqualTo(RecommendationResult.RecommendationSource.FASTAPI);
-            assertThat(result.segment()).isEqualTo(PersonaSegment.CHURN_RISK);
-            verify(fastApiRecommendationClient).fetchRecommendation(MEMBER_ID);
-            verify(recommendationTxService).upsert(eq(MEMBER_ID), eq(apiResponse.segment()),
-                    eq(apiResponse.cachedLlmRecommendation()), anyList());
         }
     }
 

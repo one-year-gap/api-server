@@ -1,11 +1,14 @@
 package site.holliverse.admin.query.dao;
 
+import org.springframework.context.annotation.Profile;
+
 import java.time.LocalDate;
 import java.util.List;
 
 /**
  * 관리자 대시보드 - 페르소나 관련 통계 조회를 위한 Port(인터페이스)
  */
+@Profile("admin")
 public interface PersonaDashboardDao {
 
     /**

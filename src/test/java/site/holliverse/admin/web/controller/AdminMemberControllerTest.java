@@ -15,7 +15,10 @@ import site.holliverse.admin.application.usecase.GetMembershipCountUseCase;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase;
 import site.holliverse.admin.application.usecase.RetrieveMemberUseCase.RetrieveMemberResult;
 import site.holliverse.admin.application.usecase.UpdateMemberUseCase;
+import site.holliverse.admin.application.usecase.GetMonthlyMemberStatisticsUseCase;
 import site.holliverse.admin.web.assembler.AdminMemberAssembler;
+import site.holliverse.admin.web.assembler.MemberStatisticsAssembler;
+import site.holliverse.admin.web.dto.member.MonthlyMemberStatResponseDto;
 import site.holliverse.admin.web.dto.member.*;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 
@@ -350,5 +353,42 @@ class AdminMemberControllerTest {
                 .andExpect(jsonPath("$.data.vvipRate").value(33.4))
                 .andExpect(jsonPath("$.data.vipRate").value(33.3))
                 .andExpect(jsonPath("$.data.goldRate").value(33.3));
+    }
+
+    @MockitoBean
+    private GetMonthlyMemberStatisticsUseCase getMonthlyMemberStatisticsUseCase;
+
+    @MockitoBean
+    private MemberStatisticsAssembler memberStatisticsAssembler;
+
+    @Test
+    @DisplayName("월별 회원 통계 조회 성공 시 200 OK와 9개월 치 리스트 데이터를 반환한다.")
+    void getMonthlyMemberStats_success() throws Exception {
+        // given
+        String currentMonth = "2026-03";
+        // UseCase용 가짜 결과
+        List<site.holliverse.admin.query.dao.dto.MonthlyStatDto> mockUseCaseResult = List.of(
+                new site.holliverse.admin.query.dao.dto.MonthlyStatDto(currentMonth, 100L, 20L)
+        );
+        // Assembler용 가짜 결과 (최종 응답 DTO)
+        List<MonthlyMemberStatResponseDto> mockResponse = List.of(
+                new MonthlyMemberStatResponseDto(currentMonth, 100L, 20L)
+        );
+
+        given(getMonthlyMemberStatisticsUseCase.execute()).willReturn(mockUseCaseResult);
+        given(memberStatisticsAssembler.toResponseList(anyList())).willReturn(mockResponse);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/admin/members/statistics/monthly"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                // ApiResponse 규격 검증
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("월별 가입자/탈퇴자 통계 조회가 완료되었습니다."))
+                // 데이터 검증
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].month").value(currentMonth))
+                .andExpect(jsonPath("$.data[0].joinedCount").value(100))
+                .andExpect(jsonPath("$.data[0].leftCount").value(20));
     }
 }

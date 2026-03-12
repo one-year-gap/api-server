@@ -27,10 +27,16 @@ public class GetPersonaDashboardUseCase {
      * * @return 페르소나 분포 데이터 리스트 (DAO DTO 반환 -> Web 계층에서 응답 DTO로 조립 예정)
      */
     public List<PersonaDistributionData> getDistribution() {
-        // 기준일: 대시보드 접속 시점의 날짜
-        LocalDate targetDate = LocalDate.now();
+        // 무조건 오늘 날짜가 아니라, DB에 있는 가장 최신 배치 날짜를 가져옴
+        LocalDate latestDate = personaDashboardDao.findLatestSnapshotDate();
 
-        return personaDashboardDao.findDistributionAndTopPlansByDate(targetDate);
+        // 아직 배치가 단 한 번도 안 돌았다면? (NPE 방어)
+        if (latestDate == null) {
+            return List.of(); // 빈 리스트 반환해서 프론트엔드가 에러 안 나게 처리
+        }
+
+        // 찾아낸 가장 최신 날짜로 데이터 조회
+        return personaDashboardDao.findDistributionAndTopPlansByDate(latestDate);
     }
 
     /**

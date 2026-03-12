@@ -25,4 +25,9 @@ public interface PersonaDashboardDao {
      * @return 월별 페르소나 트렌드 데이터 목록
      */
     List<PersonaMonthlyTrendData> findMonthlyTrendByPeriod(LocalDate startDate, LocalDate endDate);
+
+    /**
+     * 페르소나 스냅샷 테이블에 적재된 가장 최근(MAX) 날짜 조회
+     */
+    LocalDate findLatestSnapshotDate();
 }

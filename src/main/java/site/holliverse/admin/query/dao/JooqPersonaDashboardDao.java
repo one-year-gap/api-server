@@ -148,4 +148,11 @@ public class JooqPersonaDashboardDao implements PersonaDashboardDao {
     private long toLong(Integer value) {
         return value == null ? 0L : value.longValue();
     }
+
+    @Override
+    public LocalDate findLatestSnapshotDate() {
+        return dsl.select(DSL.max(INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE))
+                .from(INDEX_PERSONA_SNAPSHOT)
+                .fetchOneInto(LocalDate.class);
+    }
 }

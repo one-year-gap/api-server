@@ -111,34 +111,47 @@ public class JooqPersonaDashboardDao implements PersonaDashboardDao {
     @Override
     public List<PersonaMonthlyTrendData> findMonthlyTrendByPeriod(LocalDate startDate, LocalDate endDate) {
 
-        // YYYY-MM 형태로 날짜를 자르는 DB 함수 (PostgreSQL 기준 TO_CHAR)
-        Field<String> yyyyMm = DSL.function("TO_CHAR", String.class, INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE, DSL.inline("YYYY-MM")).as("yyyyMm");
+        // 1. 날짜 포맷팅 함수 정의 (PostgreSQL TO_CHAR 사용)
+        Field<String> toCharFunc = DSL.function("TO_CHAR", String.class, INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE, DSL.inline("YYYY-MM"));
 
-        // 서브쿼리: 월별로 스냅샷이 존재하는 가장 최근(마지막) 날짜 찾기
-        Field<LocalDate> maxDate = DSL.max(INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE).as("maxDate");
+        // 서브쿼리 SELECT 절에서 사용할 별명(Alias)들
+        Field<String> yyyyMmAlias = toCharFunc.as("yyyyMm");
+        Field<LocalDate> maxDateAlias = DSL.max(INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE).as("maxDate");
+
+        // [서브쿼리] 각 월별(YYYY-MM) 가장 마지막 스냅샷 날짜 구하기
+        // 결과 예시: (2025-10, 2025-10-31), (2025-11, 2025-11-30)
         Table<?> endOfMonthSnapshots = dsl
-                .select(maxDate)
+                .select(yyyyMmAlias, maxDateAlias)
                 .from(INDEX_PERSONA_SNAPSHOT)
                 .where(INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE.between(startDate, endDate))
-                .groupBy(yyyyMm)
+                // 별명("yyyyMm")으로 묶으면 PostgreSQL에서 에러가 날 수 있으므로, 원본 함수(toCharFunc)로 안전하게 묶음
+                .groupBy(toCharFunc)
                 .asTable("endOfMonthSnapshots");
 
+        // 2. 유저 카운트 필드
         Field<Integer> userCount = DSL.count(INDEX_PERSONA_SNAPSHOT.MEMBER_ID).as("userCount");
 
-        // 찾은 '월별 마지막 날짜'와 일치하는 스냅샷 데이터만 조인해서 진짜 월말 유저 수를 집계
+        // IDE 경고(NPE) 방어 및 안전한 필드 참조
+        Field<String> safeYyyyMm = Objects.requireNonNull(endOfMonthSnapshots.field("yyyyMm", String.class));
+        Field<LocalDate> safeMaxDate = Objects.requireNonNull(endOfMonthSnapshots.field("maxDate", LocalDate.class));
+
+        // [메인 쿼리] 서브쿼리에서 찾은 '월말 날짜'와 일치하는 스냅샷만 조인하여 최종 집계
         return dsl.select(
-                        yyyyMm,
+                        safeYyyyMm, // 메인 쿼리에서 TO_CHAR를 또 실행하지 않고, 서브쿼리의 결과 컬럼을 재사용
                         PERSONA_TYPE.CHARACTER_NAME,
                         userCount
                 )
                 .from(INDEX_PERSONA_SNAPSHOT)
                 .join(PERSONA_TYPE).on(INDEX_PERSONA_SNAPSHOT.PERSONA_TYPE_ID.eq(PERSONA_TYPE.PERSONA_TYPE_ID))
-                // 월말 날짜 필터링 조인
-                .join(endOfMonthSnapshots).on(INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE.eq(endOfMonthSnapshots.field(maxDate)))
-                .groupBy(yyyyMm, PERSONA_TYPE.CHARACTER_NAME)
-                .orderBy(yyyyMm.asc(), userCount.desc())
+                // 스냅샷 날짜가 '해당 월의 마지막 스냅샷 날짜'와 같은 데이터만 조인
+                .join(endOfMonthSnapshots).on(INDEX_PERSONA_SNAPSHOT.SNAPSHOT_DATE.eq(safeMaxDate))
+                // 년-월, 페르소나 이름 기준으로 그룹핑
+                .groupBy(safeYyyyMm, PERSONA_TYPE.CHARACTER_NAME)
+                // 시간순 정렬 후, 같은 달 안에서는 유저 수가 많은 순서대로 정렬
+                .orderBy(safeYyyyMm.asc(), userCount.desc())
                 .fetch(r -> new PersonaMonthlyTrendData(
-                        r.get(yyyyMm),
+                        // 최종 DTO 변환 시에도 가장 안전한 safeYyyyMm 필드를 사용하여 값을 꺼냄
+                        r.get(safeYyyyMm),
                         r.get(PERSONA_TYPE.CHARACTER_NAME),
                         toLong(r.get(userCount))
                 ));

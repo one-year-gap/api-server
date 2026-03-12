@@ -31,12 +31,20 @@ public class UserLogService {
             return;
         }
         for (UserLogRequest request : requests) {
-            publish(memberId, request);
+            doPublish(memberId, request);
         }
     }
 
     @Async("userLogTaskExecutor")
     public void publish(Long memberId, UserLogRequest request) {
+        doPublish(memberId, request);
+    }
+
+    /**
+     * 단일 로그를 Kafka로 전송. {@link #publish}, {@link #publishBatch}에서만 호출.
+     * self-invocation 시 @Async가 적용되지 않으므로 공통 로직을 private로 분리함.
+     */
+    private void doPublish(Long memberId, UserLogRequest request) {
         UserLogEventName eventName = UserLogEventName.from(request.eventName());
 
         UserLogPayload payload = new UserLogPayload(

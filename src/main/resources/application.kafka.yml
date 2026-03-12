@@ -22,6 +22,9 @@ spring:
         delivery.timeout.ms: 120000
         request.timeout.ms: 30000
         max.block.ms: 3000  # metadata fetch 대기 시간 제한
+        batch.size: 32768       # 파티션당 배치 크기(32KB)
+        linger.ms: 5            # 최대 5ms 동안 모아서 전송
+        buffer.memory: 33554432 # 프로듀서 버퍼 메모리(32MB)
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
 

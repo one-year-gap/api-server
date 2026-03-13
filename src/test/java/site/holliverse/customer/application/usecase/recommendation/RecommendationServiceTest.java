@@ -106,7 +106,8 @@ class RecommendationServiceTest {
             when(memberRepository.existsById(MEMBER_ID)).thenReturn(true);
             when(personaRecommendationRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
             PersonaRecommendation saved = validCachedEntity(MEMBER_ID);
-            saved.updateRecommendation(PersonaSegment.CHURN_RISK, "추천 문구", List.of(new RecommendedProductItem(2L, "이유2")));
+            saved.updateRecommendation(PersonaSegment.CHURN_RISK, "추천 문구", List.of(
+                    new RecommendedProductItem(1, 2L, null, null, null, null, List.of(), "이유2")));
             CompletableFuture<RecommendationResult> future = new CompletableFuture<>();
             when(pendingFutureRegistry.getOrCreate(MEMBER_ID)).thenReturn(future);
             doAnswer(inv -> {
@@ -137,7 +138,7 @@ class RecommendationServiceTest {
                 .memberId(memberId)
                 .segment(PersonaSegment.NORMAL)
                 .cachedLlmRecommendation("캐시 문구")
-                .recommendedProducts(List.of(new RecommendedProductItem(1L, "이유")))
+                .recommendedProducts(List.of(new RecommendedProductItem(1, 1L, null, null, null, null, List.of(), "이유")))
                 .updatedAt(Instant.now().minus(1, java.time.temporal.ChronoUnit.DAYS))
                 .build();
     }

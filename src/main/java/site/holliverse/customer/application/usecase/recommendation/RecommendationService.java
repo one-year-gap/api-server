@@ -15,7 +15,7 @@ import site.holliverse.shared.persistence.repository.MemberRepository;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -79,7 +79,7 @@ public class RecommendationService {
                     // 200 OK 동기 응답: DB 저장 후 Future 즉시 완료
                     FastApiRecommendationResponse r = syncResponse.get();
                     List<RecommendedProductItem> products = r.recommendedProducts() == null
-                            ? new ArrayList<>()
+                            ? Collections.emptyList()
                             : r.recommendedProducts().stream()
                             .map(p -> new RecommendedProductItem(
                                     p.rank(),
@@ -88,7 +88,7 @@ public class RecommendationService {
                                     p.productType(),
                                     p.productPrice(),
                                     p.salePrice(),
-                                    p.tags() != null ? p.tags() : new ArrayList<>(),
+                                    p.tags() != null ? p.tags() : Collections.emptyList(),
                                     p.reason()
                             ))
                             .toList();

@@ -81,7 +81,16 @@ public class RecommendationService {
                     List<RecommendedProductItem> products = r.recommendedProducts() == null
                             ? new ArrayList<>()
                             : r.recommendedProducts().stream()
-                            .map(p -> new RecommendedProductItem(p.productId(), p.reason()))
+                            .map(p -> new RecommendedProductItem(
+                                    p.rank(),
+                                    p.productId(),
+                                    p.productName(),
+                                    p.productType(),
+                                    p.productPrice(),
+                                    p.salePrice(),
+                                    p.tags() != null ? p.tags() : new ArrayList<>(),
+                                    p.reason()
+                            ))
                             .toList();
                     String cachedText = r.cachedLlmRecommendation() != null ? r.cachedLlmRecommendation() : "";
                     PersonaRecommendation entity = personaRecommendationRepository.findById(memberId)

@@ -53,7 +53,16 @@ public class RecommendationKafkaConsumer {
             List<RecommendedProductItem> products = message.recommendedProducts() == null
                     ? new ArrayList<>()
                     : message.recommendedProducts().stream()
-                    .map(p -> new RecommendedProductItem(p.productId(), p.reason()))
+                    .map(p -> new RecommendedProductItem(
+                            p.rank(),
+                            p.productId(),
+                            p.productName(),
+                            p.productType(),
+                            p.productPrice(),
+                            p.salePrice(),
+                            p.tags() != null ? p.tags() : new ArrayList<>(),
+                            p.reason()
+                    ))
                     .toList();
 
             String cachedText = message.cachedLlmRecommendation() != null ? message.cachedLlmRecommendation() : "";

@@ -8,7 +8,7 @@ CREATE TYPE feature_type AS ENUM (
 CREATE TABLE feature_snapshot_store (
     feature_snapshot_id BIGINT PRIMARY KEY,
     member_id           BIGINT NOT NULL ,
-    feature_type        TIMESTAMP NOT NULL ,
+    feature_type        feature_type NOT NULL ,
     created_at          TIMESTAMP NOT NULL ,
     updated_at          TIMESTAMP NOT NULL ,
 
@@ -34,7 +34,7 @@ CREATE TABLE contract_feature (
 
     CONSTRAINT chk_tenure_weeks
         CHECK (tenure_weeks >= 0)
-)
+);
 
 
 -- 2.사용량 기반 feature

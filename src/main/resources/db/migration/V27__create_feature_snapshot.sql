@@ -1,7 +1,9 @@
 -- enum 생성
 CREATE TYPE feature_type AS ENUM (
     'CONTRACT_FEATURE',
-    'USAGE_FEATURE'
+    'USAGE_FEATURE',
+    'CHANGE_FREQ_FEATURE',
+    'COUNSEL_SATIS_'
 );
 
 -- Feature store 생성
@@ -49,4 +51,26 @@ CREATE TABLE usage_feature (
 
     CONSTRAINT chk_allowance_usage_rate_pct
         CHECK (allowance_usage_rate_pct BETWEEN 0 AND 100)
+);
+
+-- 3. 요금제 변경 이력 feature
+CREATE TABLE change_freq_feature (
+    feature_snapshot_id         BIGINT PRIMARY KEY,
+    change_mobile_cnt           SMALLINT NOT NULL ,
+
+    CONSTRAINT fk_change_freq_feature_snapshot
+        FOREIGN KEY (feature_snapshot_id)
+        REFERENCES feature_snapshot_store(feature_snapshot_id)
+        ON DELETE CASCADE
+);
+
+-- 4. 상담 만족도 평균 feature
+CREATE TABLE consultation_satisfaction_feature (
+    feature_snapshot_id         BIGINT PRIMARY KEY,
+    star_mean_score             NUMERIC(2,1) NOT NULL,
+
+        CONSTRAINT fk_consultation_satisfaction_freq_feature_snapshot
+        FOREIGN KEY (feature_snapshot_id)
+        REFERENCES feature_snapshot_store(feature_snapshot_id)
+        ON DELETE CASCADE
 );

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,7 +15,6 @@ import static site.holliverse.admin.query.jooq.Tables.CHURN_SCORE_SNAPSHOT;
  * 이탈 위험도 테이블(churn_score_snapshot)에서 risk_level = 'HIGH'인 회원만 일별 집계.
  */
 @Profile("admin")
-@Repository
 @RequiredArgsConstructor
 public class ChurnRiskTrendDao {
 

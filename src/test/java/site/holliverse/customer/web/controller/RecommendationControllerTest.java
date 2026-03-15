@@ -65,7 +65,7 @@ class RecommendationControllerTest {
         return new RecommendationResult(
                 PersonaSegment.UPSELL,
                 "캐시 문구",
-                List.of(new RecommendedProductItem(1L, "추천 이유")),
+                List.of(new RecommendedProductItem(1, 1L, null, null, null, null, List.of(), "추천 이유")),
                 source,
                 Instant.now()
         );

@@ -1,0 +1,3 @@
+external:
+  fastapi:
+    base-url: ${FASTAPI_BASE_URL:http://recommendation-realtime.holliverse.internal:8000}

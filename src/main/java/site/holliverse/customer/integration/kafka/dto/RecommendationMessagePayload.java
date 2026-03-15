@@ -17,10 +17,17 @@ public record RecommendationMessagePayload(
         @JsonProperty("recommendedProducts")
         List<RecommendationProductItemPayload> recommendedProducts
 ) {
+    /** Kafka 메시지 recommendedProducts[] 항목. 내려주는 그대로 (rank, productId, productName, ...). */
     public record RecommendationProductItemPayload(
+            Integer rank,
             @JsonProperty("productId")
             Long productId,
-            @JsonProperty("llmReason")
+            String productName,
+            String productType,
+            Integer productPrice,
+            Integer salePrice,
+            List<String> tags,
+            @JsonProperty("reason")
             String reason
     ) {}
 }

@@ -14,7 +14,7 @@ import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -51,9 +51,18 @@ public class RecommendationKafkaConsumer {
             memberIdForCleanup = message.memberId();
 
             List<RecommendedProductItem> products = message.recommendedProducts() == null
-                    ? new ArrayList<>()
+                    ? Collections.emptyList()
                     : message.recommendedProducts().stream()
-                    .map(p -> new RecommendedProductItem(p.productId(), p.reason()))
+                    .map(p -> new RecommendedProductItem(
+                            p.rank(),
+                            p.productId(),
+                            p.productName(),
+                            p.productType(),
+                            p.productPrice(),
+                            p.salePrice(),
+                            p.tags() != null ? p.tags() : Collections.emptyList(),
+                            p.reason()
+                    ))
                     .toList();
 
             String cachedText = message.cachedLlmRecommendation() != null ? message.cachedLlmRecommendation() : "";

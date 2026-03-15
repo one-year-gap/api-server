@@ -9,12 +9,12 @@ CREATE TABLE churn_score_snapshot (
     base_date     DATE    NOT NULL,
 
     CONSTRAINT pk_churn_score_snapshot PRIMARY KEY (snapshot_id),
+    CONSTRAINT uq_churn_score_snapshot_member_date UNIQUE (member_id, base_date),
     CONSTRAINT fk_churn_score_snapshot_member
         FOREIGN KEY (member_id) REFERENCES member (member_id)
         ON DELETE CASCADE
 );
 
-CREATE INDEX idx_churn_score_snapshot_member ON churn_score_snapshot (member_id);
 CREATE INDEX idx_churn_score_snapshot_base_date ON churn_score_snapshot (base_date);
 
 COMMENT ON TABLE churn_score_snapshot IS '이탈 위험도 스냅샷 (회원·기준일별)';

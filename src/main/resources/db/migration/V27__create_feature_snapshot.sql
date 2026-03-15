@@ -13,10 +13,15 @@ CREATE TABLE feature_snapshot_store (
     feature_type        feature_type NOT NULL ,
     created_at          TIMESTAMP NOT NULL ,
     updated_at          TIMESTAMP NOT NULL ,
+    feature_score       INTEGER,
 
     -- 외래 키 제약
     CONSTRAINT fk_feature_snapshot_member
-                FOREIGN KEY (member_id) REFERENCES member(member_id)
+                FOREIGN KEY (member_id) REFERENCES member(member_id),
+
+    -- feature 점수 제약
+    CONSTRAINT chk_feature_score
+        CHECK ( feature_score BETWEEN 0 AND 100)
 );
 
 -- 1.계약 기반 feature

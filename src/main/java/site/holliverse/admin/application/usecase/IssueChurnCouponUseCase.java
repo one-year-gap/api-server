@@ -4,6 +4,7 @@ package site.holliverse.admin.application.usecase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import site.holliverse.admin.query.dao.AdminChurnCouponDao;
 import site.holliverse.admin.web.dto.churn.IssueChurnCouponRequestDto;
 import site.holliverse.admin.web.dto.churn.IssueChurnCouponResponseDto;
 import site.holliverse.admin.web.dto.churn.SkippedCouponIssueMemberDto;
@@ -13,7 +14,19 @@ import site.holliverse.shared.error.ErrorCode;
 import java.util.ArrayList;
 import java.util.List;
 
-@Profile("Admin")
+/**
+ ==========================
+ * $NAME
+ * 전체 발송 흐름 관리을 관리하는 usecase 입니다 .
+ * 쿠폰 1번이 있는지 확인
+ * 회원별 처리 호출
+ * 최종 응답 집계
+ * @author nonstop
+ * @version 1.0.0
+ * @since 2026-03-16
+ * ========================== */
+
+@Profile("admin")
 @Service
 @RequiredArgsConstructor
 public class IssueChurnCouponUseCase {
@@ -46,20 +59,20 @@ public class IssueChurnCouponUseCase {
             }
 
             skippedMembers.add(
-                    SkippedCouponIssueMemberDto.builder()
-                            .memberId(result.memberId())
-                            .reason(result.reason())
-                            .build()
+                    new SkippedCouponIssueMemberDto(
+                            result.memberId(),
+                            result.reason()
+                    )
             );
         }
 
-        return IssueChurnCouponResponseDto.builder()
-                .requestedCount(requestDto.memberIds().size())
-                .issuedCount(issuedMemberIds.size())
-                .skippedCount(skippedMembers.size())
-                .issuedMemberIds(issuedMemberIds)
-                .skippedMembers(skippedMembers)
-                .build();
+        return new IssueChurnCouponResponseDto(
+                requestDto.memberIds().size(),
+                issuedMemberIds.size(),
+                skippedMembers.size(),
+                issuedMemberIds,
+                skippedMembers
+        );
 
 
     }

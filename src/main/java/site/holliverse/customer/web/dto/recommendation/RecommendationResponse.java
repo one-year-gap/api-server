@@ -16,5 +16,15 @@ public record RecommendationResponse(
         RecommendationResult.RecommendationSource source,
         Instant updatedAt
 ) {
-    public record RecommendationProductItem(Long productId, String reason) {}
+    /** 추천 상품 한 건. 내려주는 그대로 (rank, productId, productName, productType, productPrice, salePrice, tags, reason). */
+    public record RecommendationProductItem(
+            Integer rank,
+            Long productId,
+            String productName,
+            String productType,
+            Integer productPrice,
+            Integer salePrice,
+            List<String> tags,
+            String reason
+    ) {}
 }

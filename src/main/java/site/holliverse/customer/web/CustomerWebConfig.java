@@ -12,6 +12,7 @@ import site.holliverse.customer.web.mapper.CustomerProfileResponseMapper;
 import site.holliverse.customer.web.mapper.ProductResponseMapper;
 import site.holliverse.customer.web.mapper.RecentActivityResponseMapper;
 import site.holliverse.customer.web.mapper.RecommendationResponseMapper;
+import site.holliverse.customer.coupon.web.CustomerCouponMapper;
 
 @Configuration
 @Profile("customer")
@@ -57,5 +58,10 @@ public class CustomerWebConfig {
     @Bean
     public RecommendationResponseMapper recommendationResponseMapper() {
         return new RecommendationResponseMapper();
+    }
+
+    @Bean
+    public CustomerCouponMapper customerCouponMapper() {
+        return new CustomerCouponMapper();
     }
 }

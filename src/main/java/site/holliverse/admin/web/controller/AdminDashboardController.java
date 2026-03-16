@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import site.holliverse.admin.application.usecase.GetChurnRiskTrendUseCase;
 import site.holliverse.admin.application.usecase.GetKeywordBubbleChartUseCase;
 import site.holliverse.admin.application.usecase.GetSupportStatUseCase;
 import site.holliverse.admin.query.dao.AdminSupportStatRawData;
+import site.holliverse.admin.web.dto.churn.ChurnRiskTrendResponseDto;
 import site.holliverse.admin.web.dto.support.AdminSupportStatResponseDto;
 import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
 import site.holliverse.admin.web.mapper.AdminSupportStatMapper;
@@ -34,6 +36,7 @@ public class AdminDashboardController {
     private final GetSupportStatUseCase getSupportStatUseCase;
     private final AdminSupportStatMapper adminSupportStatMapper;
     private final GetKeywordBubbleChartUseCase getKeywordBubbleChartUseCase;
+    private final GetChurnRiskTrendUseCase getChurnRiskTrendUseCase;
 
     /**
      * 전체 상담 처리 현황 통계 조회 API
@@ -76,6 +79,18 @@ public class AdminDashboardController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("상담 키워드 통계 조회가 완료되었습니다.", data)
+        );
+    }
+
+    /**
+     * 이탈 위험군 증감 추이 조회 API
+     * 어제 기준 어제~-31일 구간의 전일 대비 증감·riskCount·summary 반환
+     */
+    @GetMapping("/churn-risk/trend")
+    public ResponseEntity<ApiResponse<ChurnRiskTrendResponseDto>> getChurnRiskTrend() {
+        ChurnRiskTrendResponseDto data = getChurnRiskTrendUseCase.execute();
+        return ResponseEntity.ok(
+                ApiResponse.success("이탈 위험군 증감 추이 조회가 완료되었습니다.", data)
         );
     }
 }

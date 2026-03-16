@@ -9,7 +9,12 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import com.github.f4b6a3.tsid.Tsid;
+import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
 
 import java.util.List;
 
@@ -21,6 +26,7 @@ public class UserLogService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final AdminLogFeaturesClient adminLogFeaturesClient;
 
     @Value("${app.topic.client-events}")
     private String topic;
@@ -32,6 +38,14 @@ public class UserLogService {
         }
         for (UserLogRequest request : requests) {
             doPublish(memberId, request);
+        }
+        // event_name 기준 배치 내 중복 제거 후 Admin log-features 호출 (comparison/penalty 각 최대 1)
+        int comparisonIncrement = requests.stream()
+                .anyMatch(r -> UserLogEventName.CLICK_COMPARE.value().equals(r.eventName())) ? 1 : 0;
+        int penaltyIncrement = requests.stream()
+                .anyMatch(r -> UserLogEventName.CLICK_PENALTY.value().equals(r.eventName())) ? 1 : 0;
+        if (comparisonIncrement != 0 || penaltyIncrement != 0) {
+            adminLogFeaturesClient.sendLogFeatures(memberId, comparisonIncrement, penaltyIncrement);
         }
     }
 
@@ -47,8 +61,19 @@ public class UserLogService {
     private void doPublish(Long memberId, UserLogRequest request) {
         UserLogEventName eventName = UserLogEventName.from(request.eventName());
 
+        long eventId;
+        try {
+            eventId = decodeTsidToLong(request.tsid());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(
+                    ErrorCode.INVALID_USER_LOG_EVENT_ID,
+                    "event_id",
+                    "유효하지 않은 사용자 로그 이벤트 ID입니다."
+            );
+        }
+
         UserLogPayload payload = new UserLogPayload(
-                request.eventId(),
+                eventId,
                 request.timestamp(),
                 request.event(),
                 eventName.value(),
@@ -71,6 +96,18 @@ public class UserLogService {
                                 memberId, eventName.value(), ex);
                     }
                 });
+    }
+
+    /**
+     * 프론트에서 전달한 TSID 문자열을 tsid-creator 라이브러리로 디코딩한다.
+     */
+    private static long decodeTsidToLong(String tsid) {
+        if (tsid == null || tsid.isBlank()) {
+            throw new IllegalArgumentException("TSID must not be null or blank");
+        }
+        // Tsid.from(...) 내부에서 형식·길이·알파벳 검증을 수행한다.
+        Tsid parsed = Tsid.from(tsid);
+        return parsed.toLong();
     }
 }
 

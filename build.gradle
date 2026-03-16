@@ -250,7 +250,7 @@ jooq {
                 jdbc {
                     //
                     driver = 'org.postgresql.Driver'
-                    url = envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5435/holliverse'
+                    url = envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5432/holliverse'
                     user = envOrDefault('DB_USER_ADMIN', 'SPRING_DATASOURCE_USERNAME') ?: 'postgres'
                     password = envOrDefault('DB_PASS_ADMIN', 'SPRING_DATASOURCE_PASSWORD') ?: 'postgres'
                 }

@@ -27,7 +27,7 @@ public class AdminLogFeatureController {
     /**
      * 비교/패널티 건수 증분 반영.
      * body: memberId, comparisonIncrement(0|1), penaltyIncrement(0|1).
-     * 해당 회원의 MEMBER_ACTION_FEATURE 스냅샷이 있을 때만 갱신, 없으면 no-op.
+     * 해당 회원의 MEMBER_ACTION_FEATURE 스냅샷이 있을 때만 갱신, 없으면 스냅샷을 새로 생성
      */
     @PostMapping("/log-features")
     public ResponseEntity<ApiResponse<Void>> logFeatures(@Valid @RequestBody LogFeaturesRequestDto request) {

@@ -4,8 +4,11 @@ import org.jooq.DSLContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import site.holliverse.admin.query.dao.AdminChurnCouponDao;
 import site.holliverse.admin.query.dao.AdminMembershipStatDao;
 import site.holliverse.admin.query.dao.AdminSupportStatDao;
+import site.holliverse.admin.query.dao.ChurnRiskTrendDao;
+import site.holliverse.admin.query.dao.MemberActionFeatureLogDao;
 
 @Profile("admin")
 @Configuration
@@ -21,4 +24,18 @@ public class AdminQueryConfiguration {
         return new AdminMembershipStatDao(dsl);
     }
 
+    @Bean
+    public ChurnRiskTrendDao churnRiskTrendDao(DSLContext dsl) {
+        return new ChurnRiskTrendDao(dsl);
+    }
+
+    @Bean
+    public MemberActionFeatureLogDao memberActionFeatureLogDao(DSLContext dsl) {
+        return new MemberActionFeatureLogDao(dsl);
+    }
+
+    @Bean
+    public AdminChurnCouponDao adminChurnCouponDao(DSLContext dsl) {
+        return new AdminChurnCouponDao(dsl);
+    }
 }

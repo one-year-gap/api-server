@@ -46,4 +46,10 @@ public class MemberCoupon extends BaseEntity {
     // 만료 날짜
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt; // 발급 시점에 계산하여 저장 필수
+
+    /** 쿠폰 사용 처리. 트랜잭션 내에서 호출 후 저장해야 반영된다. */
+    public void markAsUsed(LocalDateTime usedAt) {
+        this.isUsed = true;
+        this.usedAt = usedAt;
+    }
 }

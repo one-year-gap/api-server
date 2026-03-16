@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import site.holliverse.customer.integration.admin.AdminLogFeaturesClient;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
 
 import java.util.List;
@@ -19,8 +20,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserLogService {
 
+    private static final String EVENT_CLICK_COMPARE = "click_compare";
+    private static final String EVENT_CLICK_PENALTY = "click_penalty";
+
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final AdminLogFeaturesClient adminLogFeaturesClient;
 
     @Value("${app.topic.client-events}")
     private String topic;
@@ -32,6 +37,12 @@ public class UserLogService {
         }
         for (UserLogRequest request : requests) {
             doPublish(memberId, request);
+        }
+        // event_name 기준 배치 내 중복 제거 후 Admin log-features 호출 (comparison/penalty 각 최대 1)
+        int comparisonIncrement = requests.stream().anyMatch(r -> EVENT_CLICK_COMPARE.equals(r.eventName())) ? 1 : 0;
+        int penaltyIncrement = requests.stream().anyMatch(r -> EVENT_CLICK_PENALTY.equals(r.eventName())) ? 1 : 0;
+        if (comparisonIncrement != 0 || penaltyIncrement != 0) {
+            adminLogFeaturesClient.sendLogFeatures(memberId, comparisonIncrement, penaltyIncrement);
         }
     }
 

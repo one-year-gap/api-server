@@ -12,6 +12,10 @@ server:
 
 app:
   runtime: customer
+  admin:
+    base-url: ${ADMIN_BASE_URL:http://localhost:8081}
+    connect-timeout-ms: ${ADMIN_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${ADMIN_READ_TIMEOUT_MS:5000}
   jwt:
     secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}
     access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:604800000}

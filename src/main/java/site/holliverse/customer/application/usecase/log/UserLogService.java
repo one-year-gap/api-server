@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
+import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.error.ErrorCode;
 
 import java.util.List;
 
@@ -58,8 +60,19 @@ public class UserLogService {
     private void doPublish(Long memberId, UserLogRequest request) {
         UserLogEventName eventName = UserLogEventName.from(request.eventName());
 
+        long eventId;
+        try {
+            eventId = decodeTsidToLong(request.tsid());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(
+                    ErrorCode.INVALID_USER_LOG_EVENT_ID,
+                    "event_id",
+                    "유효하지 않은 사용자 로그 이벤트 ID입니다."
+            );
+        }
+
         UserLogPayload payload = new UserLogPayload(
-                request.eventId(),
+                eventId,
                 request.timestamp(),
                 request.event(),
                 eventName.value(),
@@ -82,6 +95,26 @@ public class UserLogService {
                                 memberId, eventName.value(), ex);
                     }
                 });
+    }
+
+    /**
+     * 프론트에서 전달한 TSID(Base32, Crockford)를 long 값으로 디코딩한다.
+     */
+    private static long decodeTsidToLong(String tsid) {
+        if (tsid == null || tsid.isBlank()) {
+            throw new IllegalArgumentException("TSID must not be null or blank");
+        }
+        String alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+        long result = 0L;
+        for (int i = 0; i < tsid.length(); i++) {
+            char ch = Character.toUpperCase(tsid.charAt(i));
+            int idx = alphabet.indexOf(ch);
+            if (idx < 0) {
+                throw new IllegalArgumentException("Invalid TSID character: " + ch);
+            }
+            result = (result << 5) | idx;
+        }
+        return result;
     }
 }
 

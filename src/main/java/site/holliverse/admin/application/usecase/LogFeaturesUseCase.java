@@ -27,16 +27,16 @@ public class LogFeaturesUseCase {
      */
     @Transactional
     public void execute(LogFeaturesRequestDto request) {
-        long snapshotId = memberActionFeatureLogDao.getOrCreateSnapshotId(request.getMemberId());
+        long snapshotId = memberActionFeatureLogDao.getOrCreateSnapshotId(request.memberId());
         int updated = memberActionFeatureLogDao.incrementCounts(
                 snapshotId,
-                request.getComparisonIncrement(),
-                request.getPenaltyIncrement()
+                request.comparisonIncrement(),
+                request.penaltyIncrement()
         );
         if (updated > 0) {
             log.debug("log-features: member_id={}, snapshot_id={}, comparison+{}, penalty+{}",
-                    request.getMemberId(), snapshotId,
-                    request.getComparisonIncrement(), request.getPenaltyIncrement());
+                    request.memberId(), snapshotId,
+                    request.comparisonIncrement(), request.penaltyIncrement());
         }
     }
 }

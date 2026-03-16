@@ -11,6 +11,7 @@ public enum ErrorCode {
     OAUTH_USER_INFO_INVALID(HttpStatus.BAD_REQUEST, "OAUTH_USER_INFO_INVALID", "OAuth 사용자 정보가 유효하지 않습니다."),
     DATA_NOT_YET_ANALYZED(HttpStatus.BAD_REQUEST, "DATA_NOT_YET_ANALYZED", "해당 기간의 데이터 분석이 아직 완료되지 않았습니다."),
     INVALID_USER_LOG_EVENT_ID(HttpStatus.BAD_REQUEST, "INVALID_USER_LOG_EVENT_ID", "유효하지 않은 사용자 로그 이벤트 ID입니다."),
+    COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "COUPON_EXPIRED", "만료된 쿠폰입니다."),
 
     // 401
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증에 실패했습니다."),
@@ -29,11 +30,13 @@ public enum ErrorCode {
     // 404
     NOT_FOUND(HttpStatus.NOT_FOUND, "NOT_FOUND", "요청한 리소스를 찾을 수 없습니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"MEMBER_NOT_FOUND","멤버를 찾을수가 없습니다."),
+    COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "COUPON_NOT_FOUND", "보유 쿠폰을 찾을 수 없습니다."),
 
     // 409
     DUPLICATED_EMAIL(HttpStatus.CONFLICT, "DUPLICATED_EMAIL", "이미 사용 중인 이메일입니다."),
     DUPLICATED_PHONE(HttpStatus.CONFLICT, "DUPLICATED_PHONE", "이미 사용 중인 전화번호입니다."),
     CONFLICT(HttpStatus.CONFLICT, "CONFLICT", "중복 또는 충돌이 발생했습니다."),
+    COUPON_ALREADY_USED(HttpStatus.CONFLICT, "COUPON_ALREADY_USED", "이미 사용된 쿠폰입니다."),
 
     // 503
     RECOMMENDATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "RECOMMENDATION_UNAVAILABLE", "추천 서비스를 현재 사용할 수 없습니다."),

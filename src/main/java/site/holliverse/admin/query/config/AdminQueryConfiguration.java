@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Profile;
 import site.holliverse.admin.query.dao.AdminMembershipStatDao;
 import site.holliverse.admin.query.dao.AdminSupportStatDao;
 import site.holliverse.admin.query.dao.ChurnRiskTrendDao;
+import site.holliverse.admin.query.dao.MemberActionFeatureLogDao;
 
 @Profile("admin")
 @Configuration
@@ -25,5 +26,10 @@ public class AdminQueryConfiguration {
     @Bean
     public ChurnRiskTrendDao churnRiskTrendDao(DSLContext dsl) {
         return new ChurnRiskTrendDao(dsl);
+    }
+
+    @Bean
+    public MemberActionFeatureLogDao memberActionFeatureLogDao(DSLContext dsl) {
+        return new MemberActionFeatureLogDao(dsl);
     }
 }

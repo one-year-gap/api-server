@@ -1,5 +1,6 @@
 package site.holliverse.customer.config;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +27,7 @@ public class AdminLogFeaturesConfig {
 
     @Bean
     public AdminLogFeaturesClient adminLogFeaturesClient(
-            @org.springframework.beans.factory.annotation.Qualifier("adminLogFeaturesRestTemplate") RestTemplate restTemplate,
+            @Qualifier("adminLogFeaturesRestTemplate") RestTemplate restTemplate,
             AdminLogFeaturesProperties properties) {
         return new AdminLogFeaturesClient(restTemplate, properties);
     }

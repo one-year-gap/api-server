@@ -17,7 +17,6 @@ import site.holliverse.admin.web.dto.log.LogFeaturesRequestDto;
 @Profile("admin")
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class LogFeaturesUseCase {
 
     private final MemberActionFeatureLogDao memberActionFeatureLogDao;
@@ -26,6 +25,7 @@ public class LogFeaturesUseCase {
      * 요청대로 member_action_feature 카운트만 증분 반영.
      * 스냅샷이 없으면 정책에 따라 생성 후 갱신.
      */
+    @Transactional
     public void execute(LogFeaturesRequestDto request) {
         long snapshotId = memberActionFeatureLogDao.getOrCreateSnapshotId(request.getMemberId());
         int updated = memberActionFeatureLogDao.incrementCounts(

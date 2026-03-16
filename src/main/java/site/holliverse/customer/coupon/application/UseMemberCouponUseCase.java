@@ -12,30 +12,41 @@ import site.holliverse.shared.error.ErrorCode;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * 고객 보유(미사용·유효기간 내) 쿠폰 목록 조회 UseCase.
+ * 고객 쿠폰 사용 처리 UseCase.
  */
 @Service
 @Profile("customer")
-public class GetMemberCouponsUseCase {
+public class UseMemberCouponUseCase {
 
     private final MemberCouponRepository memberCouponRepository;
 
-    public GetMemberCouponsUseCase(MemberCouponRepository memberCouponRepository) {
+    public UseMemberCouponUseCase(MemberCouponRepository memberCouponRepository) {
         this.memberCouponRepository = memberCouponRepository;
     }
 
-    @Transactional(readOnly = true)
-    public List<MemberCoupon> getAvailableCoupons(Long memberId) {
+    @Transactional
+    public UseMemberCouponResult useCoupon(Long memberId, Long memberCouponId) {
         LocalDateTime now = LocalDateTime.now();
-        List<site.holliverse.customer.persistence.entity.MemberCoupon> list =
-                memberCouponRepository.findAvailableByMemberId(memberId, now);
-        return list.stream()
-                .map(this::toDomain)
-                .collect(Collectors.toList());
+
+        site.holliverse.customer.persistence.entity.MemberCoupon entity = memberCouponRepository
+                .findByIdAndMemberId(memberCouponId, memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.COUPON_NOT_FOUND, "memberCouponId", "보유 쿠폰을 찾을 수 없습니다."));
+
+        if (entity.getIsUsed()) {
+            throw new CustomException(ErrorCode.COUPON_ALREADY_USED, "memberCouponId", "이미 사용된 쿠폰입니다.");
+        }
+        if (!entity.getExpiredAt().isAfter(now)) {
+            throw new CustomException(ErrorCode.COUPON_EXPIRED, "memberCouponId", "만료된 쿠폰입니다.");
+        }
+
+        entity.markAsUsed(now);
+        memberCouponRepository.save(entity);
+
+        long remaining = memberCouponRepository.countByMember_IdAndIsUsedFalseAndExpiredAtAfter(memberId, now);
+        MemberCoupon domainMemberCoupon = toDomain(entity);
+        return new UseMemberCouponResult(domainMemberCoupon, (int) remaining);
     }
 
     private MemberCoupon toDomain(site.holliverse.customer.persistence.entity.MemberCoupon entity) {

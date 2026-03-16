@@ -1,4 +1,4 @@
-package site.holliverse.customer.integration.admin;
+package site.holliverse.customer.integration.external;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;

@@ -9,7 +9,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import site.holliverse.customer.integration.admin.AdminLogFeaturesClient;
+
+import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
 
 import java.util.List;

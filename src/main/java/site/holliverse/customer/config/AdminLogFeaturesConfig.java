@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
-import site.holliverse.customer.integration.admin.AdminLogFeaturesClient;
+
+import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 
 /**
  * Admin API log-features 호출용 RestTemplate 및 클라이언트 빈 등록.

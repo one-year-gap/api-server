@@ -1,0 +1,56 @@
+package site.holliverse.admin.application.usecase;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.admin.query.dao.ChurnRiskMemberDao;
+import site.holliverse.admin.query.dao.ChurnRiskMemberRawData;
+import site.holliverse.admin.web.dto.churn.ChurnRiskMemberListRequestDto;
+
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * 이탈 위험군 목록 조회 UseCase.
+ *
+ * 역할은 단순하다.
+ * 1. 전체 건수 조회
+ * 2. 데이터가 없으면 빈 목록 즉시 반환
+ * 3. 데이터가 있으면 실제 목록 조회
+ *
+ * 즉, 컨트롤러와 DAO 사이에서 조회 흐름을 정리하는 얇은 서비스 계층이다.
+ */
+@Profile("admin")
+@Service
+@RequiredArgsConstructor
+public class RetrieveChurnRiskMemberUseCase {
+
+    private final ChurnRiskMemberDao churnRiskMemberDao;
+
+    /**
+     * 화면 조회 요청을 받아 목록 + totalCount를 묶어서 반환한다.
+     */
+    @Transactional(readOnly = true)
+    public RetrieveChurnRiskMemberResult execute(ChurnRiskMemberListRequestDto requestDto) {
+        int totalCount = (int) churnRiskMemberDao.count(requestDto);
+
+        // count가 0이면 불필요한 목록 쿼리를 한 번 더 날리지 않는다.
+        if (totalCount == 0) {
+            return new RetrieveChurnRiskMemberResult(Collections.emptyList(), 0);
+        }
+
+        List<ChurnRiskMemberRawData> members = churnRiskMemberDao.findAll(requestDto);
+        return new RetrieveChurnRiskMemberResult(members, totalCount);
+    }
+
+    /**
+     * UseCase 결과를 컨트롤러로 전달하기 위한 단순 묶음 객체.
+     * members는 아직 화면용 가공 전 RawData 상태다.
+     */
+    public record RetrieveChurnRiskMemberResult(
+            List<ChurnRiskMemberRawData> members,
+            int totalCount
+    ) {
+    }
+}

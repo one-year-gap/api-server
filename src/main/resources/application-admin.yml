@@ -2,7 +2,12 @@ spring:
   flyway:
     user: ${FLYWAY_USER:${spring.datasource.username}}
     password: ${FLYWAY_PASSWORD:${spring.datasource.password}}
-
+  config:
+    import:
+      - optional:aws-secretsmanager:holliverse/api-server/runtime
+      - optional:aws-secretsmanager:${KAFKA_SECRET_NAME:holliverse/api-server/kafka}
+      - optional:classpath:application.kafka.yml
+      - optional:classpath:application-churn.yml
 server:
   port: ${SERVER_PORT:8081}
 

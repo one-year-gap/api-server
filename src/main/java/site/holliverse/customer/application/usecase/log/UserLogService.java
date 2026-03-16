@@ -10,6 +10,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.github.f4b6a3.tsid.Tsid;
 import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
 import site.holliverse.shared.error.CustomException;
@@ -98,23 +99,15 @@ public class UserLogService {
     }
 
     /**
-     * 프론트에서 전달한 TSID(Base32, Crockford)를 long 값으로 디코딩한다.
+     * 프론트에서 전달한 TSID 문자열을 tsid-creator 라이브러리로 디코딩한다.
      */
     private static long decodeTsidToLong(String tsid) {
         if (tsid == null || tsid.isBlank()) {
             throw new IllegalArgumentException("TSID must not be null or blank");
         }
-        String alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-        long result = 0L;
-        for (int i = 0; i < tsid.length(); i++) {
-            char ch = Character.toUpperCase(tsid.charAt(i));
-            int idx = alphabet.indexOf(ch);
-            if (idx < 0) {
-                throw new IllegalArgumentException("Invalid TSID character: " + ch);
-            }
-            result = (result << 5) | idx;
-        }
-        return result;
+        // Tsid.from(...) 내부에서 형식·길이·알파벳 검증을 수행한다.
+        Tsid parsed = Tsid.from(tsid);
+        return parsed.toLong();
     }
 }
 

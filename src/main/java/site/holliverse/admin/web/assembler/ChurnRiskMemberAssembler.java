@@ -3,6 +3,7 @@ package site.holliverse.admin.web.assembler;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import site.holliverse.admin.query.dao.ChurnRiskMemberRawData;
@@ -26,6 +27,7 @@ import java.util.List;
  */
 @Profile("admin")
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class ChurnRiskMemberAssembler {
 
@@ -91,7 +93,8 @@ public class ChurnRiskMemberAssembler {
                 return null;
             }
             return reasons.get(0);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("risk_reasons JSON 파싱 실패. raw value: {}", riskReasons, e);
             return null;
         }
     }

@@ -31,7 +31,7 @@ spring:
 
 app:
   kafka:
-    analysis-response-schema: ${WORKER_KAFKA_SCHEMA_ANALYSIS_RESPONSE:analysis.response.v1}
+    #analysis-response-schema: ${WORKER_KAFKA_SCHEMA_ANALYSIS_RESPONSE:analysis.response.v1}
     recommendation-consumer-group-id: ${KAFKA_CONSUMER_GROUP_RECOMMENDATION:api-server-recommendation}
   topic:
     client-events: ${KAFKA_TOPIC_CLIENT_EVENTS:client-event-logs}

@@ -3,13 +3,15 @@ package site.holliverse.admin.query.dao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.jooq.DSLContext;
+import org.jooq.Sequence;
 import org.jooq.impl.DSL;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import site.holliverse.admin.query.jooq.enums.FeatureType;
 
+import static org.jooq.impl.DSL.currentLocalDateTime;
+import static org.jooq.impl.DSL.sequence;
 import static site.holliverse.admin.query.jooq.Tables.FEATURE_SNAPSHOT_STORE;
 import static site.holliverse.admin.query.jooq.Tables.MEMBER_ACTION_FEATURE;
 
@@ -22,7 +24,8 @@ import static site.holliverse.admin.query.jooq.Tables.MEMBER_ACTION_FEATURE;
 @RequiredArgsConstructor
 public class MemberActionFeatureLogDao {
 
-    private static final String FEATURE_SNAPSHOT_ID_SEQ = "feature_snapshot_id_seq";
+    private static final Sequence<Long> FEATURE_SNAPSHOT_ID_SEQ =
+            sequence("feature_snapshot_id_seq", Long.class);
 
     private final DSLContext dsl;
 
@@ -72,14 +75,13 @@ public class MemberActionFeatureLogDao {
      * @return 새로 생성된 feature_snapshot_id
      */
     public long createSnapshotForMemberActionFeature(Long memberId) {
-        LocalDateTime now = LocalDateTime.now();
         Long snapshotId = dsl
                 .insertInto(FEATURE_SNAPSHOT_STORE)
-                .set(FEATURE_SNAPSHOT_STORE.FEATURE_SNAPSHOT_ID, DSL.field("nextval('" + FEATURE_SNAPSHOT_ID_SEQ + "')", Long.class))
+                .set(FEATURE_SNAPSHOT_STORE.FEATURE_SNAPSHOT_ID, dsl.nextval(FEATURE_SNAPSHOT_ID_SEQ))
                 .set(FEATURE_SNAPSHOT_STORE.MEMBER_ID, memberId)
                 .set(FEATURE_SNAPSHOT_STORE.FEATURE_TYPE, FeatureType.MEMBER_ACTION_FEATURE)
-                .set(FEATURE_SNAPSHOT_STORE.CREATED_AT, now)
-                .set(FEATURE_SNAPSHOT_STORE.UPDATED_AT, now)
+                .set(FEATURE_SNAPSHOT_STORE.CREATED_AT, currentLocalDateTime())
+                .set(FEATURE_SNAPSHOT_STORE.UPDATED_AT, currentLocalDateTime())
                 .set(FEATURE_SNAPSHOT_STORE.FEATURE_SCORE, 0)
                 .returning(FEATURE_SNAPSHOT_STORE.FEATURE_SNAPSHOT_ID)
                 .fetchOne()

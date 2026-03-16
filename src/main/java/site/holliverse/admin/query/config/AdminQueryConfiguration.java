@@ -4,6 +4,7 @@ import org.jooq.DSLContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import site.holliverse.admin.query.dao.AdminChurnCouponDao;
 import site.holliverse.admin.query.dao.AdminMembershipStatDao;
 import site.holliverse.admin.query.dao.AdminSupportStatDao;
 import site.holliverse.admin.query.dao.ChurnRiskTrendDao;
@@ -31,5 +32,10 @@ public class AdminQueryConfiguration {
     @Bean
     public MemberActionFeatureLogDao memberActionFeatureLogDao(DSLContext dsl) {
         return new MemberActionFeatureLogDao(dsl);
+    }
+
+    @Bean
+    public AdminChurnCouponDao adminChurnCouponDao(DSLContext dsl) {
+        return new AdminChurnCouponDao(dsl);
     }
 }

@@ -3,12 +3,7 @@ package site.holliverse.admin.query.dao;
 
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Repository;
-import site.holliverse.admin.query.jooq.tables.Coupon;
 
-import javax.swing.text.html.Option;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -23,8 +18,6 @@ import static site.holliverse.admin.query.jooq.Tables.*;
  * @since 2026-03-16
  * ========================== */
 
-@Profile("admin")
-@Repository
 @RequiredArgsConstructor
 public class AdminChurnCouponDao {
 

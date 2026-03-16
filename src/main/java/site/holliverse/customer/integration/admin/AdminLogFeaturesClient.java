@@ -5,6 +5,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import site.holliverse.customer.config.AdminLogFeaturesProperties;
 
@@ -15,15 +16,15 @@ import site.holliverse.customer.config.AdminLogFeaturesProperties;
 @Slf4j
 public class AdminLogFeaturesClient {
 
-    private static final String LOG_FEATURES_PATH = "/api/v1/admin/log-features";
-
     private final RestTemplate restTemplate;
     private final String baseUrl;
+    private final String logFeaturesPath;
 
     public AdminLogFeaturesClient(RestTemplate restTemplate, AdminLogFeaturesProperties properties) {
         this.restTemplate = restTemplate;
         String url = properties.baseUrl();
         this.baseUrl = (url != null && url.endsWith("/")) ? url.substring(0, url.length() - 1) : url;
+        this.logFeaturesPath = properties.logFeaturesPath();
     }
 
     /**
@@ -34,7 +35,10 @@ public class AdminLogFeaturesClient {
         if (baseUrl == null || baseUrl.isBlank()) {
             return;
         }
-        String url = baseUrl + LOG_FEATURES_PATH;
+        String path = (logFeaturesPath != null && !logFeaturesPath.isBlank())
+                ? logFeaturesPath
+                : "/api/v1/admin/log-features";
+        String url = baseUrl + path;
         LogFeaturesRequestBody body = new LogFeaturesRequestBody(memberId, comparisonIncrement, penaltyIncrement);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -44,7 +48,7 @@ public class AdminLogFeaturesClient {
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.warn("[AdminLogFeatures] POST {} memberId={} status={}", url, memberId, response.getStatusCode());
             }
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.warn("[AdminLogFeatures] POST {} memberId={} failed", url, memberId, e);
         }
     }

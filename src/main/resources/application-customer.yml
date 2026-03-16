@@ -14,6 +14,7 @@ app:
   runtime: customer
   admin:
     base-url: ${ADMIN_BASE_URL:http://localhost:8081}
+    log-features-path: ${ADMIN_LOG_FEATURES_PATH:/api/v1/admin/log-features}
     connect-timeout-ms: ${ADMIN_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${ADMIN_READ_TIMEOUT_MS:5000}
   jwt:

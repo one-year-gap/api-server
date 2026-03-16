@@ -9,12 +9,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app.admin")
 public record AdminLogFeaturesProperties(
         String baseUrl,
+        String logFeaturesPath,
         int connectTimeoutMs,
         int readTimeoutMs
 ) {
     public AdminLogFeaturesProperties {
         if (connectTimeoutMs <= 0) connectTimeoutMs = 3_000;
         if (readTimeoutMs <= 0) readTimeoutMs = 5_000;
+        if (logFeaturesPath == null || logFeaturesPath.isBlank()) {
+            logFeaturesPath = "/api/v1/admin/log-features";
+        }
     }
 
     public boolean isEnabled() {

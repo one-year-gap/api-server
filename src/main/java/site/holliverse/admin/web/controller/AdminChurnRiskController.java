@@ -23,7 +23,7 @@ import site.holliverse.shared.web.response.ApiResponse;
  * - Assembler를 통해 최종 응답 DTO 조립
  * - 공통 ApiResponse 형식으로 반환
  *
- * 현재는 "조회 전용" 컨트롤러이므로 GET 엔드포인트만 제공한다.
+ * 현재는 "조회 전용" 컨트롤러이므로 GET 엔드포인트만 제공
  */
 @Profile("admin")
 @RestController

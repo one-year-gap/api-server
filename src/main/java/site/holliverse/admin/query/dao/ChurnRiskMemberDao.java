@@ -42,9 +42,9 @@ import site.holliverse.admin.query.jooq.enums.MemberRoleType;
 @RequiredArgsConstructor
 public class ChurnRiskMemberDao {
 
-    /** jOOQ 쿼리 실행 진입점 */
+    //주크 쿼리 진입 시점
     private final DSLContext dsl;
-    /** 기존 회원 검색과 동일하게 암호화 값 비교를 위해 사용 */
+    //암호화 툴
     private final EncryptionTool encryptionTool;
 
     /**
@@ -80,8 +80,7 @@ public class ChurnRiskMemberDao {
     }
 
     /**
-     * 페이지네이션 계산을 위한 전체 건수 조회.
-     * 목록 조회와 동일한 join / where 조건을 사용해야 totalCount가 정확해진다.
+     * 페이지네이션 계산을 위한 전체 건수 조회
      */
     public long count(ChurnRiskMemberListRequestDto req) {
         Long totalCount = dsl.selectCount()
@@ -104,7 +103,7 @@ public class ChurnRiskMemberDao {
      * - memberships: 등급 필터
      * - riskLevels: 위험도 필터
      *
-     * 위험도 필터가 비어 있으면 화면 요구사항에 맞춰 HIGH/MEDIUM만 기본 조회한다.
+     * 위험도 필터가 비어있으면 기본적으로 High와 MEDIUM 만 보이도록 설정
      */
     private List<Condition> createConditions(ChurnRiskMemberListRequestDto req) {
         List<Condition> conditions = new ArrayList<>();
@@ -114,7 +113,7 @@ public class ChurnRiskMemberDao {
 
         if (StringUtils.hasText(req.keyword())) {
             // 기존 관리자 회원 검색과 동일하게 원문 키워드를 암호화한 뒤
-            // 이름 또는 전화번호 컬럼과 exact match 비교를 수행한다.
+            // 이름 또는 전화번호 컬럼과 exact match 비교를 수행
             String encryptedKeyword = encryptionTool.encrypt(req.keyword());
             conditions.add(
                     MEMBER.NAME.eq(encryptedKeyword)
@@ -123,7 +122,7 @@ public class ChurnRiskMemberDao {
         }
 
         if (!CollectionUtils.isEmpty(req.memberships())) {
-            // memberships=VIP&memberships=GOLD 형태의 다중 선택 필터를 IN 조건으로 변환한다.
+            // memberships=VIP&memberships=GOLD 형태의 다중 선택 필터를 IN 조건으로 변환
             conditions.add(MEMBER.MEMBERSHIP.in(req.memberships()));
         }
 
@@ -131,7 +130,7 @@ public class ChurnRiskMemberDao {
             // 사용자가 HIGH 또는 MEDIUM 중 일부만 보고 싶을 때 적용되는 사용자 지정 필터
             conditions.add(CHURN_SCORE_SNAPSHOT.RISK_LEVEL.in(req.riskLevels()));
         } else {
-            // 별도 필터를 주지 않아도 LOW는 기본적으로 제외한다.
+            // 별도 필터를 주지 않아도 LOW는 기본적으로 제외
             conditions.add(CHURN_SCORE_SNAPSHOT.RISK_LEVEL.in("HIGH", "MEDIUM"));
         }
 
@@ -142,7 +141,7 @@ public class ChurnRiskMemberDao {
      * 문자열 위험도를 화면 요구 순서대로 정렬하기 위한 가상 정렬 필드.
      *
      * 사전순 정렬을 사용하면 HIGH/MEDIUM 순서를 보장할 수 없으므로,
-     * CASE 문으로 우선순위 숫자를 직접 만들어 order by에 사용한다.
+     * CASE 문으로 우선순위 숫자를 직접 만들어 order by에 사용
      */
     private Field<Integer> riskLevelOrder() {
         CaseValueStep<String> riskLevelCase = org.jooq.impl.DSL.case_(CHURN_SCORE_SNAPSHOT.RISK_LEVEL);

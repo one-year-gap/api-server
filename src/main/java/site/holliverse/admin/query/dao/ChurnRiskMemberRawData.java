@@ -13,28 +13,27 @@ import lombok.ToString;
  * - risk_reasons는 JSONB를 String으로 캐스팅한 원본 문자열로 보관
  * - 화면 표시용 마스킹, JSON 배열 파싱 등은 여기서 하지 않음
  *
- * 즉, "DB 조회 결과를 안전하게 담아두는 그릇" 역할만 수행하고,
- * 실제 화면 응답 형태로의 가공은 Assembler에서 담당한다.
+ * 이 값은 Assembler가 담담ㅇ
  */
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 public class ChurnRiskMemberRawData {
-    /** 회원 PK */
+
     private Long memberId;
-    /** 회원 등급 (예: GOLD, VIP, VVIP) */
+
     private String membership;
-    /** DB에 암호화되어 저장된 이름 */
+
     private String encryptedName;
-    /** 이탈 위험도 (HIGH / MEDIUM / LOW) */
+
     private String riskLevel;
-    /** 이탈 점수 정수값 */
+
     private Integer churnScore;
-    /** JSON 배열 형태의 위험 사유 원본 문자열 */
+
     private String riskReasons;
-    /** DB에 암호화되어 저장된 전화번호 */
+
     private String encryptedPhone;
-    /** 회원 이메일 원문 */
+
     private String email;
 }

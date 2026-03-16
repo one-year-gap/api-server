@@ -14,12 +14,11 @@ import java.util.List;
 /**
  * 이탈 위험군 목록 조회 UseCase.
  *
- * 역할은 단순하다.
+ * 역할
  * 1. 전체 건수 조회
  * 2. 데이터가 없으면 빈 목록 즉시 반환
  * 3. 데이터가 있으면 실제 목록 조회
  *
- * 즉, 컨트롤러와 DAO 사이에서 조회 흐름을 정리하는 얇은 서비스 계층이다.
  */
 @Profile("admin")
 @Service
@@ -29,7 +28,7 @@ public class RetrieveChurnRiskMemberUseCase {
     private final ChurnRiskMemberDao churnRiskMemberDao;
 
     /**
-     * 화면 조회 요청을 받아 목록 + totalCount를 묶어서 반환한다.
+     * 화면 조회 요청을 받아 목록 + totalCount를 묶어서 반환
      */
     @Transactional(readOnly = true)
     public RetrieveChurnRiskMemberResult execute(ChurnRiskMemberListRequestDto requestDto) {
@@ -45,8 +44,7 @@ public class RetrieveChurnRiskMemberUseCase {
     }
 
     /**
-     * UseCase 결과를 컨트롤러로 전달하기 위한 단순 묶음 객체.
-     * members는 아직 화면용 가공 전 RawData 상태다.
+     * 가공전 Members 객체
      */
     public record RetrieveChurnRiskMemberResult(
             List<ChurnRiskMemberRawData> members,

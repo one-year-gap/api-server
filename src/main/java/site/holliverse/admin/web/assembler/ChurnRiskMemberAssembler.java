@@ -23,7 +23,7 @@ import java.util.List;
  * - risk_reasons JSON 배열 중 첫 번째 값만 추출
  * - 페이지 기준이 아닌 "전체 기준 연속 번호" 계산
  *
- * 즉, 화면에 맞는 최종 표현 형태를 만드는 계층이다.
+ * 즉, 화면에 맞는 최종 표현 형태를 만드는 계층이
  */
 @Profile("admin")
 @Component
@@ -31,9 +31,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChurnRiskMemberAssembler {
 
-    /** 이름 / 전화번호 복호화용 */
+    // 복호화 툴
     private final DecryptionTool decryptionTool;
-    /** risk_reasons JSON 배열 파싱용 */
+
     private final ObjectMapper objectMapper;
 
     /**
@@ -55,7 +55,7 @@ public class ChurnRiskMemberAssembler {
     }
 
     /**
-     * RawData 한 건을 실제 화면 행(row) DTO로 변환한다.
+     * RawData 한 건을 실제 화면 행(row) DTO로 변환
      */
     private ChurnRiskMemberDto toDto(ChurnRiskMemberRawData raw, int no) {
         String decryptedName = decryptionTool.decrypt(raw.getEncryptedName());
@@ -75,12 +75,10 @@ public class ChurnRiskMemberAssembler {
     }
 
     /**
-     * risk_reasons JSON 배열에서 첫 번째 사유만 추출한다.
+     * risk_reasons JSON 배열에서 첫 번째 사유만 추출
      *
      * 예:
-     *
-     *
-     * JSON ["장기 미접속", "상담 만족도 저하"] -> "장기 미접속"파싱 실패 시 전체 API를 깨뜨리지 않도록 null을 반환한다.
+     * JSON ["장기 미접속", "상담 만족도 저하"] -> "장기 미접속"파싱 실패 시 전체 API를 깨뜨리지 않도록 null을 반환
      */
     private String extractFirstRiskReason(String riskReasons) {
         if (riskReasons == null || riskReasons.isBlank()) {
@@ -103,8 +101,6 @@ public class ChurnRiskMemberAssembler {
      * 이름 가운데 마스킹.
      * 예:
      * - 김철수 -> 김*수
-     * - 홍길동 -> 홍*동
-     * - 김수 -> 김*
      */
     private String maskName(String name) {
         if (name == null || name.length() < 2) return name;
@@ -117,8 +113,6 @@ public class ChurnRiskMemberAssembler {
      * 전화번호 마스킹.
      * 예:
      * - 01012345678 -> 010-****-5678
-     *
-     * 이미 하이픈이 포함되어 들어와도 먼저 제거한 뒤 동일 포맷으로 다시 만든다.
      */
     private String maskPhone(String phone) {
         if (phone == null || phone.length() < 10) return phone;

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Optional;
 
 import static site.holliverse.admin.query.jooq.Tables.*;
@@ -75,6 +76,20 @@ public class AdminChurnCouponDao {
                 .set(MEMBER_COUPON.EXPIRED_AT, expiredAt)
                 .execute();
 
+    }
+
+    public java.util.List<CouponSmsTargetRawData> findCouponSmsTargets(Collection<Long> memberIds) {
+        if (memberIds == null || memberIds.isEmpty()) {
+            return java.util.List.of();
+        }
+
+        return dsl.select(
+                        MEMBER.MEMBER_ID.as("memberId"),
+                        MEMBER.PHONE.as("encryptedPhone")
+                )
+                .from(MEMBER)
+                .where(MEMBER.MEMBER_ID.in(memberIds))
+                .fetchInto(CouponSmsTargetRawData.class);
     }
 
 

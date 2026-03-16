@@ -10,7 +10,7 @@ import java.util.Map;
 public record UserLogRequest(
         @NotNull
         @JsonProperty("event_id")
-        Long eventId,
+        String tsid,
 
         @NotBlank
         @Size(max = 64)

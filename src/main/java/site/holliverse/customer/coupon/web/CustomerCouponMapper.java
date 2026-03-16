@@ -26,7 +26,6 @@ public class CustomerCouponMapper {
      * 보유 쿠폰 목록 도메인 → 목록 응답 DTO.
      * - title ← coupon.description
      * - categoryLabel ← couponType: DISCOUNT "요금 할인", DATA "데이터"
-     * - benefitText ← DISCOUNT: 숫자포맷 + "원 할인", DATA: benefitValue 그대로
      */
     public CustomerCouponListResponse toListResponse(List<MemberCoupon> coupons) {
         List<CustomerCouponItemResponse> items = coupons.stream()
@@ -42,7 +41,6 @@ public class CustomerCouponMapper {
                 toCategoryLabel(coupon.couponType()),
                 coupon.description(),
                 toSubTitle(coupon),
-                toBenefitText(coupon),
                 toExpiredDate(memberCoupon.expiredAt()),
                 true
         );
@@ -74,9 +72,7 @@ public class CustomerCouponMapper {
         return coupon.benefitValue();
     }
 
-    /**
-     * benefitText: DISCOUNT → 숫자 포맷 + "원 할인", DATA → 문자열 그대로.
-     */
+    /** 쿠폰 사용 응답의 appliedBenefitSummary용: DISCOUNT → 숫자 포맷 + "원 할인", DATA → 문자열 그대로. */
     private static String toBenefitText(Coupon coupon) {
         if (coupon.couponType() == CouponType.DISCOUNT) {
             return formatDiscountAmount(coupon.benefitValue()) + "원 할인";

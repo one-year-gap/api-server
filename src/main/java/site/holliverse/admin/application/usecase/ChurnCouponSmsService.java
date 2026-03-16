@@ -32,24 +32,36 @@ public class ChurnCouponSmsService {
         }
 
         List<CouponSmsTargetRawData> targets = adminChurnCouponDao.findCouponSmsTargets(memberIds);
-        for (CouponSmsTargetRawData target : targets) {
-            try {
-                String phone = decryptionTool.decrypt(target.encryptedPhone());
-                if (phone == null || phone.isBlank()) {
-                    log.warn("[ChurnCouponSms] 전화번호가 없어 문자 발송을 건너뜁니다. memberId={}", target.memberId());
-                    continue;
-                }
+        List<String> allowedRecipients = targets.stream()
+                .map(this::extractAllowedPhone)
+                .filter(phone -> phone != null && !phone.isBlank())
+                .toList();
 
-                String normalizedPhone = phone.replace("-", "");
-                if (!isAllowedTestPhone(normalizedPhone)) {
-                    log.warn("[ChurnCouponSms] 허용된 테스트 번호가 아니어서 문자 발송을 건너뜁니다. memberId={}", target.memberId());
-                    continue;
-                }
+        if (allowedRecipients.isEmpty()) {
+            return;
+        }
 
-                solapiSmsClient.sendCouponIssuedMessage(normalizedPhone, COUPON_MESSAGE);
-            } catch (Exception e) {
-                log.warn("[ChurnCouponSms] 문자 발송 처리 실패 memberId={}", target.memberId(), e);
+        solapiSmsClient.sendCouponIssuedMessage(allowedRecipients, COUPON_MESSAGE);
+    }
+
+    private String extractAllowedPhone(CouponSmsTargetRawData target) {
+        try {
+            String phone = decryptionTool.decrypt(target.encryptedPhone());
+            if (phone == null || phone.isBlank()) {
+                log.warn("[ChurnCouponSms] phone missing. skip sms. memberId={}", target.memberId());
+                return null;
             }
+
+            String normalizedPhone = phone.replace("-", "");
+            if (!isAllowedTestPhone(normalizedPhone)) {
+                log.warn("[ChurnCouponSms] phone not allowed for test sending. skip sms. memberId={}", target.memberId());
+                return null;
+            }
+
+            return normalizedPhone;
+        } catch (Exception e) {
+            log.warn("[ChurnCouponSms] sms target processing failed. memberId={}", target.memberId(), e);
+            return null;
         }
     }
 

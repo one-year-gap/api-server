@@ -27,11 +27,15 @@ public class SolapiSmsClient {
         this.properties = properties;
     }
 
-    public void sendCouponIssuedMessage(String to, String text) {
+    public void sendCouponIssuedMessage(List<String> toList, String text) {
         if (properties.apiKey() == null || properties.apiKey().isBlank()
                 || properties.apiSecret() == null || properties.apiSecret().isBlank()
                 || properties.senderPhone() == null || properties.senderPhone().isBlank()) {
-            log.warn("[SolapiSms] 설정이 없어 문자 발송을 건너뜁니다. to={}", to);
+            log.warn("[SolapiSms] 설정이 없어 문자 발송을 건너뜁니다. recipientCount={}", toList == null ? 0 : toList.size());
+            return;
+        }
+
+        if (toList == null || toList.isEmpty()) {
             return;
         }
 
@@ -52,14 +56,15 @@ public class SolapiSmsClient {
                         + ", salt=" + salt
                         + ", signature=" + signature);
 
-        SolapiSendRequest body = new SolapiSendRequest(
-                List.of(new SolapiMessage(properties.senderPhone(), to, text))
-        );
+        List<SolapiMessage> messages = toList.stream()
+                .map(to -> new SolapiMessage(properties.senderPhone(), to, text))
+                .toList();
+        SolapiSendRequest body = new SolapiSendRequest(messages);
 
         try {
             restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
         } catch (RestClientException e) {
-            log.warn("[SolapiSms] 문자 발송 실패 to={}", to, e);
+            log.warn("[SolapiSms] 문자 발송 실패. recipientCount={}", toList.size(), e);
         }
     }
 

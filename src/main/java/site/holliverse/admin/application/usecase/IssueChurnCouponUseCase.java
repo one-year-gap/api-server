@@ -33,6 +33,7 @@ public class IssueChurnCouponUseCase {
 
     private final AdminChurnCouponDao adminChurnCouponDao;
     private final ChurnCouponIssueProcessor churnCouponIssueProcessor;
+    private final ChurnCouponSmsService churnCouponSmsService;
 
     public IssueChurnCouponResponseDto execute(IssueChurnCouponRequestDto requestDto) {
         boolean couponExists = adminChurnCouponDao.existsCouponById(requestDto.couponId());
@@ -65,6 +66,9 @@ public class IssueChurnCouponUseCase {
                     )
             );
         }
+
+        // 문자 발송은 쿠폰 적재와 분리해 처리한다.
+        churnCouponSmsService.sendCouponIssuedMessages(issuedMemberIds);
 
         return new IssueChurnCouponResponseDto(
                 requestDto.memberIds().size(),

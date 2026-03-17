@@ -29,6 +29,9 @@ class IssueChurnCouponUseCaseTest {
     @Mock
     private ChurnCouponIssueProcessor churnCouponIssueProcessor;
 
+    @Mock
+    private ChurnCouponSmsService churnCouponSmsService;
+
     @InjectMocks
     private IssueChurnCouponUseCase issueChurnCouponUseCase;
 

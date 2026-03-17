@@ -86,11 +86,20 @@ public class ChurnRiskMemberAssembler {
         }
 
         try {
-            List<String> reasons = objectMapper.readValue(riskReasons, new TypeReference<>() {});
+            List<?> reasons = objectMapper.readValue(riskReasons, new TypeReference<>() {});
             if (reasons == null || reasons.isEmpty()) {
                 return null;
             }
-            return reasons.get(0);
+
+            Object first = reasons.get(0);
+            if (first instanceof String reason) {
+                return reason;
+            }
+            if (first instanceof java.util.Map<?, ?> reasonMap) {
+                Object summary = reasonMap.get("summary");
+                return summary != null ? summary.toString() : null;
+            }
+            return null;
         } catch (Exception e) {
             log.warn("risk_reasons JSON 파싱 실패. raw value: {}", riskReasons, e);
             return null;

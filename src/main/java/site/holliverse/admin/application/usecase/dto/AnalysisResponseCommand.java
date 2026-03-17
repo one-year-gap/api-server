@@ -1,5 +1,7 @@
 package site.holliverse.admin.application.usecase.dto;
 
+import site.holliverse.admin.domain.model.churn.ConsultationSentimentType;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -12,6 +14,7 @@ public record AnalysisResponseCommand(
         Long analysisId,
         Long memberId,
         String status,
+        ConsultationSentimentType consultationType,
         Integer keywordTypes,
         Integer keywordHits,
         List<KeywordCountCommand> keywordCounts,
@@ -23,7 +26,8 @@ public record AnalysisResponseCommand(
             Long businessKeywordId,
             String keywordCode,
             String keywordName,
-            Integer count
+            Integer count,
+            Integer negativeWeight
     ) {
     }
 }

@@ -3,7 +3,7 @@ package site.holliverse.customer.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Admin API log-features 호출 설정. application*.yml의 app.admin과 바인딩.
+ * Admin 내부 log-features 호출 설정. application*.yml의 app.admin과 바인딩.
  * base-url이 비어 있으면 HTTP 호출을 하지 않음(no-op).
  */
 @ConfigurationProperties(prefix = "app.admin")
@@ -17,7 +17,7 @@ public record AdminLogFeaturesProperties(
         if (connectTimeoutMs <= 0) connectTimeoutMs = 3_000;
         if (readTimeoutMs <= 0) readTimeoutMs = 5_000;
         if (logFeaturesPath == null || logFeaturesPath.isBlank()) {
-            logFeaturesPath = "/api/v1/admin/log-features";
+            logFeaturesPath = "/internal/v1/log-features";
         }
     }
 

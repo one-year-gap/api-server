@@ -1,14 +1,13 @@
 package site.holliverse.admin.query.dao;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.jooq.DSLContext;
 import org.jooq.Sequence;
-import org.jooq.impl.DSL;
+import org.springframework.context.annotation.Profile;
+import site.holliverse.admin.domain.model.churn.feature.MemberActionFeature;
+import site.holliverse.admin.query.jooq.enums.FeatureType;
 
 import java.util.Optional;
-
-import site.holliverse.admin.query.jooq.enums.FeatureType;
 
 import static org.jooq.impl.DSL.currentLocalDateTime;
 import static org.jooq.impl.DSL.sequence;
@@ -16,9 +15,7 @@ import static site.holliverse.admin.query.jooq.Tables.FEATURE_SNAPSHOT_STORE;
 import static site.holliverse.admin.query.jooq.Tables.MEMBER_ACTION_FEATURE;
 
 /**
- * member_action_feature의 comparison_cnt / checked_penalty_fee_cnt 실시간 증분 갱신용 DAO.
- * feature_snapshot_store에서 해당 회원·MEMBER_ACTION_FEATURE 최신 스냅샷 조회 후 갱신.
- * 스냅샷 없을 때 생성 정책: 시퀀스로 새 ID 발급 후 feature_snapshot_store + member_action_feature 1건씩 INSERT.
+ * 로그 feature 스냅샷 DAO.
  */
 @Profile("admin")
 @RequiredArgsConstructor
@@ -30,7 +27,7 @@ public class MemberActionFeatureLogDao {
     private final DSLContext dsl;
 
     /**
-     * member_id + MEMBER_ACTION_FEATURE 기준 최신 스냅샷 ID 조회 (updated_at 내림차순 1건).
+     * 최신 스냅샷 조회.
      */
     public Optional<Long> findLatestSnapshotId(Long memberId) {
         return dsl
@@ -44,35 +41,43 @@ public class MemberActionFeatureLogDao {
     }
 
     /**
-     * member_action_feature의 comparison_cnt, checked_penalty_fee_cnt에 증분 반영.
+     * 스냅샷 조회.
      */
-    public int incrementCounts(Long featureSnapshotId, int comparisonIncrement, int penaltyIncrement) {
-        if (comparisonIncrement == 0 && penaltyIncrement == 0) {
-            return 0;
-        }
-        var ma = MEMBER_ACTION_FEATURE;
-        var update = dsl.update(ma)
-                .set(ma.COMPARISON_CNT, ma.COMPARISON_CNT.plus(comparisonIncrement))
-                .set(ma.CHECKED_PENALTY_FEE_CNT, ma.CHECKED_PENALTY_FEE_CNT.plus(penaltyIncrement))
-                .where(ma.FEATURE_SNAPSHOT_ID.eq(featureSnapshotId));
-        return update.execute();
+    public ActionSnapshot findSnapshot(Long snapshotId) {
+        return dsl.select(
+                        MEMBER_ACTION_FEATURE.FEATURE_SNAPSHOT_ID,
+                        MEMBER_ACTION_FEATURE.CHANGE_MOBILE_CNT,
+                        MEMBER_ACTION_FEATURE.COMPARISON_CNT,
+                        MEMBER_ACTION_FEATURE.CHECKED_PENALTY_FEE_CNT
+                )
+                .from(MEMBER_ACTION_FEATURE)
+                .where(MEMBER_ACTION_FEATURE.FEATURE_SNAPSHOT_ID.eq(snapshotId))
+                .fetchOptional(record -> new ActionSnapshot(
+                        record.get(MEMBER_ACTION_FEATURE.FEATURE_SNAPSHOT_ID),
+                        new MemberActionFeature(
+                                Optional.ofNullable(record.get(MEMBER_ACTION_FEATURE.CHANGE_MOBILE_CNT))
+                                        .map(Short::intValue)
+                                        .orElse(0),
+                                Optional.ofNullable(record.get(MEMBER_ACTION_FEATURE.COMPARISON_CNT))
+                                        .orElse(0),
+                                Optional.ofNullable(record.get(MEMBER_ACTION_FEATURE.CHECKED_PENALTY_FEE_CNT))
+                                        .orElse(0)
+                        )
+                ))
+                .orElseThrow(() -> new IllegalStateException("member action snapshot not found. snapshotId=" + snapshotId));
     }
 
     /**
-     * 스냅샷 조회/생성 정책: 최신 스냅샷이 있으면 그 ID, 없으면 1건 생성 후 해당 ID 반환.
-     * (최신 = member_id + MEMBER_ACTION_FEATURE, updated_at 내림차순 1건)
+     * 스냅샷 조회 또는 생성.
      */
-    public long getOrCreateSnapshotId(Long memberId) {
-        return findLatestSnapshotId(memberId)
+    public ActionSnapshot getOrCreateSnapshot(Long memberId) {
+        long snapshotId = findLatestSnapshotId(memberId)
                 .orElseGet(() -> createSnapshotForMemberActionFeature(memberId));
+        return findSnapshot(snapshotId);
     }
 
     /**
-     * 해당 회원의 MEMBER_ACTION_FEATURE 스냅샷이 없을 때 1건 생성.
-     * feature_snapshot_id는 feature_snapshot_id_seq 시퀀스로 발급.
-     * member 테이블에 해당 member_id가 있어야 FK 제약으로 정상 동작.
-     *
-     * @return 새로 생성된 feature_snapshot_id
+     * 스냅샷 생성.
      */
     public long createSnapshotForMemberActionFeature(Long memberId) {
         Long snapshotId = dsl
@@ -94,5 +99,32 @@ public class MemberActionFeatureLogDao {
                 .set(MEMBER_ACTION_FEATURE.CHECKED_PENALTY_FEE_CNT, 0)
                 .execute();
         return snapshotId.longValue();
+    }
+
+    /**
+     * 스냅샷 동기화.
+     */
+    public void syncSnapshot(Long snapshotId, int featureScore, MemberActionFeature feature) {
+        dsl.update(FEATURE_SNAPSHOT_STORE)
+                .set(FEATURE_SNAPSHOT_STORE.UPDATED_AT, currentLocalDateTime())
+                .set(FEATURE_SNAPSHOT_STORE.FEATURE_SCORE, featureScore)
+                .where(FEATURE_SNAPSHOT_STORE.FEATURE_SNAPSHOT_ID.eq(snapshotId))
+                .execute();
+
+        dsl.update(MEMBER_ACTION_FEATURE)
+                .set(MEMBER_ACTION_FEATURE.CHANGE_MOBILE_CNT, (short) feature.changeMobileCount())
+                .set(MEMBER_ACTION_FEATURE.COMPARISON_CNT, feature.comparisonCount())
+                .set(MEMBER_ACTION_FEATURE.CHECKED_PENALTY_FEE_CNT, feature.checkedPenaltyFeeCount())
+                .where(MEMBER_ACTION_FEATURE.FEATURE_SNAPSHOT_ID.eq(snapshotId))
+                .execute();
+    }
+
+    /**
+     * 스냅샷 묶음.
+     */
+    public record ActionSnapshot(
+            Long snapshotId,
+            MemberActionFeature feature
+    ) {
     }
 }

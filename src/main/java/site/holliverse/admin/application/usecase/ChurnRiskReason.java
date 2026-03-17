@@ -4,6 +4,7 @@ import site.holliverse.admin.domain.model.churn.ChurnFeatureCollectionType;
 import site.holliverse.admin.domain.model.churn.ChurnSignalType;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 이탈 위험 사유.
@@ -33,7 +34,9 @@ public record ChurnRiskReason(
      */
     public enum ReasonCode {
         NEGATIVE_SENTIMENT("부정 상담 감지"),
-        KEYWORD("상담 키워드 감지");
+        KEYWORD("상담 키워드 감지"),
+        COMPARE("요금제 비교 클릭 감지"),
+        CHECKED_PENALTY_FEE("위약금 확인 이력 클릭 감지");
 
         private final String defaultSummary;
 
@@ -82,6 +85,19 @@ public record ChurnRiskReason(
 
             return String.join(", ", labels) + " 키워드 감지";
         }
+
+        /**
+         * 로그 요약.
+         */
+        public String logSummary(int totalCount) {
+            String label = switch (this) {
+                case COMPARE -> "요금제 비교 클릭";
+                case CHECKED_PENALTY_FEE -> "위약금 확인 이력 클릭";
+                default -> defaultSummary;
+            };
+
+            return label + " 누적 " + totalCount + "회";
+        }
     }
 
     /**
@@ -122,5 +138,27 @@ public record ChurnRiskReason(
             }
             return keywordName + " " + count + "회";
         }
+    }
+
+    /**
+     * 로그 근거.
+     */
+    public record LogEvidence(
+            int incrementCount,
+            int totalCount,
+            List<LogEventItem> events
+    ) {
+    }
+
+    /**
+     * 로그 항목.
+     */
+    public record LogEventItem(
+            Long eventId,
+            String timestamp,
+            String event,
+            String eventName,
+            Map<String, Object> eventProperties
+    ) {
     }
 }

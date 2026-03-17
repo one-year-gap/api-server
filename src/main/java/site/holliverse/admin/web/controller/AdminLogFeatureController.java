@@ -14,22 +14,21 @@ import site.holliverse.shared.web.response.ApiResponse;
 
 /**
  * 실시간 로그 기반 feature 카운트 갱신 API.
- * Customer API user-logs 처리 후 event_name dedupe 결과를 전달받아 member_action_feature만 갱신.
+ * Customer API user-logs 처리 후 event_id dedupe 결과를 전달받아
+ * member_action_feature와 churn snapshot을 갱신한다.
  */
 @Profile("admin")
 @RestController
-@RequestMapping("/api/v1/admin")
+@RequestMapping("/internal/v1/log-features")
 @RequiredArgsConstructor
 public class AdminLogFeatureController {
 
     private final LogFeaturesUseCase logFeaturesUseCase;
 
     /**
-     * 비교/패널티 건수 증분 반영.
-     * body: memberId, comparisonIncrement(0|1), penaltyIncrement(0|1).
-     * 해당 회원의 MEMBER_ACTION_FEATURE 스냅샷이 있을 때만 갱신, 없으면 스냅샷을 새로 생성
+     * 비교/위약금 이벤트 반영.
      */
-    @PostMapping("/log-features")
+    @PostMapping
     public ResponseEntity<ApiResponse<Void>> logFeatures(@Valid @RequestBody LogFeaturesRequestDto request) {
         logFeaturesUseCase.execute(request);
         return ResponseEntity.ok(ApiResponse.success("처리되었습니다.", null));

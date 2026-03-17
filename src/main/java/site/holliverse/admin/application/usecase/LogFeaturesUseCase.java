@@ -5,13 +5,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import site.holliverse.admin.query.dao.MemberActionFeatureLogDao;
+import site.holliverse.admin.domain.model.churn.ChurnEvaluationResult;
 import site.holliverse.admin.web.dto.log.LogFeaturesRequestDto;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * POST /api/v1/admin/log-features 처리.
- * 스냅샷 조회/생성 정책: 해당 회원의 MEMBER_ACTION_FEATURE 최신 스냅샷을 쓰고, 없으면 1건 생성 후
- * comparison_cnt / checked_penalty_fee_cnt 만 증분 갱신.
  */
 @Service
 @Profile("admin")
@@ -19,24 +24,65 @@ import site.holliverse.admin.web.dto.log.LogFeaturesRequestDto;
 @Slf4j
 public class LogFeaturesUseCase {
 
-    private final MemberActionFeatureLogDao memberActionFeatureLogDao;
+    private final CalculateLogChurnScoreService calculateLogChurnScoreService;
 
     /**
-     * 요청대로 member_action_feature 카운트만 증분 반영.
-     * 스냅샷이 없으면 정책에 따라 생성 후 갱신.
+     * 로그 처리.
      */
     @Transactional
     public void execute(LogFeaturesRequestDto request) {
-        long snapshotId = memberActionFeatureLogDao.getOrCreateSnapshotId(request.memberId());
-        int updated = memberActionFeatureLogDao.incrementCounts(
-                snapshotId,
-                request.comparisonIncrement(),
-                request.penaltyIncrement()
-        );
-        if (updated > 0) {
-            log.debug("log-features: member_id={}, snapshot_id={}, comparison+{}, penalty+{}",
-                    request.memberId(), snapshotId,
-                    request.comparisonIncrement(), request.penaltyIncrement());
+        // 대상 이벤트
+        List<LogFeatureEvent> events = resolveEvents(request);
+        if (events.isEmpty()) {
+            log.debug("log-features skipped: member_id={} events=0", request.memberId());
+            return;
         }
+
+        // 기준일 추출
+        LocalDate baseDate = resolveBaseDate(events);
+
+        // 이탈률 계산
+        ChurnEvaluationResult result = calculateLogChurnScoreService.calculateAndStore(
+                request.memberId(),
+                baseDate,
+                events
+        );
+
+        log.debug("log-features: member_id={} events={} churnScore={}",
+                request.memberId(), events.size(), result.scoreResult().score().value());
+    }
+
+    /**
+     * 이벤트 변환.
+     */
+    private List<LogFeatureEvent> resolveEvents(LogFeaturesRequestDto request) {
+        Map<Long, LogFeatureEvent> events = new LinkedHashMap<>();
+        for (LogFeaturesRequestDto.LogEventDto event : request.events()) {
+            LogFeatureEventName.find(event.eventName())
+                    .ifPresent(eventName -> events.putIfAbsent(
+                            event.eventId(),
+                            new LogFeatureEvent(
+                                    event.eventId(),
+                                    Instant.parse(event.timestamp()),
+                                    event.event(),
+                                    eventName,
+                                    event.eventProperties()
+                            )
+                    ));
+        }
+
+        return List.copyOf(events.values());
+    }
+
+    /**
+     * 기준일 추출.
+     */
+    private LocalDate resolveBaseDate(List<LogFeatureEvent> events) {
+        return events.stream()
+                .map(LogFeatureEvent::timestamp)
+                .max(Instant::compareTo)
+                .orElseGet(Instant::now)
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toLocalDate();
     }
 }

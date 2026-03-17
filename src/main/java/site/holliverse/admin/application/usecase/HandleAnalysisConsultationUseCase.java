@@ -33,7 +33,7 @@ public class HandleAnalysisConsultationUseCase {
 
         // 이탈률 계산
         return calculateChurnScoreService.calculateAndStore(
-                command.memberId(),
+                command,
                 resolveBaseDate(command),
                 dissatisfactionFeature
         );

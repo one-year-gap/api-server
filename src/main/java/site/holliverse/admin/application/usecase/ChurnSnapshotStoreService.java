@@ -32,42 +32,61 @@ public class ChurnSnapshotStoreService {
             Long memberId,
             LocalDate baseDate,
             ChurnScoreCalculationResult result,
-            ChurnRiskGrade grade
+            ChurnRiskGrade grade,
+            List<ChurnRiskReason> riskReasons
     ) {
         // 위험 사유 직렬화
-        String riskReasons = writeRiskReasons(result.contributions());
+        JSONB riskReasonsJson = JSONB.valueOf(writeRiskReasons(riskReasons));
+
+        // 상세 점수
+        FeatureScores featureScores = toFeatureScores(result);
 
         // 부모 업서트
         Long snapshotId = dsl.insertInto(CHURN_SCORE_SNAPSHOT)
                 .set(CHURN_SCORE_SNAPSHOT.MEMBER_ID, memberId)
                 .set(CHURN_SCORE_SNAPSHOT.CHURN_SCORE, result.score().value())
                 .set(CHURN_SCORE_SNAPSHOT.RISK_LEVEL, grade.name())
-                .set(CHURN_SCORE_SNAPSHOT.RISK_REASONS, JSONB.valueOf(riskReasons))
+                .set(CHURN_SCORE_SNAPSHOT.RISK_REASONS, riskReasonsJson)
                 .set(CHURN_SCORE_SNAPSHOT.BASE_DATE, baseDate)
                 .onConflict(CHURN_SCORE_SNAPSHOT.MEMBER_ID, CHURN_SCORE_SNAPSHOT.BASE_DATE)
                 .doUpdate()
                 .set(CHURN_SCORE_SNAPSHOT.CHURN_SCORE, result.score().value())
                 .set(CHURN_SCORE_SNAPSHOT.RISK_LEVEL, grade.name())
-                .set(CHURN_SCORE_SNAPSHOT.RISK_REASONS, JSONB.valueOf(riskReasons))
+                .set(CHURN_SCORE_SNAPSHOT.RISK_REASONS, riskReasonsJson)
                 .returning(CHURN_SCORE_SNAPSHOT.SNAPSHOT_ID)
                 .fetchOne(CHURN_SCORE_SNAPSHOT.SNAPSHOT_ID);
 
         // 자식 업서트
         dsl.insertInto(CHURN_FEATURE_SCORE)
                 .set(CHURN_FEATURE_SCORE.SNAPSHOT_ID, snapshotId)
-                .set(CHURN_FEATURE_SCORE.CHURN_BASE_SCORE, toShortScore(result, ChurnFeatureType.CONTRACT))
-                .set(CHURN_FEATURE_SCORE.CHURN_USAGE_SCORE, toShortScore(result, ChurnFeatureType.USAGE))
-                .set(CHURN_FEATURE_SCORE.CHURN_COUNSEL_SCORE, toShortScore(result, ChurnFeatureType.MEMBER_DISSATISFACTION))
-                .set(CHURN_FEATURE_SCORE.CHURN_LOG_SCORE, toShortScore(result, ChurnFeatureType.MEMBER_ACTION))
+                .set(CHURN_FEATURE_SCORE.CHURN_BASE_SCORE, featureScores.baseScore())
+                .set(CHURN_FEATURE_SCORE.CHURN_USAGE_SCORE, featureScores.usageScore())
+                .set(CHURN_FEATURE_SCORE.CHURN_COUNSEL_SCORE, featureScores.counselScore())
+                .set(CHURN_FEATURE_SCORE.CHURN_LOG_SCORE, featureScores.logScore())
                 .onConflict(CHURN_FEATURE_SCORE.SNAPSHOT_ID)
                 .doUpdate()
-                .set(CHURN_FEATURE_SCORE.CHURN_BASE_SCORE, toShortScore(result, ChurnFeatureType.CONTRACT))
-                .set(CHURN_FEATURE_SCORE.CHURN_USAGE_SCORE, toShortScore(result, ChurnFeatureType.USAGE))
-                .set(CHURN_FEATURE_SCORE.CHURN_COUNSEL_SCORE, toShortScore(result, ChurnFeatureType.MEMBER_DISSATISFACTION))
-                .set(CHURN_FEATURE_SCORE.CHURN_LOG_SCORE, toShortScore(result, ChurnFeatureType.MEMBER_ACTION))
+                .set(CHURN_FEATURE_SCORE.CHURN_BASE_SCORE, featureScores.baseScore())
+                .set(CHURN_FEATURE_SCORE.CHURN_USAGE_SCORE, featureScores.usageScore())
+                .set(CHURN_FEATURE_SCORE.CHURN_COUNSEL_SCORE, featureScores.counselScore())
+                .set(CHURN_FEATURE_SCORE.CHURN_LOG_SCORE, featureScores.logScore())
                 .execute();
     }
 
+    /**
+     * 상세 점수 조립.
+     */
+    private FeatureScores toFeatureScores(ChurnScoreCalculationResult result) {
+        return new FeatureScores(
+                toShortScore(result, ChurnFeatureType.CONTRACT),
+                toShortScore(result, ChurnFeatureType.USAGE),
+                toShortScore(result, ChurnFeatureType.MEMBER_DISSATISFACTION),
+                toShortScore(result, ChurnFeatureType.MEMBER_ACTION)
+        );
+    }
+
+    /**
+     * feature 점수.
+     */
     private Short toShortScore(ChurnScoreCalculationResult result, ChurnFeatureType featureType) {
         // feature 합계
         int featureScore = result.contributions().stream()
@@ -78,11 +97,22 @@ public class ChurnSnapshotStoreService {
         return (short) featureScore;
     }
 
-    private String writeRiskReasons(List<ChurnFeatureContribution> contributions) {
+    private String writeRiskReasons(List<ChurnRiskReason> riskReasons) {
         try {
-            return objectMapper.writeValueAsString(contributions);
+            return objectMapper.writeValueAsString(riskReasons);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("risk reasons serialization failed", e);
         }
+    }
+
+    /**
+     * 점수 묶음.
+     */
+    private record FeatureScores(
+            Short baseScore,
+            Short usageScore,
+            Short counselScore,
+            Short logScore
+    ) {
     }
 }

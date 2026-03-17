@@ -16,7 +16,9 @@ import site.holliverse.customer.web.dto.log.UserLogRequest;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -39,19 +41,17 @@ public class UserLogService {
         for (UserLogRequest request : requests) {
             doPublish(memberId, request);
         }
-        // event_name 기준 배치 내 중복 제거 후 Admin log-features 호출 (comparison/penalty 각 최대 1)
-        int comparisonIncrement = requests.stream()
-                .anyMatch(r -> UserLogEventName.CLICK_COMPARE.value().equals(r.eventName())) ? 1 : 0;
-        int penaltyIncrement = requests.stream()
-                .anyMatch(r -> UserLogEventName.CLICK_PENALTY.value().equals(r.eventName())) ? 1 : 0;
-        if (comparisonIncrement != 0 || penaltyIncrement != 0) {
-            adminLogFeaturesClient.sendLogFeatures(memberId, comparisonIncrement, penaltyIncrement);
-        }
+
+        // 이벤트 전달
+        adminLogFeaturesClient.sendLogFeatures(memberId, toAdminEvents(requests));
     }
 
     @Async("userLogTaskExecutor")
     public void publish(Long memberId, UserLogRequest request) {
         doPublish(memberId, request);
+
+        // 이벤트 전달
+        adminLogFeaturesClient.sendLogFeatures(memberId, toAdminEvents(List.of(request)));
     }
 
     /**
@@ -109,5 +109,39 @@ public class UserLogService {
         Tsid parsed = Tsid.from(tsid);
         return parsed.toLong();
     }
-}
 
+    /**
+     * Admin 이벤트 변환.
+     */
+    private List<AdminLogFeaturesClient.LogEventBody> toAdminEvents(List<UserLogRequest> requests) {
+        Map<Long, AdminLogFeaturesClient.LogEventBody> deduplicatedEvents = new LinkedHashMap<>();
+        for (UserLogRequest request : requests) {
+            UserLogEventName eventName = UserLogEventName.from(request.eventName());
+            if (!isAdminTarget(eventName)) {
+                continue;
+            }
+
+            long eventId = decodeTsidToLong(request.tsid());
+            deduplicatedEvents.putIfAbsent(
+                    eventId,
+                    new AdminLogFeaturesClient.LogEventBody(
+                            eventId,
+                            request.timestamp(),
+                            request.event(),
+                            eventName.value(),
+                            request.eventProperties()
+                    )
+            );
+        }
+
+        return List.copyOf(deduplicatedEvents.values());
+    }
+
+    /**
+     * 대상 이벤트.
+     */
+    private boolean isAdminTarget(UserLogEventName eventName) {
+        return eventName == UserLogEventName.CLICK_COMPARE
+                || eventName == UserLogEventName.CLICK_PENALTY;
+    }
+}

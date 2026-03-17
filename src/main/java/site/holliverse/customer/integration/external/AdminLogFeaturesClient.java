@@ -9,8 +9,11 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import site.holliverse.customer.config.AdminLogFeaturesProperties;
 
+import java.util.List;
+import java.util.Map;
+
 /**
- * Admin API POST /api/v1/admin/log-features 호출용 클라이언트.
+ * Admin API POST /internal/v1/log-features 호출용 클라이언트.
  * customer 모듈은 admin 패키지를 의존하지 않고 HTTP만 사용(ArchUnit 준수).
  */
 @Slf4j
@@ -31,15 +34,15 @@ public class AdminLogFeaturesClient {
      * log-features API 호출. baseUrl이 비어 있으면 호출하지 않음(no-op).
      * 실패 시 로깅만 하고 예외 전파하지 않음(배치 처리 방해 방지).
      */
-    public void sendLogFeatures(long memberId, int comparisonIncrement, int penaltyIncrement) {
-        if (baseUrl == null || baseUrl.isBlank()) {
+    public void sendLogFeatures(long memberId, List<LogEventBody> events) {
+        if (baseUrl == null || baseUrl.isBlank() || events == null || events.isEmpty()) {
             return;
         }
         String path = (logFeaturesPath != null && !logFeaturesPath.isBlank())
                 ? logFeaturesPath
-                : "/api/v1/admin/log-features";
+                : "/internal/v1/log-features";
         String url = baseUrl + path;
-        LogFeaturesRequestBody body = new LogFeaturesRequestBody(memberId, comparisonIncrement, penaltyIncrement);
+        LogFeaturesRequestBody body = new LogFeaturesRequestBody(memberId, events);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<LogFeaturesRequestBody> entity = new HttpEntity<>(body, headers);
@@ -54,5 +57,19 @@ public class AdminLogFeaturesClient {
     }
 
     /** Admin API 요청 body (admin 패키지 미참조). */
-    public record LogFeaturesRequestBody(long memberId, int comparisonIncrement, int penaltyIncrement) {}
+    public record LogFeaturesRequestBody(
+            long memberId,
+            List<LogEventBody> events
+    ) {
+    }
+
+    /** Admin API 로그 body. */
+    public record LogEventBody(
+            long eventId,
+            String timestamp,
+            String event,
+            String eventName,
+            Map<String, Object> eventProperties
+    ) {
+    }
 }

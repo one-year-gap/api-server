@@ -139,6 +139,17 @@ external:
     base-url: ${FASTAPI_BASE_URL:http://localhost:8000}
     connect-timeout-ms: ${FASTAPI_CONNECT_TIMEOUT_MS:5000}
     read-timeout-ms: ${FASTAPI_READ_TIMEOUT_MS:60000}
+  solapi:
+    base-url: ${SOLAPI_BASE_URL:https://api.solapi.com}
+    api-key: ${SOLAPI_API_KEY:}
+    api-secret: ${SOLAPI_API_SECRET:}
+    sender-phone: ${SOLAPI_SENDER_PHONE:}
+    allowed-test-phones:
+      - ${SOLAPI_ALLOWED_TEST_PHONE_1:}
+      - ${SOLAPI_ALLOWED_TEST_PHONE_2:}
+      - ${SOLAPI_ALLOWED_TEST_PHONE_3:}
+    connect-timeout-ms: ${SOLAPI_CONNECT_TIMEOUT_MS:5000}
+    read-timeout-ms: ${SOLAPI_READ_TIMEOUT_MS:10000}
 
 # =================================================================
 # Security & Encryption Configuration

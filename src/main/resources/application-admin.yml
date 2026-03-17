@@ -13,6 +13,9 @@ server:
 
 app:
   runtime: admin
+  internal-webhook:
+    path-pattern: ${APP_INTERNAL_WEBHOOK_PATH_PATTERN:/internal/**}
+
   jwt:
     secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}
     access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:604800000}

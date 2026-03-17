@@ -250,7 +250,7 @@ jooq {
                 jdbc {
                     //
                     driver = 'org.postgresql.Driver'
-                    url = envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5435/holliverse'
+                    url = envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5432/holliverse'
                     user = envOrDefault('DB_USER_ADMIN', 'SPRING_DATASOURCE_USERNAME') ?: 'postgres'
                     password = envOrDefault('DB_PASS_ADMIN', 'SPRING_DATASOURCE_PASSWORD') ?: 'postgres'
                 }
@@ -278,7 +278,7 @@ jooq {
 
 flyway {
     configurations = ['runtimeClasspath']
-    url = envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5435/holliverse'
+    url = envOrDefault('DB_URL', 'SPRING_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5432/holliverse'
     user = envOrDefault('FLYWAY_USER', 'DB_USER_MIGRATOR', 'SPRING_DATASOURCE_USERNAME', 'DB_USER_ADMIN') ?: 'postgres'
     password = envOrDefault('FLYWAY_PASSWORD', 'DB_PASS_MIGRATOR', 'SPRING_DATASOURCE_PASSWORD', 'DB_PASS_ADMIN') ?: 'postgres'
     locations = ['filesystem:src/main/resources/db/migration']

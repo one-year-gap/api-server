@@ -7,8 +7,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import site.holliverse.customer.persistence.entity.Product;
 import site.holliverse.customer.persistence.entity.Subscription;
@@ -25,7 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,7 +52,7 @@ class CustomerInitialPlanAssignmentUseCaseTest {
         useCase.assignForNewMember(member);
 
         verify(subscriptionRepository).findActiveByMemberIdAndProductType(1L, ProductType.MOBILE_PLAN);
-        verify(productRepository, never()).countByProductType(any());
+        verify(productRepository, never()).findById(anyLong());
         verify(subscriptionRepository, never()).save(any(Subscription.class));
     }
 
@@ -65,7 +63,7 @@ class CustomerInitialPlanAssignmentUseCaseTest {
         Member member = member(2L);
         when(subscriptionRepository.findActiveByMemberIdAndProductType(2L, ProductType.MOBILE_PLAN))
                 .thenReturn(Optional.empty());
-        when(productRepository.countByProductType(ProductType.MOBILE_PLAN)).thenReturn(0L);
+        when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.assignForNewMember(member))
                 .isInstanceOf(CustomException.class)
@@ -81,13 +79,11 @@ class CustomerInitialPlanAssignmentUseCaseTest {
     @DisplayName("assigns one active mobile subscription with 24-month contract")
     void assignsRandomMobilePlan() {
         Member member = member(3L);
-        Product plan = mobilePlan(100L);
+        Product plan = mobilePlan(5L);
 
         when(subscriptionRepository.findActiveByMemberIdAndProductType(3L, ProductType.MOBILE_PLAN))
                 .thenReturn(Optional.empty());
-        when(productRepository.countByProductType(ProductType.MOBILE_PLAN)).thenReturn(1L);
-        when(productRepository.findByProductType(eq(ProductType.MOBILE_PLAN), eq(PageRequest.of(0, 1))))
-                .thenReturn(new PageImpl<>(List.of(plan)));
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(plan));
         when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(inv -> inv.getArgument(0));
 
         useCase.assignForNewMember(member);

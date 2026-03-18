@@ -15,6 +15,7 @@ import site.holliverse.shared.domain.model.ProductType;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.logging.SystemLogEvent;
+import site.holliverse.shared.persistence.entity.Address;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.util.DecryptionTool;
@@ -64,6 +65,7 @@ public class GetCustomerProfileUseCase {
                 .toList();
 
         CustomerProfileResult.MobilePlanInfo mobilePlanInfo = buildMobilePlanInfo(subscriptions);
+        CustomerProfileResult.ContractInfo contractInfo = buildContractInfo(subscriptions);
 
         String decryptedName = safeDecrypt("name", member.getName());
         String decryptedPhone = safeDecrypt("phone", member.getPhone());
@@ -71,9 +73,13 @@ public class GetCustomerProfileUseCase {
         return new CustomerProfileResult(
                 decryptedName,
                 member.getMembership(),
+                member.getEmail(),
                 decryptedPhone,
+                formatAddress(member.getAddress()),
+                member.getBirthDate(),
                 subscriptionItems,
-                mobilePlanInfo
+                mobilePlanInfo,
+                contractInfo
         );
     }
 
@@ -102,7 +108,6 @@ public class GetCustomerProfileUseCase {
                 .orElse(Map.of());
 
         CustomerProfileResult.UsageDetails usageDetails = mapToUsageDetails(rawUsageDetails);
-
         DataAmountNormalization normalized = normalizeDataAmount(mobilePlan.getDataAmount());
 
         return new CustomerProfileResult.MobilePlanInfo(
@@ -112,6 +117,35 @@ public class GetCustomerProfileUseCase {
                 mobilePlan.getBenefitVoiceCall(),
                 usageDetails
         );
+    }
+
+
+    // 활성 구독 목록에서 모바일 요금제 구독을 찾아 약정 정보를 응답용으로 변환하는 메서드
+    private CustomerProfileResult.ContractInfo buildContractInfo(List<Subscription> subscriptions) {
+        Subscription mobileSubscription = subscriptions.stream()
+                .filter(subscription -> subscription.getProduct().getProductType() == ProductType.MOBILE_PLAN)
+                .findFirst()
+                .orElse(null);
+
+        if (mobileSubscription == null) {
+            return null;
+        }
+
+        Integer contractMonths = mobileSubscription.getContractMonths();
+
+        return new CustomerProfileResult.ContractInfo(
+                contractMonths == null ? null : mobileSubscription.getStartDate().toLocalDate(),
+                mobileSubscription.getContractEndDate() == null ? null : mobileSubscription.getContractEndDate().toLocalDate(),
+                contractMonths
+        );
+    }
+
+    //주소 엔티티의 시/구/도로명 주소를 한줄 문자열로 조합하는 메서드
+    private String formatAddress(Address address) {
+        if (address == null) {
+            return null;
+        }
+        return String.join(" ", address.getProvince(), address.getCity(), address.getStreetAddress());
     }
 
     private CustomerProfileResult.UsageDetails mapToUsageDetails(Map<String, Object> map) {
@@ -155,5 +189,4 @@ public class GetCustomerProfileUseCase {
     }
 
     private record DataAmountNormalization(String dataAmount, boolean isDay) {}
-
 }

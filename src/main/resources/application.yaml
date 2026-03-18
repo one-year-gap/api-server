@@ -89,18 +89,18 @@ management:
         enabled: true
 
 
-logging:
-  level:
-    root: WARN
-    ACCESS_LOG: INFO
-  structured:
-    format:
-      console: logstash
-    json:
-      stacktrace:
-        max-length: 5000
-        include-common-frames: true
-        include-hashes: true
+#logging:
+#  level:
+#    root: WARN
+#    ACCESS_LOG: INFO
+#  structured:
+#    format:
+#      console: logstash
+#    json:
+#      stacktrace:
+#        max-length: 5000
+#        include-common-frames: true
+#        include-hashes: true
 
 app:
   oauth2:

@@ -1,7 +1,6 @@
 package site.holliverse.auth.application.usecase;
 
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.auth.application.port.InitialPlanAssignmentService;
@@ -35,7 +34,6 @@ public class CustomerInitialPlanAssignmentUseCase implements InitialPlanAssignme
     @Override
     @Transactional
     public void assignForNewMember(Member member) {
-        // 이미 모바일 요금제 활성 구독이 있으면 중복 생성하지 않는다.
         boolean alreadyAssigned = subscriptionRepository
                 .findActiveByMemberIdAndProductType(member.getId(), ProductType.MOBILE_PLAN)
                 .isPresent();
@@ -43,22 +41,13 @@ public class CustomerInitialPlanAssignmentUseCase implements InitialPlanAssignme
             return;
         }
 
-
-        //모바일플랜 요금제가 없을경우 에러처리
-        long count = productRepository.countByProductType(ProductType.MOBILE_PLAN);
-        if (count <= 0) {
-            throw new CustomException(ErrorCode.NOT_FOUND, "mobilePlan");
-        }
-
-        //요금제 하나 내려주기
-        int randomPage = ThreadLocalRandom.current().nextInt(Math.toIntExact(count));
-        Product randomPlan = productRepository
-                .findByProductType(ProductType.MOBILE_PLAN, PageRequest.of(randomPage, 1))
-                .stream()
-                .findFirst()
+        // product_id 1~10 범위의 모바일 요금제 중 하나를 랜덤으로 선택
+        long randomProductId = ThreadLocalRandom.current().nextLong(1, 11);
+        Product randomPlan = productRepository.findById(randomProductId)
+                .filter(product -> product.getProductType() == ProductType.MOBILE_PLAN)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "mobilePlan"));
 
-        Subscription subscription = Subscription.createActive(member, randomPlan, LocalDateTime.now(),24);
+        Subscription subscription = Subscription.createActive(member, randomPlan, LocalDateTime.now(), 24);
         subscriptionRepository.save(subscription);
     }
 }

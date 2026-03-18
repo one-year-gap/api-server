@@ -3,14 +3,19 @@ package site.holliverse.customer.application.usecase.member;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.ProductType;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public record CustomerProfileResult(
         String name,
         MemberMembership membership,
+        String email,
         String phone,
-        List<SubscriptionSummaryItem> subscriptions, //구독하고 있는 상품
-        MobilePlanInfo mobilePlan // 모바일 요금제 상세정보
+        String address,
+        LocalDate birthDate,
+        List<SubscriptionSummaryItem> subscriptions,
+        MobilePlanInfo mobilePlan,
+        ContractInfo contract
 ) {
 
     public record SubscriptionSummaryItem(
@@ -19,7 +24,6 @@ public record CustomerProfileResult(
             ProductType productType
     ) {}
 
-    /** 모바일 요금제 당월 사용량 상세 (data_gb, sms_cnt, voice_min) */
     public record UsageDetails(
             Double dataGb,
             Integer smsCnt,
@@ -32,5 +36,11 @@ public record CustomerProfileResult(
             String benefitSms,
             String benefitVoiceCall,
             UsageDetails usageDetails
+    ) {}
+
+    public record ContractInfo(
+            LocalDate contractStartDate,
+            LocalDate contractEndDate,
+            Integer contractMonths
     ) {}
 }

@@ -3,12 +3,17 @@ package site.holliverse.customer.web.dto.member;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.ProductType;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public record CustomerProfileResponse(
         String name,
         MemberMembership membership,
         String phone,
+        String email,
+        String address,
+        LocalDate birthDate,
+        ContractDetail contract,
         List<SubscriptionItem> subscriptions,
         MobilePlanDetail mobilePlan
 ) {
@@ -32,5 +37,11 @@ public record CustomerProfileResponse(
             String benefitSms,
             String benefitVoiceCall,
             UsageDetails usageDetails
+    ) {}
+
+    public record ContractDetail(
+            LocalDate contractStartDate,
+            LocalDate contractEndDate,
+            Integer contractMonths
     ) {}
 }

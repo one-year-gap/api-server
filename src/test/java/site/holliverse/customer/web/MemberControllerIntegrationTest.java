@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional
-@Disabled("CI 환경에 PostgreSQL 연결 불가(db_migrator 인증 실패), 로컬에서만 수동 실행")
+@Disabled("Run locally with PostgreSQL.")
 class MemberControllerIntegrationTest {
 
     private static final String TEST_EMAIL_PREFIX = "member-it-";
@@ -36,18 +36,6 @@ class MemberControllerIntegrationTest {
     private static final String TEST_STREET_PREFIX = "it-street-";
     private static final String API_ME = "/api/v1/customer/me";
     private static final String USAGE_YYYYMM = "202603";
-
-    private static final String JSON_STATUS = "$.status";
-    private static final String JSON_DATA_NAME = "$.data.name";
-    private static final String JSON_DATA_PHONE = "$.data.phone";
-    private static final String JSON_DATA_MEMBERSHIP = "$.data.membership";
-    private static final String JSON_FIRST_SUBSCRIPTION_TYPE = "$.data.subscriptions[0].productType";
-    private static final String JSON_MOBILE_DATA_AMOUNT = "$.data.mobilePlan.dataAmount";
-    private static final String JSON_USAGE_DATA_GB = "$.data.mobilePlan.usageDetails.dataGb";
-    private static final String JSON_USAGE_SMS_CNT = "$.data.mobilePlan.usageDetails.smsCnt";
-    private static final String JSON_USAGE_VOICE_MIN = "$.data.mobilePlan.usageDetails.voiceMin";
-    private static final String JSON_ERROR_CODE = "$.errorDetail.code";
-    private static final String JSON_ERROR_FIELD = "$.errorDetail.field";
 
     @Autowired
     private MockMvc mockMvc;
@@ -59,7 +47,7 @@ class MemberControllerIntegrationTest {
     private EncryptionTool encryptionTool;
 
     @Test
-    @DisplayName("GET /api/v1/customer/me - DB 데이터 기준으로 회원정보/구독/모바일 사용량을 반환한다.")
+    @DisplayName("GET /api/v1/customer/me returns profile fields including contract info")
     void getMyProfile_success() throws Exception {
         String suffix = String.valueOf(System.nanoTime());
         MemberFixtureResult fixture = createMemberFixture(suffix, true);
@@ -68,22 +56,28 @@ class MemberControllerIntegrationTest {
         try {
             mockMvc.perform(get(API_ME))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath(JSON_STATUS).value("success"))
-                    .andExpect(jsonPath(JSON_DATA_NAME).value("홍길동"))
-                    .andExpect(jsonPath(JSON_DATA_PHONE).value(fixture.expectedMaskedPhone()))
-                    .andExpect(jsonPath(JSON_DATA_MEMBERSHIP).value("GOLD"))
-                    .andExpect(jsonPath(JSON_FIRST_SUBSCRIPTION_TYPE).value("MOBILE_PLAN"))
-                    .andExpect(jsonPath(JSON_MOBILE_DATA_AMOUNT).value("완전 무제한"))
-                    .andExpect(jsonPath(JSON_USAGE_DATA_GB).value(2.8))
-                    .andExpect(jsonPath(JSON_USAGE_SMS_CNT).value(54))
-                    .andExpect(jsonPath(JSON_USAGE_VOICE_MIN).value(145));
+                    .andExpect(jsonPath("$.status").value("success"))
+                    .andExpect(jsonPath("$.data.name").value("Hong Gil-dong"))
+                    .andExpect(jsonPath("$.data.membership").value("GOLD"))
+                    .andExpect(jsonPath("$.data.email").value(fixture.email()))
+                    .andExpect(jsonPath("$.data.phone").value(fixture.phone()))
+                    .andExpect(jsonPath("$.data.address").value("Seoul Gangnam " + TEST_STREET_PREFIX + suffix))
+                    .andExpect(jsonPath("$.data.birthDate").value("2000-01-01"))
+                    .andExpect(jsonPath("$.data.contract.contractStartDate").value("2026-03-18"))
+                    .andExpect(jsonPath("$.data.contract.contractEndDate").value("2028-03-18"))
+                    .andExpect(jsonPath("$.data.contract.contractMonths").value(24))
+                    .andExpect(jsonPath("$.data.subscriptions[0].productType").value("MOBILE_PLAN"))
+                    .andExpect(jsonPath("$.data.mobilePlan.dataAmount").value("Unlimited"))
+                    .andExpect(jsonPath("$.data.mobilePlan.usageDetails.dataGb").value(2.8))
+                    .andExpect(jsonPath("$.data.mobilePlan.usageDetails.smsCnt").value(54))
+                    .andExpect(jsonPath("$.data.mobilePlan.usageDetails.voiceMin").value(145));
         } finally {
             SecurityContextHolder.clearContext();
         }
     }
 
     @Test
-    @DisplayName("GET /api/v1/customer/me - 이름 복호화 실패 시 DECRYPTION_FAILED(500)를 반환한다.")
+    @DisplayName("GET /api/v1/customer/me returns DECRYPTION_FAILED when name decryption fails")
     void getMyProfile_decryptionFailed() throws Exception {
         String suffix = String.valueOf(System.nanoTime());
         MemberFixtureResult fixture = createMemberFixture(suffix, false);
@@ -92,42 +86,41 @@ class MemberControllerIntegrationTest {
         try {
             mockMvc.perform(get(API_ME))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath(JSON_ERROR_CODE).value("DECRYPTION_FAILED"))
-                    .andExpect(jsonPath(JSON_ERROR_FIELD).value("name"));
+                    .andExpect(jsonPath("$.errorDetail.code").value("DECRYPTION_FAILED"))
+                    .andExpect(jsonPath("$.errorDetail.field").value("name"));
         } finally {
             SecurityContextHolder.clearContext();
         }
     }
 
-    // --- Helpers ---
     private MemberFixtureResult createMemberFixture(String suffix, boolean encryptName) {
         Long addressId = jdbcTemplate.queryForObject(
-                "INSERT INTO address (province, city, street_address, postal_code) " +
-                        "VALUES (?, ?, ?, ?) RETURNING address_id",
+                "INSERT INTO address (province, city, street_address, postal_code) VALUES (?, ?, ?, ?) RETURNING address_id",
                 Long.class,
-                "it-province",
-                "it-city",
+                "Seoul",
+                "Gangnam",
                 TEST_STREET_PREFIX + suffix,
                 "12345"
         );
 
-        String encryptedName = encryptName ? encryptionTool.encrypt("홍길동") : "홍길동";
+        String plainName = "Hong Gil-dong";
+        String encryptedName = encryptName ? encryptionTool.encrypt(plainName) : plainName;
         String phonePlain = "010" + String.format("%08d", Math.abs(Long.parseLong(suffix)) % 100_000_000);
         String encryptedPhone = encryptionTool.encrypt(phonePlain);
-        String expectedMaskedPhone = "010-****-" + phonePlain.substring(phonePlain.length() - 4);
+        String email = TEST_EMAIL_PREFIX + suffix + "@example.com";
 
         Long memberId = jdbcTemplate.queryForObject(
                 "INSERT INTO member (" +
                         "address_id, provider_id, email, password, name, phone, birth_date, gender, join_date, " +
                         "status, type, role, membership" +
                         ") VALUES (" +
-                        "?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, CURRENT_DATE, " +
+                        "?, ?, ?, ?, ?, ?, DATE '2000-01-01', ?, CURRENT_DATE, " +
                         "?::member_status_type, ?::member_signup_type, ?::member_role_type, ?::member_membership_type" +
                         ") RETURNING member_id",
                 Long.class,
                 addressId,
                 null,
-                TEST_EMAIL_PREFIX + suffix + "@example.com",
+                email,
                 "test-password",
                 encryptedName,
                 encryptedPhone,
@@ -146,12 +139,12 @@ class MemberControllerIntegrationTest {
                         ") RETURNING product_id",
                 Long.class,
                 TEST_PRODUCT_CODE_PREFIX + suffix,
-                "5G 프리미어 플러스",
+                "5G Premium Plan",
                 74000,
                 62000,
                 "MOBILE_PLAN",
-                "선택약정 25%",
-                "[\"데이터\"]"
+                "Selective 25%",
+                "[\"data\"]"
         );
 
         jdbcTemplate.update(
@@ -160,22 +153,23 @@ class MemberControllerIntegrationTest {
                         "benefit_voice_call, benefit_sms, benefit_media, benefit_premium, benefit_signature_family_discount" +
                         ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 productId,
-                "완전 무제한",
+                "Unlimited",
                 80,
-                "브랜드 혜택",
-                "무제한",
-                "기본 제공",
+                "Brand benefit",
+                "Unlimited",
+                "Basic",
                 null,
                 null,
                 null
         );
 
         Long subscriptionId = jdbcTemplate.queryForObject(
-                "INSERT INTO subscription (member_id, product_id, start_date, status) " +
-                        "VALUES (?, ?, NOW(), true) RETURNING subscription_id",
+                "INSERT INTO subscription (member_id, product_id, start_date, contract_months, contract_end_date, status) " +
+                        "VALUES (?, ?, TIMESTAMP '2026-03-18 00:00:00', ?, TIMESTAMP '2028-03-18 00:00:00', true) RETURNING subscription_id",
                 Long.class,
                 memberId,
-                productId
+                productId,
+                24
         );
 
         jdbcTemplate.update(
@@ -185,12 +179,11 @@ class MemberControllerIntegrationTest {
                 "{\"data_gb\": 2.8, \"sms_cnt\": 54, \"voice_min\": 145}"
         );
 
-        return new MemberFixtureResult(memberId, expectedMaskedPhone);
+        return new MemberFixtureResult(memberId, email, phonePlain);
     }
 
-    private record MemberFixtureResult(long memberId, String expectedMaskedPhone) {}
+    private record MemberFixtureResult(long memberId, String email, String phone) {}
 
-    // 보안 context mocking
     private void setSecurityContextWithMember(Long memberId) {
         Authentication authentication = authenticationWithMemberId(memberId);
         SecurityContext context = SecurityContextHolder.createEmptyContext();

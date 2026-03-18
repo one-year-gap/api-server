@@ -27,10 +27,22 @@ public class CustomerProfileResponseMapper {
                 toUsageDetails(result.mobilePlan().usageDetails())
         );
 
+        CustomerProfileResponse.ContractDetail contract = result.contract() == null
+                ? null
+                : new CustomerProfileResponse.ContractDetail(
+                result.contract().contractStartDate(),
+                result.contract().contractEndDate(),
+                result.contract().contractMonths()
+        );
+
         return new CustomerProfileResponse(
                 result.name(),
                 result.membership(),
                 result.phone(),
+                result.email(),
+                result.address(),
+                result.birthDate(),
+                contract,
                 subscriptions,
                 mobilePlan
         );

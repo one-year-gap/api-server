@@ -102,6 +102,7 @@ management:
 #        include-common-frames: true
 #        include-hashes: true
 
+
 app:
   oauth2:
     onboarding-redirect-uri: ${APP_OAUTH2_ONBOARDING_REDIRECT_URI:http://localhost:8080/test/onboarding}

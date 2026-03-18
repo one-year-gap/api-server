@@ -50,13 +50,13 @@ public class Subscription extends BaseEntity {
         this.endDate = timestamp;
     }
 
-    public static Subscription createActive(Member member, Product product, LocalDateTime timestamp) {
+    public static Subscription createActive(Member member, Product product, LocalDateTime timestamp,Integer contractMonths) {
         return Subscription.builder()
                 .member(member)
                 .product(product)
                 .startDate(timestamp)
-                .contractMonths(null)
-                .contractEndDate(null)
+                .contractMonths(contractMonths)
+                .contractEndDate(contractMonths == null ? null : timestamp.plusMonths(contractMonths))
                 .endDate(null)
                 .status(true)
                 .build();

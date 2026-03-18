@@ -65,7 +65,7 @@ public class ChangeProductUseCase {
         if (decision.deactivateCurrent() && currentSameType.isPresent()) {
             currentSameType.get().deactivate(now);
         }
-        var newSubscription = Subscription.createActive(member, targetProduct, now);
+        var newSubscription = Subscription.createActive(member, targetProduct, now,24);
         subscriptionRepository.save(newSubscription);
         return ChangeProductResult.from(newSubscription, targetProduct);
     }

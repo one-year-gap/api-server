@@ -58,7 +58,7 @@ public class CustomerInitialPlanAssignmentUseCase implements InitialPlanAssignme
                 .findFirst()
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "mobilePlan"));
 
-        Subscription subscription = Subscription.createActive(member, randomPlan, LocalDateTime.now());
+        Subscription subscription = Subscription.createActive(member, randomPlan, LocalDateTime.now(),24);
         subscriptionRepository.save(subscription);
     }
 }

@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.JSONB;
 import org.jooq.Record2;
+import org.jooq.impl.DSL;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,13 @@ import static site.holliverse.admin.query.jooq.Tables.FEATURE_SNAPSHOT_STORE;
 @Profile("admin")
 @RequiredArgsConstructor
 public class ChurnSnapshotStoreService {
+    // JOOQ 생성 코드에 아직 없는 신규 컬럼은 동적 필드로 참조한다.
+    private static final Field<Long> CHURN_REVISION_ID = DSL.field(DSL.name("revision_id"), Long.class);
+    private static final Field<java.time.OffsetDateTime> CHURN_UPDATED_AT =
+            DSL.field(DSL.name("updated_at"), java.time.OffsetDateTime.class);
+    // 같은 회원 row를 update해도 새 커서가 발급되도록 시퀀스를 직접 사용한다.
+    private static final Field<Long> NEXT_CHURN_REVISION_ID =
+            DSL.field("nextval('churn_score_revision_seq')", Long.class);
 
     private final DSLContext dsl;
     private final ObjectMapper objectMapper;
@@ -71,11 +80,15 @@ public class ChurnSnapshotStoreService {
                 .set(CHURN_SCORE_SNAPSHOT.RISK_LEVEL, riskGrade.name())
                 .set(CHURN_SCORE_SNAPSHOT.RISK_REASONS, riskReasonsJson)
                 .set(CHURN_SCORE_SNAPSHOT.BASE_DATE, baseDate)
+                .set(CHURN_REVISION_ID, NEXT_CHURN_REVISION_ID)
+                .set(CHURN_UPDATED_AT, DSL.currentOffsetDateTime())
                 .onConflict(CHURN_SCORE_SNAPSHOT.MEMBER_ID, CHURN_SCORE_SNAPSHOT.BASE_DATE)
                 .doUpdate()
                 .set(CHURN_SCORE_SNAPSHOT.CHURN_SCORE, totalScore)
                 .set(CHURN_SCORE_SNAPSHOT.RISK_LEVEL, riskGrade.name())
                 .set(CHURN_SCORE_SNAPSHOT.RISK_REASONS, riskReasonsJson)
+                .set(CHURN_REVISION_ID, NEXT_CHURN_REVISION_ID)
+                .set(CHURN_UPDATED_AT, DSL.currentOffsetDateTime())
                 .returning(CHURN_SCORE_SNAPSHOT.SNAPSHOT_ID)
                 .fetchOne(CHURN_SCORE_SNAPSHOT.SNAPSHOT_ID);
 

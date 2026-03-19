@@ -68,10 +68,18 @@ public class CalculateLogChurnScoreService {
             MemberActionFeature feature,
             ChurnScoreCalculationResult scoreResult
     ) {
-        List<LogFeatureEvent> comparisonEvents = filter(events, LogFeatureEventName.CLICK_COMPARE);
-        List<LogFeatureEvent> penaltyEvents = filter(events, LogFeatureEventName.CLICK_PENALTY);
+        List<LogFeatureEvent> changeEvents = filter(events, UserActionFeatureEventName.CLICK_CHANGE);
+        List<LogFeatureEvent> comparisonEvents = filter(events, UserActionFeatureEventName.CLICK_COMPARE);
+        List<LogFeatureEvent> penaltyEvents = filter(events, UserActionFeatureEventName.CLICK_PENALTY);
 
         return java.util.stream.Stream.of(
+                        buildLogReason(
+                                changeEvents,
+                                feature.changeMobileCount(),
+                                scoreResult,
+                                ChurnRiskReason.ReasonCode.CHANGE_MOBILE,
+                                ChurnSignalType.CHANGE_MOBILE_COUNT
+                        ),
                         buildLogReason(
                                 comparisonEvents,
                                 feature.comparisonCount(),
@@ -123,7 +131,7 @@ public class CalculateLogChurnScoreService {
     /**
      * 이벤트 필터.
      */
-    private List<LogFeatureEvent> filter(List<LogFeatureEvent> events, LogFeatureEventName eventName) {
+    private List<LogFeatureEvent> filter(List<LogFeatureEvent> events, UserActionFeatureEventName eventName) {
         return events.stream()
                 .filter(event -> event.eventName() == eventName)
                 .toList();

@@ -35,6 +35,7 @@ public record ChurnRiskReason(
     public enum ReasonCode {
         NEGATIVE_SENTIMENT("부정 상담 감지"),
         KEYWORD("상담 키워드 감지"),
+        CHANGE_MOBILE("요금제 변경 시도 감지"),
         COMPARE("요금제 비교 클릭 감지"),
         CHECKED_PENALTY_FEE("위약금 확인 이력 클릭 감지");
 
@@ -91,6 +92,7 @@ public record ChurnRiskReason(
          */
         public String logSummary(int totalCount) {
             String label = switch (this) {
+                case CHANGE_MOBILE -> "요금제 변경 시도";
                 case COMPARE -> "요금제 비교 클릭";
                 case CHECKED_PENALTY_FEE -> "위약금 확인 이력 클릭";
                 default -> defaultSummary;

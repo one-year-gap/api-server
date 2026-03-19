@@ -58,7 +58,7 @@ public class LogFeaturesUseCase {
     private List<LogFeatureEvent> resolveEvents(LogFeaturesRequestDto request) {
         Map<Long, LogFeatureEvent> events = new LinkedHashMap<>();
         for (LogFeaturesRequestDto.LogEventDto event : request.events()) {
-            LogFeatureEventName.find(event.eventName())
+            UserActionFeatureEventName.find(event.eventName())
                     .ifPresent(eventName -> events.putIfAbsent(
                             event.eventId(),
                             new LogFeatureEvent(

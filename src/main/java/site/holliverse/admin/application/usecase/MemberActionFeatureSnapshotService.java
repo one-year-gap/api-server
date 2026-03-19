@@ -28,9 +28,9 @@ public class MemberActionFeatureSnapshotService {
         MemberActionFeatureLogDao.ActionSnapshot snapshot = snapshotDao.getOrCreateSnapshot(memberId);
 
         MemberActionFeature updatedFeature = new MemberActionFeature(
-                snapshot.feature().changeMobileCount(),
-                snapshot.feature().comparisonCount() + count(events, LogFeatureEventName.CLICK_COMPARE),
-                snapshot.feature().checkedPenaltyFeeCount() + count(events, LogFeatureEventName.CLICK_PENALTY)
+                snapshot.feature().changeMobileCount() + count(events, UserActionFeatureEventName.CLICK_CHANGE),
+                snapshot.feature().comparisonCount() + count(events, UserActionFeatureEventName.CLICK_COMPARE),
+                snapshot.feature().checkedPenaltyFeeCount() + count(events, UserActionFeatureEventName.CLICK_PENALTY)
         );
 
         return new SnapshotContext(snapshot.snapshotId(), updatedFeature);
@@ -60,7 +60,7 @@ public class MemberActionFeatureSnapshotService {
     /**
      * 이벤트 개수.
      */
-    private int count(List<LogFeatureEvent> events, LogFeatureEventName eventName) {
+    private int count(List<LogFeatureEvent> events, UserActionFeatureEventName eventName) {
         return (int) events.stream()
                 .filter(event -> event.eventName() == eventName)
                 .count();

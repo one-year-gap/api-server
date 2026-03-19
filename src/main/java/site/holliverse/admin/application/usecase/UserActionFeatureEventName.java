@@ -6,13 +6,16 @@ import java.util.Optional;
 /**
  * 로그 이벤트명.
  */
-public enum LogFeatureEventName {
+public enum UserActionFeatureEventName {
     CLICK_COMPARE("click_compare"),
-    CLICK_PENALTY("click_penalty");
+    CLICK_PENALTY("click_penalty"),
+    CLICK_CHANGE("click_change"),
+    
+    ;
 
     private final String value;
 
-    LogFeatureEventName(String value) {
+    UserActionFeatureEventName(String value) {
         this.value = value;
     }
 
@@ -26,7 +29,7 @@ public enum LogFeatureEventName {
     /**
      * 이벤트 조회.
      */
-    public static Optional<LogFeatureEventName> find(String value) {
+    public static Optional<UserActionFeatureEventName> find(String value) {
         return Arrays.stream(values())
                 .filter(eventName -> eventName.value.equals(value))
                 .findFirst();

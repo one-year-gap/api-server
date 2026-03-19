@@ -25,6 +25,8 @@ import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.util.DecryptionTool;
 import site.holliverse.shared.util.EncryptionTool;
 
+import java.time.LocalDate;
+
 /**
  * 인증 도메인의 계정 생명주기 유스케이스.
  * 현재 담당 기능:
@@ -94,6 +96,14 @@ public class AuthUseCase {
             throw new CustomException(
                     ErrorCode.DUPLICATED_PHONE,
                     "phone"
+            );
+        }
+
+        if (request.getBirthDate().isBefore(LocalDate.of(1900, 1, 1))) {
+            throw new CustomException(
+                    ErrorCode.INVALID_INPUT,
+                    "birthDate",
+                    "생년월일이 1900년 전 입니다."
             );
         }
 

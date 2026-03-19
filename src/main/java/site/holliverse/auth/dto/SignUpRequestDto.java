@@ -1,11 +1,7 @@
 package site.holliverse.auth.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -38,6 +34,7 @@ public class SignUpRequestDto {
 
     /** 생년월일. */
     @NotNull(message = "필수 입력값입니다.")
+    @Past(message = "생년월일은 과거 날짜여야 합니다.")
     private LocalDate birthDate;
 
     /** 성별 코드(M/F). */

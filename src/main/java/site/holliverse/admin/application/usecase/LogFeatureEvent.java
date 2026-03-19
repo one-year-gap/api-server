@@ -10,7 +10,7 @@ public record LogFeatureEvent(
         long eventId,
         Instant timestamp,
         String event,
-        LogFeatureEventName eventName,
+        UserActionFeatureEventName eventName,
         Map<String, Object> eventProperties
 ) {
 }

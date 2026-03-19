@@ -37,7 +37,7 @@ public class AdminLogFeaturesClient {
         String path =  logFeaturesPath;
         String url = baseUrl + path;
 
-        LogFeatureRequestBody body = new LogFeatureRequestBody(eventType, memberId, timeStamp);
+        LogFeatureRequestBody body = new LogFeatureRequestBody(eventType.value(), memberId, timeStamp);
         HttpHeaders headers = new HttpHeaders();
 
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -60,7 +60,7 @@ public class AdminLogFeaturesClient {
      * Admin API 요청 body.
      */
     public record LogFeatureRequestBody(
-            UserLogEventName eventType,
+            String eventType,
             long memberId,
             String timeStamp
     ) {

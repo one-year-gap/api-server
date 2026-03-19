@@ -52,7 +52,7 @@ public class HandleLogFeatureUseCase {
      * 위약금 확인 이력 개수 증가 메서드
      */
     private Optional<UserActionFeatureEventName> resolveEventName(LogFeatureWebhookRequest request) {
-        return UserActionFeatureEventName.find(request.eventType().value());
+        return UserActionFeatureEventName.find(request.eventType());
     }
 
 
@@ -69,7 +69,7 @@ public class HandleLogFeatureUseCase {
      * 이벤트 식별자 생성.
      */
     private long resolveEventId(LogFeatureWebhookRequest request) {
-        return Integer.toUnsignedLong((request.memberId() + "|" + request.eventType().value() + "|" + request.timeStamp()).hashCode());
+        return Integer.toUnsignedLong((request.memberId() + "|" + request.eventType() + "|" + request.timeStamp()).hashCode());
     }
 
 }

@@ -2,6 +2,9 @@ package site.holliverse.customer.application.usecase.log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +30,7 @@ public class UserLogService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final AdminLogFeaturesClient adminLogFeaturesClient;
+    private final MeterRegistry meterRegistry;
 
     @Value("${app.topic.client-events}")
     private String topic;
@@ -36,6 +40,11 @@ public class UserLogService {
         if (requests == null || requests.isEmpty()) {
             return;
         }
+        DistributionSummary.builder("holliverse.userlog.batch.size")
+                .description("Batch size of user log submissions")
+                .register(meterRegistry)
+                .record(requests.size());
+        requestCounter("batch").increment();
         for (UserLogRequest request : requests) {
             doPublish(memberId, request);
         }
@@ -46,6 +55,7 @@ public class UserLogService {
 
     @Async("userLogTaskExecutor")
     public void publish(Long memberId, UserLogRequest request) {
+        requestCounter("single").increment();
         doPublish(memberId, request);
 
         // 이벤트 전달
@@ -63,6 +73,7 @@ public class UserLogService {
         try {
             eventId = decodeTsidToLong(request.tsid());
         } catch (IllegalArgumentException e) {
+            resultCounter("invalid_tsid").increment();
             throw new CustomException(
                     ErrorCode.INVALID_USER_LOG_EVENT_ID,
                     "event_id",
@@ -83,6 +94,7 @@ public class UserLogService {
         try {
             json = objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
+            resultCounter("serialization_error").increment();
             log.warn("[UserLog] 직렬화 실패 memberId={}", memberId, e);
             return;
         }
@@ -90,8 +102,11 @@ public class UserLogService {
         kafkaTemplate.send(topic, String.valueOf(memberId), json)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
+                        resultCounter("kafka_error").increment();
                         log.warn("[UserLog] Kafka 전송 실패 memberId={} eventName={}",
                                 memberId, eventName.value(), ex);
+                    } else {
+                        resultCounter("kafka_success").increment();
                     }
                 });
     }
@@ -131,5 +146,19 @@ public class UserLogService {
         return eventName == UserLogEventName.CLICK_COMPARE
                 || eventName == UserLogEventName.CLICK_PENALTY
                 || eventName == UserLogEventName.CLICK_CHANGE;
+    }
+
+    private Counter requestCounter(String mode) {
+        return Counter.builder("holliverse.userlog.requests")
+                .description("User log request count by mode")
+                .tag("mode", mode)
+                .register(meterRegistry);
+    }
+
+    private Counter resultCounter(String result) {
+        return Counter.builder("holliverse.userlog.publish")
+                .description("User log publish result count")
+                .tag("result", result)
+                .register(meterRegistry);
     }
 }

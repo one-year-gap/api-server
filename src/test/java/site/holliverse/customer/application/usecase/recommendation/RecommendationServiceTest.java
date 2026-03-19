@@ -1,5 +1,6 @@
 package site.holliverse.customer.application.usecase.recommendation;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -42,18 +43,21 @@ class RecommendationServiceTest {
 
     /** 테스트에서 동기 실행해 trigger 호출 후 Future 완료 제어 가능하게 함 */
     private final Executor sameThreadExecutor = Runnable::run;
+    private SimpleMeterRegistry meterRegistry;
 
     private RecommendationService recommendationService;
 
     @BeforeEach
     void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
         recommendationService = new RecommendationService(
                 memberRepository,
                 personaRecommendationRepository,
                 fastApiRecommendationClient,
                 pendingFutureRegistry,
                 sameThreadExecutor,
-                90L
+                90L,
+                meterRegistry
         );
     }
 
@@ -89,7 +93,8 @@ class RecommendationServiceTest {
                     fastApiRecommendationClient,
                     pendingFutureRegistry,
                     sameThreadExecutor,
-                    1L
+                    1L,
+                    meterRegistry
             );
 
             RecommendationResult result = shortTimeoutService.getRecommendations(MEMBER_ID);

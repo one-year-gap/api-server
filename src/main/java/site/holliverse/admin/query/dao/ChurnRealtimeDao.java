@@ -42,12 +42,12 @@ public class ChurnRealtimeDao {
      * 마지막 커서 이후 변경분만 조회
      */
     public List<ChurnRealtimeRawData> findChanges(ChurnRealTimeRequestDto requestDto) {
-        if (requestDto.normalizedAfterId() <= 0) {
-            return findLatest(requestDto);
+        SelectConditionStep<?> query = selectBase(requestDto);
+        if (requestDto.normalizedAfterId() > 0) {
+            query = query.and(REVISION_ID.gt(requestDto.normalizedAfterId()));
         }
 
-        return selectBase(requestDto)
-                .and(REVISION_ID.gt(requestDto.normalizedAfterId()))
+        return query
                 .orderBy(REVISION_ID.asc(), CHURN_SCORE_SNAPSHOT.SNAPSHOT_ID.asc())
                 .limit(requestDto.normalizedLimit() + 1)
                 .fetchInto(ChurnRealtimeRawData.class);

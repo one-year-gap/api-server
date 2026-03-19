@@ -72,6 +72,19 @@ management:
       app: api-server
       profile: ${SPRING_PROFILES_ACTIVE:unknown}
       application: ${spring.application.name}-${SPRING_PROFILES_ACTIVE:unknown}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        holliverse.operation.duration: true
+        holliverse.outbound.http.duration: true
+        holliverse.recommendation.wait.duration: true
+        holliverse.kafka.consume.duration: true
+      slo:
+        http.server.requests: 100ms,300ms,500ms,1s,3s
+        holliverse.operation.duration: 10ms,50ms,100ms,300ms,1s,3s
+        holliverse.outbound.http.duration: 50ms,100ms,300ms,1s,3s,10s
+        holliverse.recommendation.wait.duration: 100ms,500ms,1s,3s,10s,30s,90s
+        holliverse.kafka.consume.duration: 10ms,50ms,100ms,300ms,1s,3s
     export:
       cloudwatch:
         enabled: true

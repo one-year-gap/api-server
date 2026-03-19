@@ -1,6 +1,9 @@
 package site.holliverse.infra.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -28,6 +31,7 @@ public class RecommendationKafkaConsumer {
     private final ObjectMapper objectMapper;
     private final PersonaRecommendationRepository personaRecommendationRepository;
     private final RecommendationPendingFutureRegistry pendingFutureRegistry;
+    private final MeterRegistry meterRegistry;
 
     @KafkaListener(
             topics = "${spring.kafka.topic.recommendation}",
@@ -41,6 +45,7 @@ public class RecommendationKafkaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         Long memberIdForCleanup = null;
+        Timer.Sample sample = Timer.start(meterRegistry);
         try {
             // 수신 로그
             log.debug("[Kafka][recommendation] received. topic={}, offset={}, raw={}", topic, offset, payload);
@@ -103,6 +108,8 @@ public class RecommendationKafkaConsumer {
 
             ack.acknowledge();
             log.debug("[Kafka][recommendation] acked. topic={}, offset={}", topic, offset);
+            counter("success").increment();
+            sample.stop(timer("success"));
         } catch (Exception e) {
             if (memberIdForCleanup != null) {
                 CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(memberIdForCleanup);
@@ -111,8 +118,31 @@ public class RecommendationKafkaConsumer {
                 }
             }
             log.error("[Kafka][recommendation] consume failed. topic={}, offset={}, raw={}", topic, offset, payload, e);
+            Counter.builder("holliverse.kafka.consume.errors")
+                    .description("Recommendation consumer failures by exception")
+                    .tag("consumer", "recommendation")
+                    .tag("exception", e.getClass().getSimpleName())
+                    .register(meterRegistry)
+                    .increment();
+            counter("error").increment();
+            sample.stop(timer("error"));
             throw new IllegalStateException("recommendation consume failed", e);
         }
     }
-}
 
+    private Counter counter(String outcome) {
+        return Counter.builder("holliverse.kafka.consume")
+                .description("Kafka consume result count")
+                .tag("consumer", "recommendation")
+                .tag("outcome", outcome)
+                .register(meterRegistry);
+    }
+
+    private Timer timer(String outcome) {
+        return Timer.builder("holliverse.kafka.consume.duration")
+                .description("Kafka consumer processing duration")
+                .tag("consumer", "recommendation")
+                .tag("outcome", outcome)
+                .register(meterRegistry);
+    }
+}

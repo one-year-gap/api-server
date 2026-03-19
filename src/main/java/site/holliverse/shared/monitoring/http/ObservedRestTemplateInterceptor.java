@@ -9,6 +9,8 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * RestTemplate outbound 호출을 공통 형식으로 계측
@@ -17,6 +19,8 @@ public class ObservedRestTemplateInterceptor implements ClientHttpRequestInterce
 
     private final MeterRegistry meterRegistry;
     private final String clientName;
+    private final Map<TimerKey, Timer> timerCache = new ConcurrentHashMap<>();
+    private final Map<ErrorCounterKey, Counter> errorCounterCache = new ConcurrentHashMap<>();
 
     public ObservedRestTemplateInterceptor(MeterRegistry meterRegistry, String clientName) {
         this.meterRegistry = meterRegistry;
@@ -47,7 +51,16 @@ public class ObservedRestTemplateInterceptor implements ClientHttpRequestInterce
     }
 
     private void stop(Timer.Sample sample, String method, String path, String status, String outcome) {
-        sample.stop(
+        sample.stop(timer(method, path, status, outcome));
+    }
+
+    private void incrementError(String method, String path, String status, String reason) {
+        errorCounter(method, path, status, reason).increment();
+    }
+
+    private Timer timer(String method, String path, String status, String outcome) {
+        TimerKey key = new TimerKey(method, path, status, outcome);
+        return timerCache.computeIfAbsent(key, ignored ->
                 Timer.builder("holliverse.outbound.http.duration")
                         .description("Outbound HTTP duration by client and path")
                         .tag("client", clientName)
@@ -55,20 +68,20 @@ public class ObservedRestTemplateInterceptor implements ClientHttpRequestInterce
                         .tag("path", path)
                         .tag("status", status)
                         .tag("outcome", outcome)
-                        .register(meterRegistry)
-        );
+                        .register(meterRegistry));
     }
 
-    private void incrementError(String method, String path, String status, String reason) {
-        Counter.builder("holliverse.outbound.http.errors")
-                .description("Outbound HTTP errors by client and path")
-                .tag("client", clientName)
-                .tag("method", method)
-                .tag("path", path)
-                .tag("status", status)
-                .tag("reason", reason)
-                .register(meterRegistry)
-                .increment();
+    private Counter errorCounter(String method, String path, String status, String reason) {
+        ErrorCounterKey key = new ErrorCounterKey(method, path, status, reason);
+        return errorCounterCache.computeIfAbsent(key, ignored ->
+                Counter.builder("holliverse.outbound.http.errors")
+                        .description("Outbound HTTP errors by client and path")
+                        .tag("client", clientName)
+                        .tag("method", method)
+                        .tag("path", path)
+                        .tag("status", status)
+                        .tag("reason", reason)
+                        .register(meterRegistry));
     }
 
     private String normalizePath(HttpRequest request) {
@@ -97,5 +110,11 @@ public class ObservedRestTemplateInterceptor implements ClientHttpRequestInterce
             return "server_error";
         }
         return "error";
+    }
+
+    private record TimerKey(String method, String path, String status, String outcome) {
+    }
+
+    private record ErrorCounterKey(String method, String path, String status, String reason) {
     }
 }

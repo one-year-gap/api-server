@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -20,17 +19,34 @@ import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @Profile("customer")
-@RequiredArgsConstructor
 public class UserLogService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final AdminLogFeaturesClient adminLogFeaturesClient;
     private final MeterRegistry meterRegistry;
+    private final DistributionSummary batchSizeSummary;
+    private final Map<String, Counter> requestCounters = new ConcurrentHashMap<>();
+    private final Map<String, Counter> resultCounters = new ConcurrentHashMap<>();
+
+    public UserLogService(KafkaTemplate<String, String> kafkaTemplate,
+                          ObjectMapper objectMapper,
+                          AdminLogFeaturesClient adminLogFeaturesClient,
+                          MeterRegistry meterRegistry) {
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+        this.adminLogFeaturesClient = adminLogFeaturesClient;
+        this.meterRegistry = meterRegistry;
+        this.batchSizeSummary = DistributionSummary.builder("holliverse.userlog.batch.size")
+                .description("Batch size of user log submissions")
+                .register(meterRegistry);
+    }
 
     @Value("${app.topic.client-events}")
     private String topic;
@@ -40,10 +56,7 @@ public class UserLogService {
         if (requests == null || requests.isEmpty()) {
             return;
         }
-        DistributionSummary.builder("holliverse.userlog.batch.size")
-                .description("Batch size of user log submissions")
-                .register(meterRegistry)
-                .record(requests.size());
+        batchSizeSummary.record(requests.size());
         requestCounter("batch").increment();
         for (UserLogRequest request : requests) {
             doPublish(memberId, request);
@@ -149,16 +162,18 @@ public class UserLogService {
     }
 
     private Counter requestCounter(String mode) {
-        return Counter.builder("holliverse.userlog.requests")
-                .description("User log request count by mode")
-                .tag("mode", mode)
-                .register(meterRegistry);
+        return requestCounters.computeIfAbsent(mode, ignored ->
+                Counter.builder("holliverse.userlog.requests")
+                        .description("User log request count by mode")
+                        .tag("mode", mode)
+                        .register(meterRegistry));
     }
 
     private Counter resultCounter(String result) {
-        return Counter.builder("holliverse.userlog.publish")
-                .description("User log publish result count")
-                .tag("result", result)
-                .register(meterRegistry);
+        return resultCounters.computeIfAbsent(result, ignored ->
+                Counter.builder("holliverse.userlog.publish")
+                        .description("User log publish result count")
+                        .tag("result", result)
+                        .register(meterRegistry));
     }
 }

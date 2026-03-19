@@ -20,8 +20,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -44,6 +46,12 @@ public class RecommendationService {
     private final Executor recommendationTaskExecutor;
     private final long awaitTimeoutSeconds;
     private final MeterRegistry meterRegistry;
+    private final Map<String, Counter> recommendationCacheCounters = new ConcurrentHashMap<>();
+    private final Map<String, Counter> recommendationFastApiCounters = new ConcurrentHashMap<>();
+    private final Map<String, Counter> recommendationFinalCounters = new ConcurrentHashMap<>();
+    private final Map<String, Timer> recommendationWaitTimers = new ConcurrentHashMap<>();
+    private final Map<String, Counter> recommendationFastApiErrorCounters = new ConcurrentHashMap<>();
+    private final Map<String, Counter> recommendationErrorCounters = new ConcurrentHashMap<>();
 
     public RecommendationService(MemberRepository memberRepository,
                                 PersonaRecommendationRepository personaRecommendationRepository,
@@ -122,11 +130,7 @@ public class RecommendationService {
                     recommendationFastApiCounter("accepted").increment();
                 }
             } catch (Exception e) {
-                Counter.builder("holliverse.recommendation.fastapi.errors")
-                        .description("Recommendation trigger failures by exception")
-                        .tag("exception", e.getClass().getSimpleName())
-                        .register(meterRegistry)
-                        .increment();
+                recommendationFastApiErrorCounter(e.getClass().getSimpleName()).increment();
                 CompletableFuture<RecommendationResult> removed = pendingFutureRegistry.remove(memberId);
                 if (removed != null) {
                     removed.completeExceptionally(e);
@@ -148,11 +152,7 @@ public class RecommendationService {
             Throwable cause = e.getCause() != null ? e.getCause() : e;
             pendingFutureRegistry.remove(memberId);
             waitSample.stop(recommendationWaitTimer("error"));
-            Counter.builder("holliverse.recommendation.errors")
-                    .description("Recommendation request failures by exception")
-                    .tag("exception", cause.getClass().getSimpleName())
-                    .register(meterRegistry)
-                    .increment();
+            recommendationErrorCounter(cause.getClass().getSimpleName()).increment();
             if (cause instanceof CustomException ce) {
                 throw ce;
             }
@@ -168,31 +168,51 @@ public class RecommendationService {
     }
 
     private Counter recommendationCacheCounter(String result) {
-        return Counter.builder("holliverse.recommendation.cache")
-                .description("Recommendation cache hit/miss count")
-                .tag("result", result)
-                .register(meterRegistry);
+        return recommendationCacheCounters.computeIfAbsent(result, ignored ->
+                Counter.builder("holliverse.recommendation.cache")
+                        .description("Recommendation cache hit/miss count")
+                        .tag("result", result)
+                        .register(meterRegistry));
     }
 
     private Counter recommendationFastApiCounter(String type) {
-        return Counter.builder("holliverse.recommendation.fastapi.responses")
-                .description("Recommendation FastAPI response type count")
-                .tag("type", type)
-                .register(meterRegistry);
+        return recommendationFastApiCounters.computeIfAbsent(type, ignored ->
+                Counter.builder("holliverse.recommendation.fastapi.responses")
+                        .description("Recommendation FastAPI response type count")
+                        .tag("type", type)
+                        .register(meterRegistry));
     }
 
     private Counter recommendationFinalCounter(String result) {
-        return Counter.builder("holliverse.recommendation.final")
-                .description("Final recommendation API result count")
-                .tag("result", result)
-                .register(meterRegistry);
+        return recommendationFinalCounters.computeIfAbsent(result, ignored ->
+                Counter.builder("holliverse.recommendation.final")
+                        .description("Final recommendation API result count")
+                        .tag("result", result)
+                        .register(meterRegistry));
     }
 
     private Timer recommendationWaitTimer(String outcome) {
-        return Timer.builder("holliverse.recommendation.wait.duration")
-                .description("End-to-end wait time for cache-miss recommendation requests")
-                .tag("outcome", outcome)
-                .register(meterRegistry);
+        return recommendationWaitTimers.computeIfAbsent(outcome, ignored ->
+                Timer.builder("holliverse.recommendation.wait.duration")
+                        .description("End-to-end wait time for cache-miss recommendation requests")
+                        .tag("outcome", outcome)
+                        .register(meterRegistry));
+    }
+
+    private Counter recommendationFastApiErrorCounter(String exception) {
+        return recommendationFastApiErrorCounters.computeIfAbsent(exception, ignored ->
+                Counter.builder("holliverse.recommendation.fastapi.errors")
+                        .description("Recommendation trigger failures by exception")
+                        .tag("exception", exception)
+                        .register(meterRegistry));
+    }
+
+    private Counter recommendationErrorCounter(String exception) {
+        return recommendationErrorCounters.computeIfAbsent(exception, ignored ->
+                Counter.builder("holliverse.recommendation.errors")
+                        .description("Recommendation request failures by exception")
+                        .tag("exception", exception)
+                        .register(meterRegistry));
     }
 
 }

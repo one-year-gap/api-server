@@ -19,7 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChurnCouponSmsService {
 
-    private static final String COUPON_MESSAGE = "[HSC] 고객님 다시 보고싶습니다 쿠폰이 발급 되었어요. 앱에서 확인해 주세요.";
+    private static final String COUPON_MESSAGE = "[HSC] 고객님 다시 보고싶습니다 쿠폰이 발급 되었어요. 앱에서 확인해 주세요.\n" +
+            "링크 : https://holliverse.site/login";
 
     private final AdminChurnCouponDao adminChurnCouponDao;
     private final DecryptionTool decryptionTool;

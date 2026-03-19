@@ -16,9 +16,7 @@ import site.holliverse.customer.web.dto.log.UserLogRequest;
 import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.error.ErrorCode;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -43,7 +41,7 @@ public class UserLogService {
         }
 
         // 이벤트 전달
-        adminLogFeaturesClient.sendLogFeatures(memberId, toAdminEvents(requests));
+        requests.forEach(request -> sendAdminTarget(memberId, request));
     }
 
     @Async("userLogTaskExecutor")
@@ -51,7 +49,7 @@ public class UserLogService {
         doPublish(memberId, request);
 
         // 이벤트 전달
-        adminLogFeaturesClient.sendLogFeatures(memberId, toAdminEvents(List.of(request)));
+        sendAdminTarget(memberId, request);
     }
 
     /**
@@ -113,28 +111,17 @@ public class UserLogService {
     /**
      * Admin 이벤트 변환.
      */
-    private List<AdminLogFeaturesClient.LogEventBody> toAdminEvents(List<UserLogRequest> requests) {
-        Map<Long, AdminLogFeaturesClient.LogEventBody> deduplicatedEvents = new LinkedHashMap<>();
-        for (UserLogRequest request : requests) {
-            UserLogEventName eventName = UserLogEventName.from(request.eventName());
-            if (!isAdminTarget(eventName)) {
-                continue;
-            }
-
-            long eventId = decodeTsidToLong(request.tsid());
-            deduplicatedEvents.putIfAbsent(
-                    eventId,
-                    new AdminLogFeaturesClient.LogEventBody(
-                            eventId,
-                            request.timestamp(),
-                            request.event(),
-                            eventName.value(),
-                            request.eventProperties()
-                    )
-            );
+    private void sendAdminTarget(Long memberId, UserLogRequest request) {
+        UserLogEventName eventName = UserLogEventName.from(request.eventName());
+        if (!isAdminTarget(eventName)) {
+            return;
         }
 
-        return List.copyOf(deduplicatedEvents.values());
+        adminLogFeaturesClient.sendLogFeature(
+                memberId,
+                eventName,
+                request.timestamp()
+        );
     }
 
     /**
@@ -142,6 +129,7 @@ public class UserLogService {
      */
     private boolean isAdminTarget(UserLogEventName eventName) {
         return eventName == UserLogEventName.CLICK_COMPARE
-                || eventName == UserLogEventName.CLICK_PENALTY;
+                || eventName == UserLogEventName.CLICK_PENALTY
+                || eventName == UserLogEventName.CLICK_CHANGE;
     }
 }

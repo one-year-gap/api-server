@@ -8,9 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import site.holliverse.customer.config.AdminLogFeaturesProperties;
-
-import java.util.List;
-import java.util.Map;
+import site.holliverse.customer.application.usecase.log.UserLogEventName;
 
 /**
  * Admin API POST /internal/v1/log-features 호출용 클라이언트.
@@ -26,7 +24,7 @@ public class AdminLogFeaturesClient {
     public AdminLogFeaturesClient(RestTemplate restTemplate, AdminLogFeaturesProperties properties) {
         this.restTemplate = restTemplate;
         String url = properties.baseUrl();
-        this.baseUrl = (url != null && url.endsWith("/")) ? url.substring(0, url.length() - 1) : url;
+        this.baseUrl =  url;
         this.logFeaturesPath = properties.logFeaturesPath();
     }
 
@@ -34,42 +32,37 @@ public class AdminLogFeaturesClient {
      * log-features API 호출. baseUrl이 비어 있으면 호출하지 않음(no-op).
      * 실패 시 로깅만 하고 예외 전파하지 않음(배치 처리 방해 방지).
      */
-    public void sendLogFeatures(long memberId, List<LogEventBody> events) {
-        if (baseUrl == null || baseUrl.isBlank() || events == null || events.isEmpty()) {
-            return;
-        }
-        String path = (logFeaturesPath != null && !logFeaturesPath.isBlank())
-                ? logFeaturesPath
-                : "/internal/v1/log-features";
+    public void sendLogFeature(long memberId, UserLogEventName eventType, String timeStamp) {
+
+        String path =  logFeaturesPath;
         String url = baseUrl + path;
-        LogFeaturesRequestBody body = new LogFeaturesRequestBody(memberId, events);
+
+        LogFeatureRequestBody body = new LogFeatureRequestBody(eventType, memberId, timeStamp);
         HttpHeaders headers = new HttpHeaders();
+
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<LogFeaturesRequestBody> entity = new HttpEntity<>(body, headers);
+        HttpEntity<LogFeatureRequestBody> entity = new HttpEntity<>(body, headers);
+
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
             if (!response.getStatusCode().is2xxSuccessful()) {
-                log.warn("[AdminLogFeatures] POST {} memberId={} status={}", url, memberId, response.getStatusCode());
+                log.warn("[AdminLogFeatures] POST {} memberId={} eventType={} status={}",
+                        url, memberId, eventType.value(), response.getStatusCode());
             }
         } catch (RestClientException e) {
-            log.warn("[AdminLogFeatures] POST {} memberId={} failed", url, memberId, e);
+            log.warn("[AdminLogFeatures] POST {} memberId={} eventType={} failed",
+                    url, memberId, eventType.value(), e);
         }
     }
 
-    /** Admin API 요청 body (admin 패키지 미참조). */
-    public record LogFeaturesRequestBody(
+    /**
+     * Admin API 요청 body.
+     */
+    public record LogFeatureRequestBody(
+            UserLogEventName eventType,
             long memberId,
-            List<LogEventBody> events
-    ) {
-    }
-
-    /** Admin API 로그 body. */
-    public record LogEventBody(
-            long eventId,
-            String timestamp,
-            String event,
-            String eventName,
-            Map<String, Object> eventProperties
+            String timeStamp
     ) {
     }
 }

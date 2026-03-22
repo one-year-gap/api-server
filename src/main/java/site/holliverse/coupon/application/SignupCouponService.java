@@ -2,6 +2,7 @@ package site.holliverse.coupon.application;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.coupon.repository.MemberCouponGrantRepository;
 
 /**==========================
@@ -27,6 +28,7 @@ public class SignupCouponService {
      * 이미 발급된 경우에는 추가 발급하지 않는다.
      * @param memberId
      */
+    @Transactional
     public void issueWelcomeCoupon(Long memberId) {
         boolean alreadyIssued = memberCouponGrantRepository
                 .existsByMember_IdAndCoupon_Id(memberId, WELCOME_COUPON_ID);

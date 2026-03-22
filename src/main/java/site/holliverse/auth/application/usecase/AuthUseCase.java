@@ -9,6 +9,7 @@ import site.holliverse.auth.dto.OnboardingPrefillResponseDto;
 import site.holliverse.auth.dto.SignUpRequestDto;
 import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.coupon.application.SignupCouponService;
 import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
@@ -51,6 +52,8 @@ public class AuthUseCase {
     private final EncryptionTool encryptionTool;
     private final DecryptionTool decryptionTool;
 
+    private final SignupCouponService signupCouponService;
+
     public AuthUseCase(
             MemberRepository memberRepository,
             AddressRepository addressRepository,
@@ -58,7 +61,7 @@ public class AuthUseCase {
             RefreshTokenHashService refreshTokenHashService,
             PasswordEncoder passwordEncoder,
             InitialPlanAssignmentService initialPlanAssignmentService,
-            EncryptionTool encryptionTool, DecryptionTool decryptionTool
+            EncryptionTool encryptionTool, DecryptionTool decryptionTool, SignupCouponService signupCouponService
     ) {
         this.memberRepository = memberRepository;
         this.addressRepository = addressRepository;
@@ -68,6 +71,7 @@ public class AuthUseCase {
         this.initialPlanAssignmentService = initialPlanAssignmentService;
         this.encryptionTool = encryptionTool;
         this.decryptionTool = decryptionTool;
+        this.signupCouponService = signupCouponService;
     }
 
     /**
@@ -149,6 +153,9 @@ public class AuthUseCase {
         
         //요금제 자동 주입
         initialPlanAssignmentService.assignForNewMember(saved);
+
+        //웰컴 쿠폰 지급
+        signupCouponService.issueWelcomeCoupon(saved.getId());
         return new SignUpResponseDto(saved.getId());
     }
 
@@ -226,5 +233,7 @@ public class AuthUseCase {
         );
         //요금제 자동 주입
         initialPlanAssignmentService.assignForNewMember(member);
+        //웰컴 쿠폰 지급
+        signupCouponService.issueWelcomeCoupon(member.getId());
     }
 }

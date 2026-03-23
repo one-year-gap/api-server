@@ -9,6 +9,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import site.holliverse.customer.config.AdminLogFeaturesProperties;
 import site.holliverse.customer.application.usecase.log.UserLogEventName;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 
 /**
  * Admin API POST /internal/v1/log-features 호출용 클라이언트.
@@ -20,12 +21,18 @@ public class AdminLogFeaturesClient {
     private final RestTemplate restTemplate;
     private final String baseUrl;
     private final String logFeaturesPath;
+    private final CustomerMetrics customerMetrics;
 
-    public AdminLogFeaturesClient(RestTemplate restTemplate, AdminLogFeaturesProperties properties) {
+    public AdminLogFeaturesClient(
+            RestTemplate restTemplate,
+            AdminLogFeaturesProperties properties,
+            CustomerMetrics customerMetrics
+    ) {
         this.restTemplate = restTemplate;
         String url = properties.baseUrl();
         this.baseUrl =  url;
         this.logFeaturesPath = properties.logFeaturesPath();
+        this.customerMetrics = customerMetrics;
     }
 
     /**
@@ -42,15 +49,20 @@ public class AdminLogFeaturesClient {
 
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<LogFeatureRequestBody> entity = new HttpEntity<>(body, headers);
+        var timerSample = customerMetrics.startSample();
 
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
+                customerMetrics.stopAdminLogFeatureDuration(timerSample, "non_2xx");
                 log.warn("[AdminLogFeatures] POST {} memberId={} eventType={} status={}",
                         url, memberId, eventType.value(), response.getStatusCode());
+                return;
             }
+            customerMetrics.stopAdminLogFeatureDuration(timerSample, "success");
         } catch (RestClientException e) {
+            customerMetrics.stopAdminLogFeatureDuration(timerSample, "error");
             log.warn("[AdminLogFeatures] POST {} memberId={} eventType={} failed",
                     url, memberId, eventType.value(), e);
         }

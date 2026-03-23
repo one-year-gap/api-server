@@ -25,3 +25,9 @@
 <br/><br/>
 <!-- 구분선 -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12,16,20&height=3&section=header" width="100%"/>
+
+## Monitoring
+
+- Prometheus endpoint: `/actuator/prometheus`
+- Grafana dashboard template: `monitoring/grafana/holliverse-customer-observability-dashboard.json`
+- Monitoring notes: `monitoring/grafana/README.md`

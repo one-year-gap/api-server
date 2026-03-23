@@ -13,6 +13,7 @@ import site.holliverse.customer.integration.kafka.dto.RecommendationMessagePaylo
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +29,7 @@ public class RecommendationKafkaConsumer {
     private final ObjectMapper objectMapper;
     private final PersonaRecommendationRepository personaRecommendationRepository;
     private final RecommendationPendingFutureRegistry pendingFutureRegistry;
+    private final CustomerMetrics customerMetrics;
 
     @KafkaListener(
             topics = "${spring.kafka.topic.recommendation}",
@@ -41,6 +43,8 @@ public class RecommendationKafkaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         Long memberIdForCleanup = null;
+        var timerSample = customerMetrics.startSample();
+        String outcome = "error";
         try {
             // 수신 로그
             log.debug("[Kafka][recommendation] received. topic={}, offset={}, raw={}", topic, offset, payload);
@@ -90,11 +94,13 @@ public class RecommendationKafkaConsumer {
             CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(message.memberId());
             if (future != null) {
                 future.complete(RecommendationResult.fromEntity(saved, RecommendationResult.RecommendationSource.FASTAPI));
+                outcome = "completed_pending";
                 log.debug(
                         "[Kafka][recommendation] future completed. memberId={}, updatedAt={}",
                         message.memberId(), saved.getUpdatedAt()
                 );
             } else {
+                outcome = "stored_without_waiter";
                 log.debug(
                         "[Kafka][recommendation] no pending future. memberId={}, updatedAt={}",
                         message.memberId(), saved.getUpdatedAt()
@@ -112,7 +118,8 @@ public class RecommendationKafkaConsumer {
             }
             log.error("[Kafka][recommendation] consume failed. topic={}, offset={}, raw={}", topic, offset, payload, e);
             throw new IllegalStateException("recommendation consume failed", e);
+        } finally {
+            customerMetrics.stopRecommendationKafkaConsume(timerSample, outcome);
         }
     }
 }
-

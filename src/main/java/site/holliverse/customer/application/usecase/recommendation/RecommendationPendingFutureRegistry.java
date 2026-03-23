@@ -31,4 +31,8 @@ public class RecommendationPendingFutureRegistry {
     public CompletableFuture<RecommendationResult> remove(Long memberId) {
         return pending.remove(memberId);
     }
+
+    public int size() {
+        return pending.size();
+    }
 }

@@ -14,6 +14,7 @@ import site.holliverse.customer.error.CustomerException;
 import site.holliverse.infra.error.InfraErrorCode;
 import site.holliverse.infra.error.InfraException;
 import site.holliverse.shared.error.DomainException;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
 import java.time.Instant;
@@ -43,18 +44,21 @@ public class RecommendationService {
     private final RecommendationPendingFutureRegistry pendingFutureRegistry;
     private final Executor recommendationTaskExecutor;
     private final long awaitTimeoutSeconds;
+    private final CustomerMetrics customerMetrics;
 
     public RecommendationService(MemberRepository memberRepository,
                                 PersonaRecommendationRepository personaRecommendationRepository,
                                 FastApiRecommendationClient fastApiRecommendationClient,
                                 RecommendationPendingFutureRegistry pendingFutureRegistry,
                                 @Qualifier("recommendationTaskExecutor") Executor recommendationTaskExecutor,
+                                CustomerMetrics customerMetrics,
                                 @Value("${app.recommendation.await-timeout-seconds:90}") long awaitTimeoutSeconds) {
         this.memberRepository = memberRepository;
         this.personaRecommendationRepository = personaRecommendationRepository;
         this.fastApiRecommendationClient = fastApiRecommendationClient;
         this.pendingFutureRegistry = pendingFutureRegistry;
         this.recommendationTaskExecutor = recommendationTaskExecutor;
+        this.customerMetrics = customerMetrics;
         this.awaitTimeoutSeconds = awaitTimeoutSeconds;
     }
 
@@ -63,6 +67,7 @@ public class RecommendationService {
      * 캐시 미스: Future 등록 → FastAPI 202 트리거 → Future.get(timeout) 대기 후 반환. 타임아웃 시 PENDING 반환.
      */
     public RecommendationResult getRecommendations(Long memberId) {
+        var totalSample = customerMetrics.startSample();
         ensureMemberExists(memberId);
 
         Instant cacheExpiry = Instant.now().minus(CACHE_TTL_DAYS, ChronoUnit.DAYS);
@@ -71,9 +76,12 @@ public class RecommendationService {
                 .map(entity -> RecommendationResult.fromEntity(entity, RecommendationResult.RecommendationSource.CACHE));
 
         if (cached.isPresent()) {
+            customerMetrics.recordRecommendationRequest("cache_hit");
+            customerMetrics.stopRecommendationDuration(totalSample, "success", "cache");
             return cached.get();
         }
 
+        customerMetrics.recordRecommendationRequest("cache_miss");
         CompletableFuture<RecommendationResult> future = pendingFutureRegistry.getOrCreate(memberId);
         recommendationTaskExecutor.execute(() -> {
             try {
@@ -118,14 +126,25 @@ public class RecommendationService {
             }
         });
 
+        var waitSample = customerMetrics.startSample();
         try {
-            return future.get(awaitTimeoutSeconds, TimeUnit.SECONDS);
+            RecommendationResult result = future.get(awaitTimeoutSeconds, TimeUnit.SECONDS);
+            customerMetrics.recordRecommendationRequest("resolved");
+            customerMetrics.stopRecommendationWaitDuration(waitSample, "success");
+            customerMetrics.stopRecommendationDuration(totalSample, "success", result.source().name().toLowerCase());
+            return result;
         } catch (TimeoutException e) {
             pendingFutureRegistry.remove(memberId);
+            customerMetrics.recordRecommendationRequest("timeout");
+            customerMetrics.stopRecommendationWaitDuration(waitSample, "timeout");
+            customerMetrics.stopRecommendationDuration(totalSample, "timeout", "pending");
             return RecommendationResult.pending(PENDING_MESSAGE);
         } catch (Exception e) {
             Throwable cause = e.getCause() != null ? e.getCause() : e;
             pendingFutureRegistry.remove(memberId);
+            customerMetrics.recordRecommendationRequest("error");
+            customerMetrics.stopRecommendationWaitDuration(waitSample, "error");
+            customerMetrics.stopRecommendationDuration(totalSample, "error", "exception");
             if (cause instanceof DomainException de) {
                 throw de;
             }

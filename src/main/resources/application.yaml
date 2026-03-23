@@ -72,6 +72,12 @@ management:
       app: api-server
       profile: ${SPRING_PROFILES_ACTIVE:unknown}
       application: ${spring.application.name}-${SPRING_PROFILES_ACTIVE:unknown}
+    distribution:
+      percentiles-histogram:
+        "[holliverse.recommendation.duration]": true
+        "[holliverse.recommendation.wait.duration]": true
+        "[holliverse.recommendation.kafka.consume.duration]": true
+        "[holliverse.userlog.admin_log_feature.duration]": true
     export:
       cloudwatch:
         enabled: true

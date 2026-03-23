@@ -12,8 +12,8 @@ import site.holliverse.customer.persistence.entity.PersonaType;
 import site.holliverse.customer.persistence.repository.IndexPersonaSnapshotRepository;
 import site.holliverse.customer.persistence.repository.IndexTscoreSnapshotRepository;
 import site.holliverse.customer.persistence.repository.PersonaTypeRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -145,12 +145,9 @@ class GetMyPersonaUseCaseTest {
 
         // when/then: NOT_FOUND + field=personaType 예외를 확인
         assertThatThrownBy(() -> getMyPersonaUseCase.execute(memberId))
-                .isInstanceOf(CustomException.class)
-                .satisfies(ex -> {
-                    CustomException customException = (CustomException) ex;
-                    assertThat(customException.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-                    assertThat(customException.getField()).isEqualTo("personaType");
-                });
+                .isInstanceOf(CustomerException.class)
+                .extracting(ex -> ((CustomerException) ex).getErrorCode())
+                .isEqualTo(CustomerErrorCode.PERSONA_TYPE_NOT_FOUND);
     }
 
     /**

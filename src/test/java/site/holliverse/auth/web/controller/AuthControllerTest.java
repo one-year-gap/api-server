@@ -14,6 +14,7 @@ import site.holliverse.auth.application.usecase.AuthUseCase;
 import site.holliverse.auth.application.usecase.RefreshTokenUseCase;
 import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.dto.TokenRefreshResponseDto;
+import site.holliverse.auth.error.AuthErrorCode;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.shared.config.web.GlobalExceptionHandler;
 
@@ -80,7 +81,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/v1/auth/refresh"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("REFRESH_TOKEN_MISSING"));
+                .andExpect(jsonPath("$.errorDetail.code").value(AuthErrorCode.REFRESH_TOKEN_MISSING.code()));
     }
 
     @Test

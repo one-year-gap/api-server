@@ -21,6 +21,7 @@ import site.holliverse.admin.web.assembler.MemberStatisticsAssembler;
 import site.holliverse.admin.web.dto.member.MonthlyMemberStatResponseDto;
 import site.holliverse.admin.web.dto.member.*;
 import site.holliverse.auth.jwt.JwtTokenProvider;
+import site.holliverse.shared.error.SharedErrorCode;
 
 import java.util.Collections;
 import java.util.List;
@@ -121,7 +122,7 @@ class AdminMemberControllerTest {
 
                 .andExpect(jsonPath("$.status").value("error"))
                 .andExpect(jsonPath("$.message").value("유효성 검증에 실패했습니다."))
-                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.code").value(SharedErrorCode.INVALID_INPUT.code()))
                 .andExpect(jsonPath("$.errorDetail.field").value("ages[0]"));
     }
 

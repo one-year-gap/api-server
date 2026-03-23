@@ -6,10 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.query.dao.MemberDetailRawData;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -78,16 +78,15 @@ class GetMemberDetailUseCaseTest {
     }
 
     @Test
-    @DisplayName("회원 상세 조회 실패 - 존재하지 않는 ID인 경우 CustomException이 발생한다")
+    @DisplayName("회원 상세 조회 실패 - 존재하지 않는 ID인 경우 AdminException이 발생한다")
     void execute_fail_notFound() {
         // given
         Long memberId = 999L;
         given(adminMemberDao.findDetailById(memberId)).willReturn(Optional.empty());
 
         // when & then
-        CustomException exception = assertThrows(CustomException.class, () -> useCase.execute(memberId));
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-        assertThat(exception.getReason()).contains("999");
+        AdminException exception = assertThrows(AdminException.class, () -> useCase.execute(memberId));
+        assertThat(exception.getErrorCode()).isEqualTo(AdminErrorCode.MEMBER_NOT_FOUND);
 
         // 회원이 없어서 예외가 터졌으므로, 두 번째 쿼리(키워드 조회)는 절대 실행되지 않아야 함
         verify(adminMemberDao, never()).findTop3KeywordsByMemberId(anyLong());

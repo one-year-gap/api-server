@@ -8,11 +8,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
 import site.holliverse.shared.domain.model.PersonaSegment;
-import site.holliverse.shared.error.CustomException;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
 import java.time.Instant;
@@ -128,8 +129,9 @@ class RecommendationServiceTest {
             when(memberRepository.existsById(MEMBER_ID)).thenReturn(false);
 
             assertThatThrownBy(() -> recommendationService.getRecommendations(MEMBER_ID))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessageContaining("멤버");
+                    .isInstanceOf(CustomerException.class)
+                    .extracting(ex -> ((CustomerException) ex).getErrorCode())
+                    .isEqualTo(CustomerErrorCode.MEMBER_NOT_FOUND);
         }
     }
 

@@ -7,12 +7,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import site.holliverse.auth.dto.TokenRefreshResponseDto;
+import site.holliverse.auth.error.AuthErrorCode;
+import site.holliverse.auth.error.AuthException;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberStatus;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.entity.RefreshToken;
 import site.holliverse.shared.persistence.repository.MemberRepository;
@@ -102,11 +102,9 @@ class RefreshTokenUseCaseTest {
 
         // 실행, 검증
         assertThatThrownBy(() -> refreshTokenUseCase.refresh(rawRefreshToken))
-                .isInstanceOf(CustomException.class)
-                .satisfies(ex -> {
-                    CustomException custom = (CustomException) ex;
-                    assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
-                });
+                .isInstanceOf(AuthException.class)
+                .extracting(ex -> ((AuthException) ex).getErrorCode())
+                .isEqualTo(AuthErrorCode.INVALID_REFRESH_TOKEN);
 
         verifyNoInteractions(refreshTokenRepository, memberRepository);
     }
@@ -134,11 +132,9 @@ class RefreshTokenUseCaseTest {
 
         // 실행, 검증
         assertThatThrownBy(() -> refreshTokenUseCase.refresh(rawRefreshToken))
-                .isInstanceOf(CustomException.class)
-                .satisfies(ex -> {
-                    CustomException custom = (CustomException) ex;
-                    assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.REFRESH_TOKEN_EXPIRED);
-                });
+                .isInstanceOf(AuthException.class)
+                .extracting(ex -> ((AuthException) ex).getErrorCode())
+                .isEqualTo(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
 
         verify(tokenRevoker).revokeById(expiredToken.getId());
     }
@@ -175,11 +171,9 @@ class RefreshTokenUseCaseTest {
 
         // 실행, 검증
         assertThatThrownBy(() -> refreshTokenUseCase.refresh(rawRefreshToken))
-                .isInstanceOf(CustomException.class)
-                .satisfies(ex -> {
-                    CustomException custom = (CustomException) ex;
-                    assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.FORBIDDEN);
-                });
+                .isInstanceOf(AuthException.class)
+                .extracting(ex -> ((AuthException) ex).getErrorCode())
+                .isEqualTo(AuthErrorCode.FORBIDDEN_MEMBER_STATUS);
 
         verify(memberRepository).findById(memberId);
     }

@@ -6,10 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.KeywordStatDao;
 import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -108,7 +108,8 @@ class GetKeywordBubbleChartUseCaseTest {
 
         // when & then: "2026년 3월"을 요청하면 예외가 터져야 함 (3월 1일 > 2월 28일)
         assertThatThrownBy(() -> getKeywordBubbleChartUseCase.execute(2026, 3))
-                .isInstanceOf(CustomException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DATA_NOT_YET_ANALYZED);
+                .isInstanceOf(AdminException.class)
+                .extracting(ex -> ((AdminException) ex).getErrorCode())
+                .isEqualTo(AdminErrorCode.DATA_NOT_YET_ANALYZED);
     }
 }

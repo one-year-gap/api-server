@@ -12,6 +12,7 @@ import site.holliverse.admin.application.usecase.CounselTrafficUseCase;
 import site.holliverse.admin.query.dao.CounselTrafficDailyRawData;
 import site.holliverse.admin.query.dao.CounselTrafficMonthlyRawData;
 import site.holliverse.auth.jwt.JwtTokenProvider;
+import site.holliverse.shared.error.SharedErrorCode;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -60,7 +61,7 @@ class CounselControllerTest {
                         .param("date", "2026-02-30"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.code").value(SharedErrorCode.INVALID_INPUT.code()))
                 .andExpect(jsonPath("$.errorDetail.field").value("date"));
 
         verifyNoInteractions(useCase);
@@ -89,7 +90,7 @@ class CounselControllerTest {
                         .param("month", "2026-13"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.code").value(SharedErrorCode.INVALID_INPUT.code()))
                 .andExpect(jsonPath("$.errorDetail.field").value("month"));
 
         verifyNoInteractions(useCase);

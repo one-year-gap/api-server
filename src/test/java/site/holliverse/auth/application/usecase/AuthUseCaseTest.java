@@ -18,6 +18,7 @@ import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.error.AuthErrorCode;
 import site.holliverse.auth.error.AuthException;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.coupon.application.SignupCouponService;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberSignupType;
@@ -64,6 +65,8 @@ class AuthUseCaseTest {
     private EncryptionTool encryptionTool;
     @Mock
     private DecryptionTool decryptionTool;
+    @Mock
+    private SignupCouponService signupCouponService;
 
     @InjectMocks
     private AuthUseCase authUseCase;
@@ -124,6 +127,7 @@ class AuthUseCaseTest {
             assertThat(savedMember.getMembership()).isEqualTo(MemberMembership.GOLD);
             // 회원가입 성공 시 초기 요금제 자동 할당이 호출되어야 한다.
             verify(initialPlanAssignmentService).assignForNewMember(savedMember);
+            verify(signupCouponService).issueWelcomeCoupon(savedMember.getId());
         }
 
         @Test
@@ -160,7 +164,7 @@ class AuthUseCaseTest {
             assertThat(savedAddress.getStreetAddress()).isEqualTo("teheran-ro 123");
             assertThat(savedAddress.getPostalCode()).isEqualTo("06234");
 
-            // [추가 검증] 저장된 멤버의 정보가 암호화되었는지 확인
+            // 저장된 멤버의 정보가 암호화되었는지 확인
             ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
             verify(memberRepository).save(memberCaptor.capture());
             Member savedMember = memberCaptor.getValue();
@@ -168,6 +172,7 @@ class AuthUseCaseTest {
             assertThat(savedMember.getPhone()).isEqualTo("encrypted-phone");
             // 회원가입 성공 시 초기 요금제 자동 할당이 호출되어야 한다.
             verify(initialPlanAssignmentService).assignForNewMember(savedMember);
+            verify(signupCouponService).issueWelcomeCoupon(savedMember.getId());
         }
 
         @Test
@@ -324,6 +329,7 @@ class AuthUseCaseTest {
             verify(addressRepository, never()).save(any(Address.class));
             // 온보딩 완료 성공 시 초기 요금제 자동 할당이 호출되어야 한다.
             verify(initialPlanAssignmentService).assignForNewMember(member);
+            verify(signupCouponService).issueWelcomeCoupon(member.getId());
         }
 
         @Test
@@ -357,6 +363,7 @@ class AuthUseCaseTest {
             verify(addressRepository).save(any(Address.class));
             // 온보딩 완료 성공 시 초기 요금제 자동 할당이 호출되어야 한다.
             verify(initialPlanAssignmentService).assignForNewMember(member);
+            verify(signupCouponService).issueWelcomeCoupon(member.getId());
         }
 
         @Test

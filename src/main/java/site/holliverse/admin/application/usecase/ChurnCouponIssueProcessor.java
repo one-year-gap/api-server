@@ -6,11 +6,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import site.holliverse.admin.error.AdminErrorCode;
-import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminChurnCouponDao;
 import site.holliverse.admin.query.dao.ChurnCouponMemberRawData;
-import site.holliverse.admin.query.dao.CouponRawData;
+import site.holliverse.coupon.application.CouponGrantService;
 
 import java.time.LocalDateTime;
 
@@ -32,6 +30,7 @@ import java.time.LocalDateTime;
 public class ChurnCouponIssueProcessor {
 
     private final AdminChurnCouponDao adminChurnCouponDao;
+    private final CouponGrantService couponGrantService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public IssueOneChurnCouponResult issue(Long memberId, Long couponId) {
@@ -51,30 +50,9 @@ public class ChurnCouponIssueProcessor {
             return IssueOneChurnCouponResult.skipped(memberId, "ALREADY_ISSUED_WITHIN_90_DAYS");
         }
 
-        CouponRawData coupon = adminChurnCouponDao.findCouponById(couponId)
-                .orElse(null);
-
-        if (coupon == null) {
-            return IssueOneChurnCouponResult.skipped(memberId, "COUPON_NOT_FOUND");
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiredAt = resolveExpiredAt(coupon, now);
-
-        adminChurnCouponDao.insertMemberCoupon(memberId, couponId, now, expiredAt);
-
+        couponGrantService.grant(memberId, couponId);
         return IssueOneChurnCouponResult.issued(memberId);
     }
 
-    private LocalDateTime resolveExpiredAt(CouponRawData coupon, LocalDateTime now) {
-        if (coupon.validDays() != null) {
-            return now.plusDays(coupon.validDays());
-        }
-
-        if (coupon.validEndDate() != null) {
-            return coupon.validEndDate();
-        }
-
-        throw new AdminException(AdminErrorCode.COUPON_EXPIRATION_DATE_UNAVAILABLE);
-    }
 }
+

@@ -6,11 +6,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminChurnCouponDao;
 import site.holliverse.admin.query.dao.ChurnCouponMemberRawData;
 import site.holliverse.admin.query.dao.CouponRawData;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 
 import java.time.LocalDateTime;
 
@@ -75,11 +75,6 @@ public class ChurnCouponIssueProcessor {
             return coupon.validEndDate();
         }
 
-        throw new CustomException(
-                ErrorCode.INTERNAL_ERROR,
-                "couponId",
-                "쿠폰 만료일 정보를 확인할 수 없습니다."
-        );
+        throw new AdminException(AdminErrorCode.COUPON_EXPIRATION_DATE_UNAVAILABLE);
     }
 }
-

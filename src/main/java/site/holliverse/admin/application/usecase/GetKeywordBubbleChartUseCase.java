@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.KeywordStatDao;
 import site.holliverse.admin.web.dto.support.KeywordBubbleChartResponseDto;
 import site.holliverse.shared.alert.AlertOwner;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.logging.SystemLogEvent;
 
 import java.math.BigDecimal;
@@ -41,7 +41,7 @@ public class GetKeywordBubbleChartUseCase {
             // DB에 분석된 데이터가 아예 없거나, 요청한 달(1일)이 마지막 분석 날짜보다 미래인 경우
             if (lastAnalyzedDate == null || requestedDate.isAfter(lastAnalyzedDate)) {
                 // 400 에러로 처리
-                throw new CustomException(ErrorCode.DATA_NOT_YET_ANALYZED);
+                throw new AdminException(AdminErrorCode.DATA_NOT_YET_ANALYZED);
             }
         }
 

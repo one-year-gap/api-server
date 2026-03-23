@@ -9,8 +9,11 @@ import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationRes
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
+import site.holliverse.infra.error.InfraErrorCode;
+import site.holliverse.infra.error.InfraException;
+import site.holliverse.shared.error.DomainException;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
 import java.time.Instant;
@@ -123,17 +126,16 @@ public class RecommendationService {
         } catch (Exception e) {
             Throwable cause = e.getCause() != null ? e.getCause() : e;
             pendingFutureRegistry.remove(memberId);
-            if (cause instanceof CustomException ce) {
-                throw ce;
+            if (cause instanceof DomainException de) {
+                throw de;
             }
-            throw new CustomException(ErrorCode.RECOMMENDATION_UNAVAILABLE, "fastapi",
-                    "추천 서비스 호출에 실패했습니다.", cause.getMessage());
+            throw new InfraException(InfraErrorCode.RECOMMENDATION_UNAVAILABLE);
         }
     }
 
     private void ensureMemberExists(Long memberId) {
         if (!memberRepository.existsById(memberId)) {
-            throw new CustomException(ErrorCode.MEMBER_NOT_FOUND, "memberId", "멤버를 찾을 수 없습니다.");
+            throw new CustomerException(CustomerErrorCode.MEMBER_NOT_FOUND);
         }
     }
 

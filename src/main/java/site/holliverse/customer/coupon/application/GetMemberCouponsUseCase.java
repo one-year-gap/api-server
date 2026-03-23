@@ -7,8 +7,8 @@ import site.holliverse.customer.coupon.domain.Coupon;
 import site.holliverse.customer.coupon.domain.MemberCoupon;
 import site.holliverse.customer.coupon.domain.MemberCouponStatus;
 import site.holliverse.customer.persistence.repository.MemberCouponRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.infra.error.InfraErrorCode;
+import site.holliverse.infra.error.InfraException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -41,7 +41,7 @@ public class GetMemberCouponsUseCase {
     private MemberCoupon toDomain(site.holliverse.customer.persistence.entity.MemberCoupon entity) {
         site.holliverse.customer.persistence.entity.Coupon c = entity.getCoupon();
         if (c == null) {
-            throw new CustomException(ErrorCode.INTERNAL_ERROR, "coupon", "쿠폰 정보를 불러오는 중 오류가 발생했습니다.");
+            throw new InfraException(InfraErrorCode.COUPON_LOAD_FAILED);
         }
         Coupon domainCoupon = new Coupon(
                 c.getId(),

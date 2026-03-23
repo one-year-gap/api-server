@@ -1,6 +1,7 @@
 package site.holliverse.infra.kafka.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -36,12 +37,14 @@ public class RecommendationKafkaConfig {
             ObjectMapper objectMapper,
             PersonaRecommendationRepository personaRecommendationRepository,
             RecommendationPendingFutureRegistry pendingFutureRegistry,
+            MeterRegistry meterRegistry,
             CustomerMetrics customerMetrics
     ) {
         return new RecommendationKafkaConsumer(
                 objectMapper,
                 personaRecommendationRepository,
                 pendingFutureRegistry,
+                meterRegistry,
                 customerMetrics
         );
     }

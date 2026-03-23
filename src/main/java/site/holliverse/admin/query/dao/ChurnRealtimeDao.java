@@ -23,8 +23,10 @@ import static site.holliverse.admin.query.jooq.Tables.MEMBER;
 @Repository
 @RequiredArgsConstructor
 public class ChurnRealtimeDao {
-    private static final Field<Long> REVISION_ID = DSL.field(DSL.name("revision_id"), Long.class);
-    private static final Field<OffsetDateTime> UPDATED_AT = DSL.field(DSL.name("updated_at"), OffsetDateTime.class);
+    private static final Field<Long> REVISION_ID =
+            DSL.field(DSL.name("churn_score_snapshot", "revision_id"), Long.class);
+    private static final Field<OffsetDateTime> UPDATED_AT =
+            DSL.field(DSL.name("churn_score_snapshot", "updated_at"), OffsetDateTime.class);
 
     private final DSLContext dsl;
 

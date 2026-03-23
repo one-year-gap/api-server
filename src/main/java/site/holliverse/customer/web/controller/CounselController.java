@@ -1,5 +1,6 @@
 package site.holliverse.customer.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +27,7 @@ public class CounselController {
     @PostMapping("/counsel")
     public ApiResponse<Long> createCounsel(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestBody CreateCounselDto request
+            @Valid @RequestBody CreateCounselDto request
             ){
 
         Long counselId = useCase.execute(customUserDetails.getMemberId(),request.title(),request.content());

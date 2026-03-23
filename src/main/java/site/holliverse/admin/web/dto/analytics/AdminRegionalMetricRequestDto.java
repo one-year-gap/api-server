@@ -1,7 +1,7 @@
 package site.holliverse.admin.web.dto.analytics;
 
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -24,18 +24,12 @@ public record AdminRegionalMetricRequestDto(
         }
 
         if (!yyyymm.matches("\\d{6}")) {
-            throw new CustomException(
-                    ErrorCode.INVALID_INPUT,
-                    "yyyymm"
-            );
+            throw new AdminException(AdminErrorCode.INVALID_YYYYMM);
         }
 
         int month = Integer.parseInt(yyyymm.substring(4, 6));
         if (month < 1 || month > 12) {
-            throw new CustomException(
-                    ErrorCode.INVALID_INPUT,
-                    "yyyymm"
-            );
+            throw new AdminException(AdminErrorCode.INVALID_YYYYMM);
         }
         this.yyyymm = yyyymm;
     }

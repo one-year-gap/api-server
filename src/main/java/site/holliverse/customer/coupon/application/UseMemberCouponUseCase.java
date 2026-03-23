@@ -6,9 +6,11 @@ import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.customer.coupon.domain.Coupon;
 import site.holliverse.customer.coupon.domain.MemberCoupon;
 import site.holliverse.customer.coupon.domain.MemberCouponStatus;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.customer.persistence.repository.MemberCouponRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.infra.error.InfraErrorCode;
+import site.holliverse.infra.error.InfraException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -32,13 +34,13 @@ public class UseMemberCouponUseCase {
 
         site.holliverse.customer.persistence.entity.MemberCoupon entity = memberCouponRepository
                 .findByIdAndMemberId(memberCouponId, memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.COUPON_NOT_FOUND, "memberCouponId", "보유 쿠폰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomerException(CustomerErrorCode.COUPON_NOT_FOUND));
 
         if (entity.getIsUsed()) {
-            throw new CustomException(ErrorCode.COUPON_ALREADY_USED, "memberCouponId", "이미 사용된 쿠폰입니다.");
+            throw new CustomerException(CustomerErrorCode.COUPON_ALREADY_USED);
         }
         if (!entity.getExpiredAt().isAfter(now)) {
-            throw new CustomException(ErrorCode.COUPON_EXPIRED, "memberCouponId", "만료된 쿠폰입니다.");
+            throw new CustomerException(CustomerErrorCode.COUPON_EXPIRED);
         }
 
         entity.markAsUsed(now);
@@ -52,7 +54,7 @@ public class UseMemberCouponUseCase {
     private MemberCoupon toDomain(site.holliverse.customer.persistence.entity.MemberCoupon entity) {
         site.holliverse.customer.persistence.entity.Coupon c = entity.getCoupon();
         if (c == null) {
-            throw new CustomException(ErrorCode.INTERNAL_ERROR, "coupon", "쿠폰 정보를 불러오는 중 오류가 발생했습니다.");
+            throw new InfraException(InfraErrorCode.COUPON_LOAD_FAILED);
         }
         Coupon domainCoupon = new Coupon(
                 c.getId(),

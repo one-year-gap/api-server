@@ -2,8 +2,8 @@ package site.holliverse.customer.domain.policy;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 
 import java.util.Objects;
 
@@ -20,11 +20,11 @@ public class SubscriptionChangePolicy {
      * @param currentProductId 같은 타입 활성 구독의 상품 ID (없으면 null)
      * @param targetProductId  변경/신규 가입 대상 상품 ID
      * @return deactivateCurrent: 기존 구독 해지 여부, createNew: 신규 구독 생성 여부
-     * @throws CustomException CONFLICT when currentProductId equals targetProductId (동일 상품 재가입)
+     * @throws CustomerException CONFLICT when currentProductId equals targetProductId (동일 상품 재가입)
      */
     public SubscriptionChangeDecision decide(Long currentProductId, Long targetProductId) {
         if (Objects.equals(currentProductId, targetProductId)) {
-            throw new CustomException(ErrorCode.CONFLICT, "target_product_id", "지금 가입되어있는 상품입니다.");
+            throw new CustomerException(CustomerErrorCode.MOBILE_PLAN_ALREADY_SUBSCRIBED);
         }
         boolean deactivateCurrent = currentProductId != null;
         return new SubscriptionChangeDecision(deactivateCurrent, true);

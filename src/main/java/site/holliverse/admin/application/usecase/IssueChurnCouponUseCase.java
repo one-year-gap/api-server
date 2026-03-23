@@ -4,12 +4,12 @@ package site.holliverse.admin.application.usecase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminChurnCouponDao;
 import site.holliverse.admin.web.dto.churn.IssueChurnCouponRequestDto;
 import site.holliverse.admin.web.dto.churn.IssueChurnCouponResponseDto;
 import site.holliverse.admin.web.dto.churn.SkippedCouponIssueMemberDto;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,11 +39,7 @@ public class IssueChurnCouponUseCase {
         boolean couponExists = adminChurnCouponDao.existsCouponById(requestDto.couponId());
 
         if (!couponExists) {
-            throw new CustomException(
-                    ErrorCode.NOT_FOUND,
-                    "couponId",
-                    "존재하지 않는 쿠폰입니다."
-            );
+            throw new AdminException(AdminErrorCode.COUPON_NOT_FOUND);
         }
 
         List<Long> issuedMemberIds = new ArrayList<>();

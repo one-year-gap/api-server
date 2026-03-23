@@ -14,8 +14,11 @@ import site.holliverse.auth.application.usecase.AuthUseCase;
 import site.holliverse.auth.application.usecase.RefreshTokenUseCase;
 import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.dto.TokenRefreshResponseDto;
+import site.holliverse.auth.error.AuthErrorCode;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.shared.config.web.GlobalExceptionHandler;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, ApiErrorResponseFactory.class, ConstraintExceptionMapper.class})
 class AuthControllerTest {
 
     @Autowired
@@ -80,7 +83,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/v1/auth/refresh"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("REFRESH_TOKEN_MISSING"));
+                .andExpect(jsonPath("$.errorDetail.code").value(AuthErrorCode.REFRESH_TOKEN_MISSING.code()));
     }
 
     @Test

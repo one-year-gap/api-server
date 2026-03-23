@@ -2,13 +2,13 @@ package site.holliverse.auth.application.usecase;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.auth.error.AuthErrorCode;
+import site.holliverse.auth.error.AuthException;
 import site.holliverse.auth.dto.TokenRefreshResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.domain.model.MemberStatus;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.entity.RefreshToken;
@@ -55,7 +55,7 @@ public class RefreshTokenUseCase {
     public TokenRefreshResponseDto refresh(String rawRefreshToken) {
         // 1) JWT 서명/만료/토큰타입 검증을한다음 검증 실패하면 예외처리
         if (!jwtTokenProvider.isValid(rawRefreshToken) || !jwtTokenProvider.isRefreshToken(rawRefreshToken)) {
-            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN, null);
+            throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         Long memberId = jwtTokenProvider.getMemberId(rawRefreshToken);
@@ -63,29 +63,26 @@ public class RefreshTokenUseCase {
 
         // 2) 활성 상태의 해시 토큰 조회를 하였을때 폐기된 토큰아니면 성공 아니면 예외처리
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHashAndRevokedFalse(tokenHash)
-                .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_REVOKED, null));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.REFRESH_TOKEN_REVOKED));
 
         // 3) 토큰 소유자 일치 여부 확인을한다.
         if (!refreshToken.getMemberId().equals(memberId)) {
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_OWNER_MISMATCH, null);
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_OWNER_MISMATCH);
         }
 
         // 4) 만료 토큰은 폐기 후 차단
         if (refreshToken.isExpired()) {
             tokenRevoker.revokeById(refreshToken.getId());
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED, null);
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
         // 5) 회원 상태 검증
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND, "memberId"));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
 
         if ((member.getStatus() != MemberStatus.ACTIVE
                 && member.getStatus() != MemberStatus.PROCESSING)) {
-            throw new CustomException(
-                    ErrorCode.FORBIDDEN,
-                    "memberStatus"
-            );
+            throw new AuthException(AuthErrorCode.FORBIDDEN_MEMBER_STATUS);
         }
 
         // 6) 새 토큰 발급 및 리프레시 토큰 회전

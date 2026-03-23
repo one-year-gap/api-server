@@ -9,6 +9,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 
 /**
  * Admin API log-features 호출용 RestTemplate 및 클라이언트 빈 등록.
@@ -29,7 +30,8 @@ public class AdminLogFeaturesConfig {
     @Bean
     public AdminLogFeaturesClient adminLogFeaturesClient(
             @Qualifier("adminLogFeaturesRestTemplate") RestTemplate restTemplate,
-            AdminLogFeaturesProperties properties) {
-        return new AdminLogFeaturesClient(restTemplate, properties);
+            AdminLogFeaturesProperties properties,
+            CustomerMetrics customerMetrics) {
+        return new AdminLogFeaturesClient(restTemplate, properties, customerMetrics);
     }
 }

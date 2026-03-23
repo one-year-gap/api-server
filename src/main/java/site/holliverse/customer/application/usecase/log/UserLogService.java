@@ -13,8 +13,9 @@ import org.springframework.stereotype.Service;
 import com.github.f4b6a3.tsid.Tsid;
 import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class UserLogService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final AdminLogFeaturesClient adminLogFeaturesClient;
+    private final CustomerMetrics customerMetrics;
 
     @Value("${app.topic.client-events}")
     private String topic;
@@ -36,6 +38,7 @@ public class UserLogService {
         if (requests == null || requests.isEmpty()) {
             return;
         }
+        customerMetrics.recordUserLogBatchSize(requests.size());
         for (UserLogRequest request : requests) {
             doPublish(memberId, request);
         }
@@ -63,11 +66,8 @@ public class UserLogService {
         try {
             eventId = decodeTsidToLong(request.tsid());
         } catch (IllegalArgumentException e) {
-            throw new CustomException(
-                    ErrorCode.INVALID_USER_LOG_EVENT_ID,
-                    "event_id",
-                    "유효하지 않은 사용자 로그 이벤트 ID입니다."
-            );
+            customerMetrics.recordUserLogPublish(request.eventName(), "invalid_tsid");
+            throw new CustomerException(CustomerErrorCode.INVALID_USER_LOG_EVENT_ID);
         }
 
         UserLogPayload payload = new UserLogPayload(
@@ -83,6 +83,7 @@ public class UserLogService {
         try {
             json = objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
+            customerMetrics.recordUserLogPublish(eventName.value(), "serialization_error");
             log.warn("[UserLog] 직렬화 실패 memberId={}", memberId, e);
             return;
         }
@@ -90,9 +91,12 @@ public class UserLogService {
         kafkaTemplate.send(topic, String.valueOf(memberId), json)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
+                        customerMetrics.recordUserLogPublish(eventName.value(), "kafka_error");
                         log.warn("[UserLog] Kafka 전송 실패 memberId={} eventName={}",
                                 memberId, eventName.value(), ex);
+                        return;
                     }
+                    customerMetrics.recordUserLogPublish(eventName.value(), "success");
                 });
     }
 

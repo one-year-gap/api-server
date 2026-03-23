@@ -1,5 +1,6 @@
 package site.holliverse.admin.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class InternalLogFeatureController {
 
 
     @PostMapping
-    public ResponseEntity<Void> receive (@RequestBody LogFeatureWebhookRequest request){
+    public ResponseEntity<Void> receive (@RequestBody @Valid LogFeatureWebhookRequest request){
         useCase.execute(request);
 
         return ResponseEntity.accepted().build();

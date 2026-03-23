@@ -1,5 +1,11 @@
 package site.holliverse.admin.application.usecase;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
+import site.holliverse.shared.error.SharedErrorCode;
+
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -22,6 +28,7 @@ public enum UserActionFeatureEventName {
     /**
      * 원본 값.
      */
+    @JsonValue
     public String value() {
         return value;
     }
@@ -33,5 +40,11 @@ public enum UserActionFeatureEventName {
         return Arrays.stream(values())
                 .filter(eventName -> eventName.value.equals(value))
                 .findFirst();
+    }
+
+    @JsonCreator
+    public static UserActionFeatureEventName from(String value) {
+        return find(value)
+                .orElseThrow(() -> new AdminException(AdminErrorCode.INVALID_CLICK_VALUE));
     }
 }

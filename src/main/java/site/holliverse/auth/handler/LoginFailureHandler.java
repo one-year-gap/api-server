@@ -13,7 +13,7 @@ import org.springframework.security.authentication.AuthenticationServiceExceptio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.auth.error.AuthErrorCode;
 import site.holliverse.shared.logging.LogFieldKeys;
 import site.holliverse.shared.web.response.ApiErrorDetail;
 import site.holliverse.shared.web.response.ApiErrorResponse;
@@ -37,9 +37,9 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
-        ErrorCode code = (exception instanceof AuthenticationServiceException)
-                ? ErrorCode.INVALID_INPUT
-                : ErrorCode.INVALID_CREDENTIALS;
+        AuthErrorCode code = (exception instanceof AuthenticationServiceException)
+                ? AuthErrorCode.INVALID_LOGIN_REQUEST
+                : AuthErrorCode.INVALID_CREDENTIALS;
 
         //민감정보는 남기지 않음.
         MDC.put(LogFieldKeys.EVENT, "security.auth.failure");
@@ -59,15 +59,15 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
         }
 
         ApiErrorResponse body = ApiErrorResponse.error(
-                ErrorCode.INVALID_CREDENTIALS.defaultMessage(),
+                code.message(),
                 new ApiErrorDetail(
-                        ErrorCode.INVALID_CREDENTIALS.code(),
+                        code.code(),
                         null,
                         exception.getMessage()
                 )
         );
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(code.httpStatus().value());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(objectMapper.writeValueAsString(body));

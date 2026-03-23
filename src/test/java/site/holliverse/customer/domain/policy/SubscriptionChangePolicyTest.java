@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,13 +47,9 @@ class SubscriptionChangePolicyTest {
         @DisplayName("동일 상품: currentProductId equals targetProductId → CONFLICT 예외")
         void sameProduct_throwsConflict() {
             assertThatThrownBy(() -> subscriptionChangePolicy.decide(TARGET_PRODUCT_ID, TARGET_PRODUCT_ID))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException ce = (CustomException) ex;
-                        assertThat(ce.getErrorCode()).isEqualTo(ErrorCode.CONFLICT);
-                        assertThat(ce.getField()).isEqualTo("target_product_id");
-                        assertThat(ce.getReason()).isEqualTo("지금 가입되어있는 상품입니다.");
-                    });
+                    .isInstanceOf(CustomerException.class)
+                    .extracting(ex -> ((CustomerException) ex).getErrorCode())
+                    .isEqualTo(CustomerErrorCode.MOBILE_PLAN_ALREADY_SUBSCRIBED);
         }
     }
 }

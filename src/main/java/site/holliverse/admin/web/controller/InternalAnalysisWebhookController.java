@@ -1,5 +1,6 @@
 package site.holliverse.admin.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class InternalAnalysisWebhookController {
     private final HandleAnalysisConsultationUseCase useCase;
 
     @PostMapping
-    public ResponseEntity<Void> receive(@RequestBody AnalysisResponseWebhookRequest request) {
+    public ResponseEntity<Void> receive(@RequestBody @Valid AnalysisResponseWebhookRequest request) {
         // 요청 처리
         useCase.execute(toCommand(request));
 

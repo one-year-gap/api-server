@@ -1,5 +1,6 @@
 package site.holliverse.customer.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -31,10 +32,8 @@ public class SubscriptionController {
     @PostMapping("/change")
     public ApiResponse<ChangeProductResponse> changePlan(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestBody ChangeProductRequest request) {
-        if (customUserDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
-        }
+            @RequestBody @Valid ChangeProductRequest request) {
+
         Long memberId = customUserDetails.getMemberId(); // memberId 추출 
         ChangeProductResult result = changeProductUseCase.execute(memberId, request.targetProductId()); // UseCase 호출
         ChangeProductResponse response = changeProductResponseAssembler.assemble(result);

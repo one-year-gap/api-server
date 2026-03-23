@@ -8,13 +8,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import site.holliverse.auth.error.AuthErrorCode;
+import site.holliverse.auth.error.AuthException;
 import site.holliverse.customer.persistence.entity.Product;
 import site.holliverse.customer.persistence.entity.Subscription;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.shared.domain.model.ProductType;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Member;
 
 import java.util.List;
@@ -66,12 +66,9 @@ class CustomerInitialPlanAssignmentUseCaseTest {
         when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.assignForNewMember(member))
-                .isInstanceOf(CustomException.class)
-                .satisfies(ex -> {
-                    CustomException custom = (CustomException) ex;
-                    assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-                    assertThat(custom.getField()).isEqualTo("mobilePlan");
-                });
+                .isInstanceOf(AuthException.class)
+                .extracting(ex -> ((AuthException) ex).getErrorCode())
+                .isEqualTo(AuthErrorCode.MOBILE_PLAN_NOT_FOUND);
     }
 
     @Test

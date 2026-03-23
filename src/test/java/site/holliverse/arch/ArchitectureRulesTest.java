@@ -2,6 +2,7 @@ package site.holliverse.arch;
 
 import com.tngtech.archunit.core.domain.JavaAnnotation;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.Dependency;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -123,11 +124,11 @@ public class ArchitectureRulesTest {
     // ---------------------------------------------------------------------------
     @ArchTest
     static final ArchRule only_runtime_config_can_depend_on_infra =
-            noClasses()
+            classes()
                     .that().resideOutsideOfPackage(RUNTIME_CONFIG)
                     .and().resideInAnyPackage(CUSTOMER, ADMIN, SHARED)
-                    .should().dependOnClassesThat().resideInAnyPackage(INFRA)
-                    .because("infra 구현체는 runtime config에서만 import/enable 되어야 한다. 나머지는 Port를 통해 접근한다.")
+                    .should(notDependOnInfraExceptError())
+                    .because("infra 구현체는 runtime config에서만 import/enable 되어야 한다. 다만 도메인 전반에서 사용하는 예외 모델은 infra.error를 참조할 수 있다.")
                     .allowEmptyShould(true);
     ;
 
@@ -168,6 +169,24 @@ public class ArchitectureRulesTest {
 
                 String msg = item.getName() + " must have @Profile(\"" + profile + "\")";
                 events.add(new SimpleConditionEvent(item, ok, msg));
+            }
+        };
+    }
+
+    private static ArchCondition<JavaClass> notDependOnInfraExceptError() {
+        return new ArchCondition<>("not depend on infra except infra.error") {
+            @Override
+            public void check(JavaClass item, ConditionEvents events) {
+                for (Dependency dependency : item.getDirectDependenciesFromSelf()) {
+                    String target = dependency.getTargetClass().getPackageName();
+                    boolean isInfra = target.startsWith("site.holliverse.infra");
+                    boolean isInfraError = target.startsWith("site.holliverse.infra.error");
+
+                    if (isInfra && !isInfraError) {
+                        String message = item.getName() + " depends on infra class " + dependency.getTargetClass().getName();
+                        events.add(SimpleConditionEvent.violated(item, message));
+                    }
+                }
             }
         };
     }

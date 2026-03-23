@@ -5,11 +5,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
 import site.holliverse.shared.alert.AlertOwner;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.util.EncryptionTool;
 
@@ -32,7 +32,7 @@ public class UpdateMemberUseCase {
         // 1. 대상 회원이 진짜 존재하는지 검증
         if (!adminMemberDao.existsById(memberId)) {
             // 커스텀 예외 적용
-            throw new CustomException(ErrorCode.NOT_FOUND, "memberId", "존재하지 않는 회원입니다.");
+            throw new AdminException(AdminErrorCode.MEMBER_NOT_FOUND);
         }
 
         // 2. 이름 암호화 (값이 들어왔을 때만)
@@ -47,7 +47,7 @@ public class UpdateMemberUseCase {
             try {
                 statusEnum = MemberStatusType.valueOf(dto.status());
             } catch (IllegalArgumentException e) {
-                throw new CustomException(ErrorCode.INVALID_INPUT, "status", "유효하지 않은 회원 상태값입니다.");
+                throw new AdminException(AdminErrorCode.INVALID_MEMBER_STATUS);
             }
         }
 
@@ -57,7 +57,7 @@ public class UpdateMemberUseCase {
             try {
                 membershipEnum = MemberMembershipType.valueOf(dto.membership());
             } catch (IllegalArgumentException e) {
-                throw new CustomException(ErrorCode.INVALID_INPUT, "membership", "유효하지 않은 멤버십 등급입니다.");
+                throw new AdminException(AdminErrorCode.INVALID_MEMBERSHIP);
             }
         }
 

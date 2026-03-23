@@ -1,5 +1,6 @@
 package site.holliverse.admin.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class ChurnRealTimeController {
      */
     @GetMapping("/latest")
     public ResponseEntity<ApiResponse<ChurnRealTimeResponseDto>> latest(
-            @ModelAttribute ChurnRealTimeRequestDto requestDto
+            @Valid @ModelAttribute ChurnRealTimeRequestDto requestDto
     ) {
         RetrieveChurnRealtimeResult result = retrieveChurnRealtimeUseCase.latest(requestDto);
         ChurnRealTimeResponseDto response = churnRealtimeAssembler.toResponse(result, 0L);
@@ -40,7 +41,7 @@ public class ChurnRealTimeController {
      */
     @GetMapping("/changes")
     public ResponseEntity<ApiResponse<ChurnRealTimeResponseDto>> changes(
-            @ModelAttribute ChurnRealTimeRequestDto requestDto
+           @Valid @ModelAttribute ChurnRealTimeRequestDto requestDto
     ) {
         RetrieveChurnRealtimeResult result = retrieveChurnRealtimeUseCase.changes(requestDto);
         ChurnRealTimeResponseDto response = churnRealtimeAssembler.toResponse(result, requestDto.normalizedAfterId());

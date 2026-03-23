@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -21,6 +22,9 @@ import site.holliverse.admin.web.assembler.MemberStatisticsAssembler;
 import site.holliverse.admin.web.dto.member.MonthlyMemberStatResponseDto;
 import site.holliverse.admin.web.dto.member.*;
 import site.holliverse.auth.jwt.JwtTokenProvider;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
+import site.holliverse.shared.error.SharedErrorCode;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +49,7 @@ import static org.mockito.BDDMockito.mock;
 @ActiveProfiles("admin")
 @WebMvcTest(AdminMemberController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import({ApiErrorResponseFactory.class, ConstraintExceptionMapper.class})
 class AdminMemberControllerTest {
 
     @Autowired
@@ -120,8 +125,7 @@ class AdminMemberControllerTest {
                 .andExpect(status().isBadRequest())
 
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.message").value("유효성 검증에 실패했습니다."))
-                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.code").value(SharedErrorCode.INVALID_INPUT.code()))
                 .andExpect(jsonPath("$.errorDetail.field").value("ages[0]"));
     }
 

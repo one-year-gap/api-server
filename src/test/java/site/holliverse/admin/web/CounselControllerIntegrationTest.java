@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import site.holliverse.shared.error.SharedErrorCode;
 import site.holliverse.admin.query.jooq.enums.MemberRoleType;
 import site.holliverse.admin.query.jooq.enums.MemberSignupType;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
@@ -110,7 +111,7 @@ class CounselControllerIntegrationTest {
                         .param("date", "2026-02-30"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.code").value(SharedErrorCode.INVALID_INPUT.code()))
                 .andExpect(jsonPath("$.errorDetail.field").value("date"));
     }
 
@@ -121,7 +122,7 @@ class CounselControllerIntegrationTest {
                         .param("month", "2026-13"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.code").value(SharedErrorCode.INVALID_INPUT.code()))
                 .andExpect(jsonPath("$.errorDetail.field").value("month"));
     }
 

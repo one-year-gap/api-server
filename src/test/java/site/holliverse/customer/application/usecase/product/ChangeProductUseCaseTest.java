@@ -10,13 +10,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import site.holliverse.customer.domain.policy.SubscriptionChangeDecision;
 import site.holliverse.customer.domain.policy.SubscriptionChangePolicy;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.customer.persistence.entity.Product;
 import site.holliverse.customer.persistence.entity.Subscription;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.shared.domain.model.ProductType;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
@@ -175,12 +175,9 @@ class ChangeProductUseCaseTest {
             given(productRepository.findById(TARGET_PRODUCT_ID)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> changeProductUseCase.execute(MEMBER_ID, TARGET_PRODUCT_ID))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException ce = (CustomException) ex;
-                        assertThat(ce.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-                        assertThat(ce.getField()).isEqualTo("product");
-                    });
+                    .isInstanceOf(CustomerException.class)
+                    .extracting(ex -> ((CustomerException) ex).getErrorCode())
+                    .isEqualTo(CustomerErrorCode.PRODUCT_NOT_FOUND);
             verify(productRepository).findById(TARGET_PRODUCT_ID);
         }
 
@@ -192,12 +189,9 @@ class ChangeProductUseCaseTest {
             given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> changeProductUseCase.execute(MEMBER_ID, TARGET_PRODUCT_ID))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException ce = (CustomException) ex;
-                        assertThat(ce.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-                        assertThat(ce.getField()).isEqualTo("member");
-                    });
+                    .isInstanceOf(CustomerException.class)
+                    .extracting(ex -> ((CustomerException) ex).getErrorCode())
+                    .isEqualTo(CustomerErrorCode.MEMBER_NOT_FOUND);
             verify(memberRepository).findById(MEMBER_ID);
         }
     }
@@ -216,11 +210,12 @@ class ChangeProductUseCaseTest {
             given(subscriptionRepository.findActiveByMemberIdAndProductType(MEMBER_ID, PRODUCT_TYPE))
                     .willReturn(Optional.of(currentSub));
             given(subscriptionChangePolicy.decide(eq(TARGET_PRODUCT_ID), eq(TARGET_PRODUCT_ID)))
-                    .willThrow(new CustomException(ErrorCode.CONFLICT, "target_product_id", "already subscribed"));
+                    .willThrow(new CustomerException(CustomerErrorCode.MOBILE_PLAN_ALREADY_SUBSCRIBED));
 
             assertThatThrownBy(() -> changeProductUseCase.execute(MEMBER_ID, TARGET_PRODUCT_ID))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> assertThat(((CustomException) ex).getErrorCode()).isEqualTo(ErrorCode.CONFLICT));
+                    .isInstanceOf(CustomerException.class)
+                    .extracting(ex -> ((CustomerException) ex).getErrorCode())
+                    .isEqualTo(CustomerErrorCode.MOBILE_PLAN_ALREADY_SUBSCRIBED);
 
             verify(subscriptionRepository, never()).save(any(Subscription.class));
         }

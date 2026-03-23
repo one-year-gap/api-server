@@ -5,12 +5,12 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.web.dto.member.AdminMemberBulkStatusUpdateRequestDto;
 import site.holliverse.shared.alert.AlertOwner;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.logging.SystemLogEvent;
 
 @Profile("admin")
@@ -33,7 +33,7 @@ public class BulkUpdateMemberStatusUseCase {
         try {
             targetStatus = MemberStatusType.valueOf(requestDto.status());
         } catch (IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.INVALID_INPUT, "status", "유효하지 않은 회원 상태값입니다.");
+            throw new AdminException(AdminErrorCode.INVALID_MEMBER_STATUS);
         }
 
         int updatedCount = adminMemberDao.updateMembersStatus(requestDto.memberIds(), targetStatus);

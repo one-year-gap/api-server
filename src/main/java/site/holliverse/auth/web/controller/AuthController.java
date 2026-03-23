@@ -10,8 +10,8 @@ import site.holliverse.auth.application.usecase.AuthUseCase;
 import site.holliverse.auth.application.usecase.RefreshTokenUseCase;
 import site.holliverse.auth.cookie.RefreshTokenCookieUtil;
 import site.holliverse.auth.dto.*;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.auth.error.AuthErrorCode;
+import site.holliverse.auth.error.AuthException;
 import site.holliverse.shared.security.CustomUserDetails;
 import site.holliverse.shared.web.response.ApiResponse;
 
@@ -59,7 +59,7 @@ public class AuthController {
             HttpServletResponse response
     ) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_MISSING,"refresh");
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_MISSING);
         }
 
         TokenRefreshResponseDto data = refreshTokenUseCase.refresh(refreshToken);

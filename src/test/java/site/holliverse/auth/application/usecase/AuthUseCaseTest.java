@@ -15,14 +15,14 @@ import site.holliverse.auth.dto.OnboardingCompleteRequestDto;
 import site.holliverse.auth.dto.OnboardingPrefillResponseDto;
 import site.holliverse.auth.dto.SignUpRequestDto;
 import site.holliverse.auth.dto.SignUpResponseDto;
+import site.holliverse.auth.error.AuthErrorCode;
+import site.holliverse.auth.error.AuthException;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
 import site.holliverse.coupon.application.SignupCouponService;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberSignupType;
 import site.holliverse.shared.domain.model.MemberStatus;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Address;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.entity.RefreshToken;
@@ -184,12 +184,9 @@ class AuthUseCaseTest {
 
             // when, then
             assertThatThrownBy(() -> authUseCase.signUp(request))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException custom = (CustomException) ex;
-                        assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.DUPLICATED_EMAIL);
-                        assertThat(custom.getField()).isEqualTo("email");
-                    });
+                    .isInstanceOf(AuthException.class)
+                    .extracting(ex -> ((AuthException) ex).getErrorCode())
+                    .isEqualTo(AuthErrorCode.DUPLICATED_EMAIL);
             // 가입 실패 시 자동 할당은 호출되지 않아야 한다.
             verifyNoInteractions(initialPlanAssignmentService);
         }
@@ -208,12 +205,9 @@ class AuthUseCaseTest {
 
             // when, then
             assertThatThrownBy(() -> authUseCase.signUp(request))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException custom = (CustomException) ex;
-                        assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.DUPLICATED_PHONE);
-                        assertThat(custom.getField()).isEqualTo("phone");
-                    });
+                    .isInstanceOf(AuthException.class)
+                    .extracting(ex -> ((AuthException) ex).getErrorCode())
+                    .isEqualTo(AuthErrorCode.DUPLICATED_PHONE);
             // 가입 실패 시 자동 할당은 호출되지 않아야 한다.
             verifyNoInteractions(initialPlanAssignmentService);
         }
@@ -287,12 +281,9 @@ class AuthUseCaseTest {
 
             // when, then
             assertThatThrownBy(() -> authUseCase.getOnboardingPrefill(999L))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException custom = (CustomException) ex;
-                        assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
-                        assertThat(custom.getField()).isEqualTo("memberId");
-                    });
+                    .isInstanceOf(AuthException.class)
+                    .extracting(ex -> ((AuthException) ex).getErrorCode())
+                    .isEqualTo(AuthErrorCode.MEMBER_NOT_FOUND);
         }
     }
 
@@ -387,12 +378,9 @@ class AuthUseCaseTest {
 
             // when, then
             assertThatThrownBy(() -> authUseCase.completeOnboarding(3L, createOnboardingRequest()))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException custom = (CustomException) ex;
-                        assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT);
-                        assertThat(custom.getField()).isEqualTo("memberStatus");
-                    });
+                    .isInstanceOf(AuthException.class)
+                    .extracting(ex -> ((AuthException) ex).getErrorCode())
+                    .isEqualTo(AuthErrorCode.INVALID_MEMBER_STATUS);
             // 온보딩 실패 시 자동 할당은 호출되지 않아야 한다.
             verifyNoInteractions(initialPlanAssignmentService);
         }
@@ -411,12 +399,9 @@ class AuthUseCaseTest {
 
             // when, then
             assertThatThrownBy(() -> authUseCase.completeOnboarding(4L, createOnboardingRequest()))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException custom = (CustomException) ex;
-                        assertThat(custom.getErrorCode()).isEqualTo(ErrorCode.DUPLICATED_PHONE);
-                        assertThat(custom.getField()).isEqualTo("phone");
-                    });
+                    .isInstanceOf(AuthException.class)
+                    .extracting(ex -> ((AuthException) ex).getErrorCode())
+                    .isEqualTo(AuthErrorCode.DUPLICATED_PHONE);
             // 온보딩 실패 시 자동 할당은 호출되지 않아야 한다.
             verifyNoInteractions(initialPlanAssignmentService);
         }

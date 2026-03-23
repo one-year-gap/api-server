@@ -3,12 +3,12 @@ package site.holliverse.coupon.application;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.customer.persistence.entity.Coupon;
 import site.holliverse.customer.persistence.entity.MemberCoupon;
 import site.holliverse.coupon.repository.CouponRepository;
 import site.holliverse.coupon.repository.MemberCouponGrantRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
@@ -41,8 +41,8 @@ public class CouponGrantService {
     @Transactional
     public void grant(Long memberId, Long couponId) {
         Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new CustomException(
-                        ErrorCode.NOT_FOUND,
+                .orElseThrow(() -> new AdminException(
+                        AdminErrorCode.COUPON_NOT_FOUND,
                         "couponId"
                 ));
 
@@ -75,8 +75,8 @@ public class CouponGrantService {
             return coupon.getValidEndDate();
         }
 
-        throw new CustomException(
-                ErrorCode.INTERNAL_ERROR,
+        throw new AdminException(
+                AdminErrorCode.COUPON_EXPIRATION_DATE_UNAVAILABLE,
                 "couponId"
         );
     }

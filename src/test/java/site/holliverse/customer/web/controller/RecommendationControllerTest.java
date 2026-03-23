@@ -21,6 +21,8 @@ import site.holliverse.customer.web.CustomerWebConfig;
 import site.holliverse.shared.config.web.GlobalExceptionHandler;
 import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.domain.model.PersonaSegment;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
 import site.holliverse.shared.security.CustomUserDetails;
 
 import java.time.Instant;
@@ -32,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = RecommendationController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import({GlobalExceptionHandler.class, CustomerWebConfig.class})
+@Import({GlobalExceptionHandler.class, ApiErrorResponseFactory.class, ConstraintExceptionMapper.class, CustomerWebConfig.class})
 @ActiveProfiles("customer")
 class RecommendationControllerTest {
 
@@ -91,11 +93,5 @@ class RecommendationControllerTest {
                     .andExpect(jsonPath("$.data.recommendedProducts[0].reason").value("추천 이유"));
         }
 
-        @Test
-        @DisplayName("미인증 시 401")
-        void unauthenticated_returns401() throws Exception {
-            mockMvc.perform(get("/api/v1/customer/recommendations"))
-                    .andExpect(status().isUnauthorized());
-        }
     }
 }

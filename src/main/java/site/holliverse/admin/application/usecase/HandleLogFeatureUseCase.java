@@ -32,38 +32,21 @@ public class HandleLogFeatureUseCase {
      */
     @Transactional
     public void execute(LogFeatureWebhookRequest request) {
-        UserActionFeatureEventName eventName = resolveEventName(request)
-                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 로그 이벤트입니다. eventType=" + request.eventType()));
 
         calculateLogChurnScoreService.calculateAndStore(
                 request.memberId(),
-                resolveBaseDate(request.timeStamp()),
+                LocalDate.from(request.timeStamp()),
                 List.of(new LogFeatureEvent(
                         resolveEventId(request),
-                        Instant.parse(request.timeStamp()),
+                        request.timeStamp(),
                         "click",
-                        eventName,
+                        request.eventType(),
                         Map.of()
                 ))
         );
     }
 
-    /**
-     * 위약금 확인 이력 개수 증가 메서드
-     */
-    private Optional<UserActionFeatureEventName> resolveEventName(LogFeatureWebhookRequest request) {
-        return UserActionFeatureEventName.find(request.eventType());
-    }
 
-
-    /**
-     * 기준일 추출.
-     */
-    private LocalDate resolveBaseDate(String timestamp) {
-        return Instant.parse(timestamp)
-                .atZone(ZoneId.of("Asia/Seoul"))
-                .toLocalDate();
-    }
 
     /**
      * 이벤트 식별자 생성.

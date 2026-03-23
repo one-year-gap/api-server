@@ -20,10 +20,10 @@ import site.holliverse.customer.persistence.repository.IptvRepository;
 import site.holliverse.customer.persistence.repository.MobilePlanRepository;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.shared.domain.model.AddonType;
 import site.holliverse.shared.domain.model.ProductType;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 
 import java.util.Optional;
 import java.util.List;
@@ -122,12 +122,9 @@ class GetProductDetailUseCaseTest {
             when(productRepository.findById(planId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> getProductDetailUseCase.execute(planId))
-                    .isInstanceOf(CustomException.class)
-                    .satisfies(ex -> {
-                        CustomException ce = (CustomException) ex;
-                        assertThat(ce.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-                        assertThat(ce.getReason()).contains("해당 상품을 찾을 수 없습니다: 999");
-                    });
+                    .isInstanceOf(CustomerException.class)
+                    .extracting(ex -> ((CustomerException) ex).getErrorCode())
+                    .isEqualTo(CustomerErrorCode.PRODUCT_NOT_FOUND);
 
             verify(productRepository).findById(planId);
         }

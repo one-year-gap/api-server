@@ -7,12 +7,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import io.micrometer.core.instrument.Timer;
 import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
 import site.holliverse.shared.domain.model.PersonaSegment;
-import site.holliverse.shared.error.CustomException;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
 import java.time.Instant;
@@ -39,6 +42,12 @@ class RecommendationServiceTest {
     private FastApiRecommendationClient fastApiRecommendationClient;
     @Mock
     private RecommendationPendingFutureRegistry pendingFutureRegistry;
+    @Mock
+    private CustomerMetrics customerMetrics;
+    @Mock
+    private Timer.Sample totalSample;
+    @Mock
+    private Timer.Sample waitSample;
 
     /** 테스트에서 동기 실행해 trigger 호출 후 Future 완료 제어 가능하게 함 */
     private final Executor sameThreadExecutor = Runnable::run;
@@ -47,12 +56,14 @@ class RecommendationServiceTest {
 
     @BeforeEach
     void setUp() {
+        when(customerMetrics.startSample()).thenReturn(totalSample, waitSample);
         recommendationService = new RecommendationService(
                 memberRepository,
                 personaRecommendationRepository,
                 fastApiRecommendationClient,
                 pendingFutureRegistry,
                 sameThreadExecutor,
+                customerMetrics,
                 90L
         );
     }
@@ -89,6 +100,7 @@ class RecommendationServiceTest {
                     fastApiRecommendationClient,
                     pendingFutureRegistry,
                     sameThreadExecutor,
+                    customerMetrics,
                     1L
             );
 
@@ -128,8 +140,9 @@ class RecommendationServiceTest {
             when(memberRepository.existsById(MEMBER_ID)).thenReturn(false);
 
             assertThatThrownBy(() -> recommendationService.getRecommendations(MEMBER_ID))
-                    .isInstanceOf(CustomException.class)
-                    .hasMessageContaining("멤버");
+                    .isInstanceOf(CustomerException.class)
+                    .extracting(ex -> ((CustomerException) ex).getErrorCode())
+                    .isEqualTo(CustomerErrorCode.MEMBER_NOT_FOUND);
         }
     }
 

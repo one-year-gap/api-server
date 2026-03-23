@@ -18,10 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import site.holliverse.auth.filter.LoginFilter;
-import site.holliverse.auth.handler.LoginFailureHandler;
-import site.holliverse.auth.handler.LoginSuccessHandler;
-import site.holliverse.auth.handler.SocialFailureHandler;
-import site.holliverse.auth.handler.SocialSuccessHandler;
+import site.holliverse.auth.handler.*;
 import site.holliverse.auth.jwt.JwtAuthenticationFilter;
 import site.holliverse.auth.oauth.CustomOAuth2UserService;
 
@@ -30,6 +27,15 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private final String[] WHITE_LIST = {
+            "/api/v1/admin/**",
+            "/internal/v1/**",
+            "/api/v1/signup",
+            "/api/v1/customer/test",
+            "/v1/auth/refresh",
+            "/test/callback",
+            "/test/onboarding"
+    };
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -63,7 +69,9 @@ public class SecurityConfig {
                                                    LoginFilter loginFilter,
                                                    CustomOAuth2UserService customOAuth2UserService,
                                                    SocialFailureHandler socialFailureHandler,
-                                                   SocialSuccessHandler socialSuccessHandler) throws Exception {
+                                                   SocialSuccessHandler socialSuccessHandler,
+                                                   ApiAuthenticationEntryPoint apiAuthenticationEntryPoint,
+                                                   ApiAccessDeniedHandler apiAccessDeniedHandler) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -71,14 +79,19 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers(WHITE_LIST).permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/customer/**").hasRole("CUSTOMER")
+                        .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .failureHandler(socialFailureHandler)
                         .successHandler(socialSuccessHandler)
                 )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(apiAuthenticationEntryPoint)
+                        .accessDeniedHandler(apiAccessDeniedHandler))
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -6,8 +6,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminChurnCouponDao;
 import site.holliverse.admin.query.dao.ChurnCouponMemberRawData;
+import site.holliverse.admin.query.dao.CouponRawData;
 import site.holliverse.coupon.application.CouponGrantService;
 
 import java.time.LocalDateTime;
@@ -23,7 +26,6 @@ import java.time.LocalDateTime;
  * @version 1.0.0
  * @since 2026-03-16
  * ========================== */
-
 @Profile("admin")
 @Service
 @RequiredArgsConstructor
@@ -54,5 +56,15 @@ public class ChurnCouponIssueProcessor {
         return IssueOneChurnCouponResult.issued(memberId);
     }
 
-}
+    private LocalDateTime resolveExpiredAt(CouponRawData coupon, LocalDateTime now) {
+        if (coupon.validDays() != null) {
+            return now.plusDays(coupon.validDays());
+        }
 
+        if (coupon.validEndDate() != null) {
+            return coupon.validEndDate();
+        }
+
+        throw new AdminException(AdminErrorCode.COUPON_EXPIRATION_DATE_UNAVAILABLE);
+    }
+}

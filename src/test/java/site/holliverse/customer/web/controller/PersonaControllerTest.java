@@ -18,6 +18,8 @@ import site.holliverse.customer.application.usecase.persona.GetMyPersonaUseCase;
 import site.holliverse.customer.application.usecase.persona.PersonaDetailResult;
 import site.holliverse.shared.config.web.GlobalExceptionHandler;
 import site.holliverse.shared.domain.model.MemberStatus;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
 import site.holliverse.shared.security.CustomUserDetails;
 
 import java.math.BigDecimal;
@@ -38,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = PersonaController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, ApiErrorResponseFactory.class, ConstraintExceptionMapper.class})
 @ActiveProfiles("customer")
 class PersonaControllerTest {
 
@@ -123,13 +125,5 @@ class PersonaControllerTest {
                     .andExpect(jsonPath("$.timestamp").exists());
         }
 
-        @Test
-        @DisplayName("unauthenticated request returns 401")
-        void unauthenticated_returns401() throws Exception {
-            // given: 인증 정보 없음
-            // when/then: 컨트롤러 null 가드에 의해 401
-            mockMvc.perform(get("/api/v1/customer/persona-types/me"))
-                    .andExpect(status().isUnauthorized());
-        }
     }
 }

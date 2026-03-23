@@ -17,6 +17,8 @@ import site.holliverse.auth.dto.TokenRefreshResponseDto;
 import site.holliverse.auth.error.AuthErrorCode;
 import site.holliverse.auth.jwt.JwtTokenProvider;
 import site.holliverse.shared.config.web.GlobalExceptionHandler;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -28,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, ApiErrorResponseFactory.class, ConstraintExceptionMapper.class})
 class AuthControllerTest {
 
     @Autowired

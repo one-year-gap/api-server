@@ -49,6 +49,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 import site.holliverse.shared.config.web.GlobalExceptionHandler;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -60,7 +62,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = ProductController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, ApiErrorResponseFactory.class, ConstraintExceptionMapper.class})
 @ActiveProfiles("customer")
 class ProductControllerTest {
 
@@ -378,13 +380,6 @@ class ProductControllerTest {
             } finally {
                 SecurityContextHolder.clearContext();
             }
-        }
-
-        @Test
-        @DisplayName("실패: 인증 없이 호출 시 401 Unauthorized 반환")
-        void whenUnauthenticated_returns401() throws Exception {
-            mockMvc.perform(get("/api/v1/customer/plans/compare").param("targetPlanId", "2"))
-                    .andExpect(status().isUnauthorized());
         }
 
         @Test

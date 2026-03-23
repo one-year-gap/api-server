@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import site.holliverse.infra.error.InfraErrorCode;
 import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.security.CustomUserDetails;
 import site.holliverse.shared.util.EncryptionTool;
@@ -86,8 +87,8 @@ class MemberControllerIntegrationTest {
         try {
             mockMvc.perform(get(API_ME))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.errorDetail.code").value("DECRYPTION_FAILED"))
-                    .andExpect(jsonPath("$.errorDetail.field").value("name"));
+                    .andExpect(jsonPath("$.errorDetail.code").value(InfraErrorCode.DECRYPTION_FAILED.code()))
+                    .andExpect(jsonPath("$.errorDetail.field").isEmpty());
         } finally {
             SecurityContextHolder.clearContext();
         }

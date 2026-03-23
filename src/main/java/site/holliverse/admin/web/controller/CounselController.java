@@ -1,5 +1,6 @@
 package site.holliverse.admin.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,7 +35,7 @@ public class CounselController {
      */
     @GetMapping("/daily")
     public ResponseEntity<ApiResponse<CounselTrafficDailyResponseDto>> getDailyTraffic(
-             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Valid LocalDate date
     ) {
         List<CounselTrafficDailyRawData> data = useCase.getHourlyTraffic(date);
         return ResponseEntity.ok(ApiResponse.success(
@@ -49,7 +50,7 @@ public class CounselController {
      */
     @GetMapping("/monthly")
     public ResponseEntity<ApiResponse<CounselTrafficMonthResponseDto>> getMonthlyTraffic(
-            @RequestParam("month") YearMonth month
+            @RequestParam("month") @Valid YearMonth month
     ) {
         List<CounselTrafficMonthlyRawData> data = useCase.getDailyTraffic(month);
         return ResponseEntity.ok(ApiResponse.success(

@@ -6,11 +6,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminChurnCouponDao;
 import site.holliverse.admin.web.dto.churn.IssueChurnCouponRequestDto;
 import site.holliverse.admin.web.dto.churn.IssueChurnCouponResponseDto;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 
 import java.util.List;
 
@@ -45,11 +45,10 @@ class IssueChurnCouponUseCaseTest {
 
         given(adminChurnCouponDao.existsCouponById(999L)).willReturn(false);
 
-        CustomException exception = assertThrows(CustomException.class,
+        AdminException exception = assertThrows(AdminException.class,
                 () -> issueChurnCouponUseCase.execute(requestDto));
 
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-        assertThat(exception.getField()).isEqualTo("couponId");
+        assertThat(exception.getErrorCode()).isEqualTo(AdminErrorCode.COUPON_NOT_FOUND);
         verify(churnCouponIssueProcessor, never()).issue(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong());
     }
 

@@ -3,8 +3,8 @@ package site.holliverse.auth.application.usecase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.auth.error.AuthErrorCode;
+import site.holliverse.auth.error.AuthException;
 import site.holliverse.shared.persistence.entity.RefreshToken;
 import site.holliverse.shared.persistence.repository.RefreshTokenRepository;
 
@@ -33,7 +33,7 @@ public class TokenRevoker {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void revokeById(Long refreshTokenId) {
         RefreshToken refreshToken = refreshTokenRepository.findById(refreshTokenId)
-                .orElseThrow(() -> new CustomException(ErrorCode.REFRESH_TOKEN_REVOKED,"refreshId"));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.REFRESH_TOKEN_REVOKED));
         refreshToken.revoke();
     }
 }

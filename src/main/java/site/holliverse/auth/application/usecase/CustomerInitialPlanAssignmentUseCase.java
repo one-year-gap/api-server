@@ -4,13 +4,13 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.auth.application.port.InitialPlanAssignmentService;
+import site.holliverse.auth.error.AuthErrorCode;
+import site.holliverse.auth.error.AuthException;
 import site.holliverse.customer.persistence.entity.Product;
 import site.holliverse.customer.persistence.entity.Subscription;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.shared.domain.model.ProductType;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Member;
 
 import java.time.LocalDateTime;
@@ -45,7 +45,7 @@ public class CustomerInitialPlanAssignmentUseCase implements InitialPlanAssignme
         long randomProductId = ThreadLocalRandom.current().nextLong(1, 11);
         Product randomPlan = productRepository.findById(randomProductId)
                 .filter(product -> product.getProductType() == ProductType.MOBILE_PLAN)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "mobilePlan"));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.MOBILE_PLAN_NOT_FOUND));
 
         Subscription subscription = Subscription.createActive(member, randomPlan, LocalDateTime.now(), 24);
         subscriptionRepository.save(subscription);

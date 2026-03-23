@@ -47,9 +47,6 @@ public class ProductController {
     public ApiResponse<PlanCompareResponse> comparePlans(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam Long targetPlanId) {
-        if (customUserDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
-        }
         var result = comparePlansUseCase.execute(customUserDetails.getMemberId(), targetPlanId);
         PlanCompareResponse response = planCompareResponseAssembler.assemble(
                 result.currentResult(), result.targetResult(), result.comparison());

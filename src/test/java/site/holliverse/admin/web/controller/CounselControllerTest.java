@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -12,6 +13,9 @@ import site.holliverse.admin.application.usecase.CounselTrafficUseCase;
 import site.holliverse.admin.query.dao.CounselTrafficDailyRawData;
 import site.holliverse.admin.query.dao.CounselTrafficMonthlyRawData;
 import site.holliverse.auth.jwt.JwtTokenProvider;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
+import site.holliverse.shared.error.SharedErrorCode;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -26,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("admin")
 @WebMvcTest(CounselController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import({ApiErrorResponseFactory.class, ConstraintExceptionMapper.class})
 class CounselControllerTest {
 
     @Autowired
@@ -60,7 +65,7 @@ class CounselControllerTest {
                         .param("date", "2026-02-30"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.code").value(SharedErrorCode.INVALID_INPUT.code()))
                 .andExpect(jsonPath("$.errorDetail.field").value("date"));
 
         verifyNoInteractions(useCase);
@@ -89,7 +94,7 @@ class CounselControllerTest {
                         .param("month", "2026-13"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.errorDetail.code").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.errorDetail.code").value(SharedErrorCode.INVALID_INPUT.code()))
                 .andExpect(jsonPath("$.errorDetail.field").value("month"));
 
         verifyNoInteractions(useCase);

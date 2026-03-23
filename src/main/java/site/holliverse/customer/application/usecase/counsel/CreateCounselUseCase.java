@@ -5,12 +5,12 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.customer.domain.model.SupportStatus;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.customer.persistence.entity.Category;
 import site.holliverse.customer.persistence.entity.SupportCase;
 import site.holliverse.customer.persistence.repository.CategoryRepository;
 import site.holliverse.customer.persistence.repository.CounselRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
@@ -31,15 +31,11 @@ public class CreateCounselUseCase {
     @Transactional
     public Long execute(Long memberId, String title, String content) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(
-                        ErrorCode.MEMBER_NOT_FOUND,
-                        "memberId",
-                        "회원을 찾을 수 없습니다: " + memberId
-                ));
+                .orElseThrow(() -> new CustomerException(CustomerErrorCode.MEMBER_NOT_FOUND));
 
         List<Category> categories = categoryRepository.findAll();
         if (categories.isEmpty()) {
-            throw new CustomException(ErrorCode.NOT_FOUND, "category", "카테고리 마스터 데이터가 없습니다.");
+            throw new CustomerException(CustomerErrorCode.CATEGORY_NOT_FOUND);
         }
 
         Category randomCategory = categories.get(ThreadLocalRandom.current().nextInt(categories.size()));

@@ -12,8 +12,10 @@ import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.customer.persistence.repository.UsageMonthlyRepository;
 import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.domain.model.ProductType;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
+import site.holliverse.infra.error.InfraErrorCode;
+import site.holliverse.infra.error.InfraException;
 import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.persistence.entity.Address;
 import site.holliverse.shared.persistence.entity.Member;
@@ -52,7 +54,7 @@ public class GetCustomerProfileUseCase {
     @AlertOwner("hy")
     public CustomerProfileResult execute(Long memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND, "memberId", "회원을 찾을 수 없습니다: " + memberId));
+                .orElseThrow(() -> new CustomerException(CustomerErrorCode.MEMBER_NOT_FOUND));
 
         List<Subscription> subscriptions = subscriptionRepository.findAllActiveByMemberId(memberId);
 
@@ -180,11 +182,7 @@ public class GetCustomerProfileUseCase {
         try {
             return decryptionTool.decrypt(cipherText);
         } catch (RuntimeException ex) {
-            throw new CustomException(
-                    ErrorCode.DECRYPTION_FAILED,
-                    field,
-                    "복호화에 실패했습니다. 암호화 키/데이터 형식을 확인하세요."
-            );
+            throw new InfraException(InfraErrorCode.DECRYPTION_FAILED);
         }
     }
 

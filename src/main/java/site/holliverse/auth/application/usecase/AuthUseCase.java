@@ -4,18 +4,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.auth.application.port.InitialPlanAssignmentService;
+import site.holliverse.auth.error.AuthErrorCode;
+import site.holliverse.auth.error.AuthException;
 import site.holliverse.auth.dto.OnboardingCompleteRequestDto;
 import site.holliverse.auth.dto.OnboardingPrefillResponseDto;
 import site.holliverse.auth.dto.SignUpRequestDto;
 import site.holliverse.auth.dto.SignUpResponseDto;
 import site.holliverse.auth.jwt.RefreshTokenHashService;
+import site.holliverse.coupon.application.SignupCouponService;
 import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.domain.model.MemberMembership;
 import site.holliverse.shared.domain.model.MemberRole;
 import site.holliverse.shared.domain.model.MemberSignupType;
 import site.holliverse.shared.domain.model.MemberStatus;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.persistence.entity.Address;
 import site.holliverse.shared.persistence.entity.Member;
 import site.holliverse.shared.persistence.repository.AddressRepository;
@@ -51,6 +52,8 @@ public class AuthUseCase {
     private final EncryptionTool encryptionTool;
     private final DecryptionTool decryptionTool;
 
+    private final SignupCouponService signupCouponService;
+
     public AuthUseCase(
             MemberRepository memberRepository,
             AddressRepository addressRepository,
@@ -58,7 +61,7 @@ public class AuthUseCase {
             RefreshTokenHashService refreshTokenHashService,
             PasswordEncoder passwordEncoder,
             InitialPlanAssignmentService initialPlanAssignmentService,
-            EncryptionTool encryptionTool, DecryptionTool decryptionTool
+            EncryptionTool encryptionTool, DecryptionTool decryptionTool, SignupCouponService signupCouponService
     ) {
         this.memberRepository = memberRepository;
         this.addressRepository = addressRepository;
@@ -68,6 +71,7 @@ public class AuthUseCase {
         this.initialPlanAssignmentService = initialPlanAssignmentService;
         this.encryptionTool = encryptionTool;
         this.decryptionTool = decryptionTool;
+        this.signupCouponService = signupCouponService;
     }
 
     /**
@@ -87,24 +91,14 @@ public class AuthUseCase {
         String encryptedPhone = encryptionTool.encrypt(request.getPhone());
 
         if (memberRepository.existsByEmail(request.getEmail())) {
-            throw new CustomException(
-                    ErrorCode.DUPLICATED_EMAIL,
-                    "email"
-            );
+            throw new AuthException(AuthErrorCode.DUPLICATED_EMAIL);
         }
         if (memberRepository.existsByPhone(encryptedPhone)) {
-            throw new CustomException(
-                    ErrorCode.DUPLICATED_PHONE,
-                    "phone"
-            );
+            throw new AuthException(AuthErrorCode.DUPLICATED_PHONE);
         }
 
         if (request.getBirthDate().isBefore(LocalDate.of(1900, 1, 1))) {
-            throw new CustomException(
-                    ErrorCode.INVALID_INPUT,
-                    "birthDate",
-                    "생년월일이 1900년 전 입니다."
-            );
+            throw new AuthException(AuthErrorCode.INVALID_BIRTH_DATE);
         }
 
 
@@ -149,6 +143,9 @@ public class AuthUseCase {
         
         //요금제 자동 주입
         initialPlanAssignmentService.assignForNewMember(saved);
+
+        //웰컴 쿠폰 지급
+        signupCouponService.issueWelcomeCoupon(saved.getId());
         return new SignUpResponseDto(saved.getId());
     }
 
@@ -177,7 +174,7 @@ public class AuthUseCase {
     @Transactional(readOnly = true)
     public OnboardingPrefillResponseDto getOnboardingPrefill(Long memberId){
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(()->new CustomException(ErrorCode.MEMBER_NOT_FOUND,"memberId"));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
         return new OnboardingPrefillResponseDto(member.getEmail(), decryptionTool.decrypt(member.getName()));
     }
 
@@ -190,18 +187,15 @@ public class AuthUseCase {
     @Transactional
     public void completeOnboarding(Long memberId, OnboardingCompleteRequestDto request) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND, "memberId"));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
 
         if (member.getStatus() != MemberStatus.PROCESSING) {
-            throw new CustomException(ErrorCode.INVALID_INPUT, "memberStatus");
+            throw new AuthException(AuthErrorCode.INVALID_MEMBER_STATUS);
         }
 
         String encryptedPhone = encryptionTool.encrypt(request.phone());
         if (memberRepository.existsByPhone(encryptedPhone)) {
-            throw new CustomException(
-                    ErrorCode.DUPLICATED_PHONE,
-                    "phone"
-            );
+            throw new AuthException(AuthErrorCode.DUPLICATED_PHONE);
         }
 
         // request.address()에서 온보딩 요청의 주소 객체를 꺼낸다음 주소가 있으면 사용하고 없으면 새로운 주소 만들어서 쓴다.
@@ -226,5 +220,7 @@ public class AuthUseCase {
         );
         //요금제 자동 주입
         initialPlanAssignmentService.assignForNewMember(member);
+        //웰컴 쿠폰 지급
+        signupCouponService.issueWelcomeCoupon(member.getId());
     }
 }

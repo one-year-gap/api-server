@@ -6,10 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.web.dto.member.AdminMemberUpdateRequestDto;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.util.EncryptionTool;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.query.jooq.enums.MemberMembershipType;
@@ -43,13 +43,12 @@ class UpdateMemberUseCaseTest {
         given(adminMemberDao.existsById(memberId)).willReturn(false);
 
         // when
-        CustomException exception = assertThrows(CustomException.class, () -> {
+        AdminException exception = assertThrows(AdminException.class, () -> {
             updateMemberUseCase.execute(memberId, dto);
         });
 
         // then
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND);
-        assertThat(exception.getField()).isEqualTo("memberId");
+        assertThat(exception.getErrorCode()).isEqualTo(AdminErrorCode.MEMBER_NOT_FOUND);
 
         // Dao의 update 메서드는 절대 호출되지 않아야 함
         verify(adminMemberDao, never()).updateMember(anyLong(), anyString(), anyString(), any(), any());
@@ -120,13 +119,12 @@ class UpdateMemberUseCaseTest {
         given(adminMemberDao.existsById(memberId)).willReturn(true);
 
         // when
-        CustomException exception = assertThrows(CustomException.class, () -> {
+        AdminException exception = assertThrows(AdminException.class, () -> {
             updateMemberUseCase.execute(memberId, dto);
         });
 
         // then
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT);
-        assertThat(exception.getField()).isEqualTo("status");
+        assertThat(exception.getErrorCode()).isEqualTo(AdminErrorCode.INVALID_MEMBER_STATUS);
 
         // Dao까지 넘어가면 안 됨
         verify(adminMemberDao, never()).updateMember(anyLong(), anyString(), anyString(), any(), any());
@@ -143,13 +141,12 @@ class UpdateMemberUseCaseTest {
         given(adminMemberDao.existsById(memberId)).willReturn(true);
 
         // when
-        CustomException exception = assertThrows(CustomException.class, () -> {
+        AdminException exception = assertThrows(AdminException.class, () -> {
             updateMemberUseCase.execute(memberId, dto);
         });
 
         // then
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT);
-        assertThat(exception.getField()).isEqualTo("membership");
+        assertThat(exception.getErrorCode()).isEqualTo(AdminErrorCode.INVALID_MEMBERSHIP);
 
         // Dao까지 넘어가면 안 됨
         verify(adminMemberDao, never()).updateMember(anyLong(), anyString(), anyString(), any(), any());

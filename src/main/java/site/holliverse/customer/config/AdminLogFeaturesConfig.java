@@ -10,6 +10,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 import site.holliverse.shared.monitoring.http.ObservedRestTemplateInterceptor;
 
 /**
@@ -34,7 +35,8 @@ public class AdminLogFeaturesConfig {
     @Bean
     public AdminLogFeaturesClient adminLogFeaturesClient(
             @Qualifier("adminLogFeaturesRestTemplate") RestTemplate restTemplate,
-            AdminLogFeaturesProperties properties) {
-        return new AdminLogFeaturesClient(restTemplate, properties);
+            AdminLogFeaturesProperties properties,
+            CustomerMetrics customerMetrics) {
+        return new AdminLogFeaturesClient(restTemplate, properties, customerMetrics);
     }
 }

@@ -77,8 +77,11 @@ management:
         http.server.requests: true
         holliverse.operation.duration: true
         holliverse.outbound.http.duration: true
+        holliverse.recommendation.duration: true
         holliverse.recommendation.wait.duration: true
         holliverse.kafka.consume.duration: true
+        holliverse.recommendation.kafka.consume.duration: true
+        holliverse.userlog.admin_log_feature.duration: true
       slo:
         http.server.requests: 100ms,300ms,500ms,1s,3s
         holliverse.operation.duration: 10ms,50ms,100ms,300ms,1s,3s

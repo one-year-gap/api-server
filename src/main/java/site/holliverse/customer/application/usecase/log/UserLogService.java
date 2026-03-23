@@ -2,6 +2,7 @@ package site.holliverse.customer.application.usecase.log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.f4b6a3.tsid.Tsid;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -11,12 +12,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import com.github.f4b6a3.tsid.Tsid;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +30,7 @@ public class UserLogService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final AdminLogFeaturesClient adminLogFeaturesClient;
+    private final CustomerMetrics customerMetrics;
     private final MeterRegistry meterRegistry;
     private final DistributionSummary batchSizeSummary;
     private final Map<String, Counter> requestCounters = new ConcurrentHashMap<>();
@@ -38,10 +39,12 @@ public class UserLogService {
     public UserLogService(KafkaTemplate<String, String> kafkaTemplate,
                           ObjectMapper objectMapper,
                           AdminLogFeaturesClient adminLogFeaturesClient,
+                          CustomerMetrics customerMetrics,
                           MeterRegistry meterRegistry) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
         this.adminLogFeaturesClient = adminLogFeaturesClient;
+        this.customerMetrics = customerMetrics;
         this.meterRegistry = meterRegistry;
         this.batchSizeSummary = DistributionSummary.builder("holliverse.userlog.batch.size")
                 .description("Batch size of user log submissions")
@@ -56,13 +59,13 @@ public class UserLogService {
         if (requests == null || requests.isEmpty()) {
             return;
         }
+        customerMetrics.recordUserLogBatchSize(requests.size());
         batchSizeSummary.record(requests.size());
         requestCounter("batch").increment();
         for (UserLogRequest request : requests) {
             doPublish(memberId, request);
         }
 
-        // 이벤트 전달
         requests.forEach(request -> sendAdminTarget(memberId, request));
     }
 
@@ -70,15 +73,9 @@ public class UserLogService {
     public void publish(Long memberId, UserLogRequest request) {
         requestCounter("single").increment();
         doPublish(memberId, request);
-
-        // 이벤트 전달
         sendAdminTarget(memberId, request);
     }
 
-    /**
-     * 단일 로그를 Kafka로 전송. {@link #publish}, {@link #publishBatch}에서만 호출.
-     * self-invocation 시 @Async가 적용되지 않으므로 공통 로직을 private로 분리함.
-     */
     private void doPublish(Long memberId, UserLogRequest request) {
         UserLogEventName eventName = UserLogEventName.from(request.eventName());
 
@@ -86,12 +83,9 @@ public class UserLogService {
         try {
             eventId = decodeTsidToLong(request.tsid());
         } catch (IllegalArgumentException e) {
+            customerMetrics.recordUserLogPublish(request.eventName(), "invalid_tsid");
             resultCounter("invalid_tsid").increment();
-            throw new CustomException(
-                    ErrorCode.INVALID_USER_LOG_EVENT_ID,
-                    "event_id",
-                    "유효하지 않은 사용자 로그 이벤트 ID입니다."
-            );
+            throw new CustomerException(CustomerErrorCode.INVALID_USER_LOG_EVENT_ID);
         }
 
         UserLogPayload payload = new UserLogPayload(
@@ -107,6 +101,7 @@ public class UserLogService {
         try {
             json = objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
+            customerMetrics.recordUserLogPublish(eventName.value(), "serialization_error");
             resultCounter("serialization_error").increment();
             log.warn("[UserLog] 직렬화 실패 memberId={}", memberId, e);
             return;
@@ -115,30 +110,25 @@ public class UserLogService {
         kafkaTemplate.send(topic, String.valueOf(memberId), json)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
+                        customerMetrics.recordUserLogPublish(eventName.value(), "kafka_error");
                         resultCounter("kafka_error").increment();
                         log.warn("[UserLog] Kafka 전송 실패 memberId={} eventName={}",
                                 memberId, eventName.value(), ex);
-                    } else {
-                        resultCounter("kafka_success").increment();
+                        return;
                     }
+                    customerMetrics.recordUserLogPublish(eventName.value(), "success");
+                    resultCounter("kafka_success").increment();
                 });
     }
 
-    /**
-     * 프론트에서 전달한 TSID 문자열을 tsid-creator 라이브러리로 디코딩한다.
-     */
     private static long decodeTsidToLong(String tsid) {
         if (tsid == null || tsid.isBlank()) {
             throw new IllegalArgumentException("TSID must not be null or blank");
         }
-        // Tsid.from(...) 내부에서 형식·길이·알파벳 검증을 수행한다.
         Tsid parsed = Tsid.from(tsid);
         return parsed.toLong();
     }
 
-    /**
-     * Admin 이벤트 변환.
-     */
     private void sendAdminTarget(Long memberId, UserLogRequest request) {
         UserLogEventName eventName = UserLogEventName.from(request.eventName());
         if (!isAdminTarget(eventName)) {
@@ -152,9 +142,6 @@ public class UserLogService {
         );
     }
 
-    /**
-     * 대상 이벤트.
-     */
     private boolean isAdminTarget(UserLogEventName eventName) {
         return eventName == UserLogEventName.CLICK_COMPARE
                 || eventName == UserLogEventName.CLICK_PENALTY

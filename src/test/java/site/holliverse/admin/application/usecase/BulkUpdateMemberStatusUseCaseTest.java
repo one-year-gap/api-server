@@ -6,11 +6,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import site.holliverse.admin.error.AdminErrorCode;
+import site.holliverse.admin.error.AdminException;
 import site.holliverse.admin.query.dao.AdminMemberDao;
 import site.holliverse.admin.query.jooq.enums.MemberStatusType;
 import site.holliverse.admin.web.dto.member.AdminMemberBulkStatusUpdateRequestDto;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 
 import java.util.Collections;
 import java.util.List;
@@ -78,8 +78,9 @@ class BulkUpdateMemberStatusUseCaseTest {
 
         // when & then
         assertThatThrownBy(() -> useCase.execute(requestDto))
-                .isInstanceOf(CustomException.class) // CustomException 발생 여부
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_INPUT); // 에러 코드 검증
+                .isInstanceOf(AdminException.class)
+                .extracting(ex -> ((AdminException) ex).getErrorCode())
+                .isEqualTo(AdminErrorCode.INVALID_MEMBER_STATUS);
 
         // 예외가 발생했으므로 DAO는 호출되면 안 됨
         verify(adminMemberDao, never()).updateMembersStatus(any(), any());

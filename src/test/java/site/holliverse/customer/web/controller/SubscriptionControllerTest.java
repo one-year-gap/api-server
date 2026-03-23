@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,8 @@ import site.holliverse.customer.application.usecase.product.ChangeProductUseCase
 import site.holliverse.customer.web.assembler.ChangeProductResponseAssembler;
 import site.holliverse.customer.web.dto.product.change.ChangeProductRequest;
 import site.holliverse.customer.web.dto.product.change.ChangeProductResponse;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
 import site.holliverse.shared.domain.model.MemberStatus;
 import site.holliverse.shared.security.CustomUserDetails;
 
@@ -41,6 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientWebSecurityAutoConfiguration.class
         }
 )
+@Import({ApiErrorResponseFactory.class, ConstraintExceptionMapper.class})
 @ActiveProfiles("customer")
 class SubscriptionControllerTest {
 

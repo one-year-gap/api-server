@@ -12,7 +12,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.auth.error.AuthErrorCode;
 import site.holliverse.shared.logging.LogFieldKeys;
 import site.holliverse.shared.web.response.ApiErrorDetail;
 import site.holliverse.shared.web.response.ApiErrorResponse;
@@ -36,9 +36,9 @@ public class SocialFailureHandler implements AuthenticationFailureHandler {
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
         // Spring Security 예외를 우리 ErrorCode로 변환한다.
-        ErrorCode errorCode = mapErrorCode(exception);
+        AuthErrorCode errorCode = mapErrorCode(exception);
         ApiErrorResponse body = ApiErrorResponse.error(
-                errorCode.defaultMessage(),
+                errorCode.message(),
                 new ApiErrorDetail(errorCode.code(), null, exception.getMessage())
         );
 
@@ -66,26 +66,26 @@ public class SocialFailureHandler implements AuthenticationFailureHandler {
         response.getWriter().write(objectMapper.writeValueAsString(body));
     }
 
-    private ErrorCode mapErrorCode(AuthenticationException exception) {
+    private AuthErrorCode mapErrorCode(AuthenticationException exception) {
         // OAuth2 예외가 아니면 인증 실패(401)로 처리한다.
         if (!(exception instanceof OAuth2AuthenticationException oauthEx)) {
-            return ErrorCode.OAUTH_UNAUTHORIZED;
+            return AuthErrorCode.OAUTH_UNAUTHORIZED;
         }
 
         // OAuth2 표준/커스텀 error code를 서비스 공통 ErrorCode로 매핑한다.
         String oauthErrorCode = oauthEx.getError().getErrorCode();
         if ("invalid_request".equals(oauthErrorCode)) {
-            return ErrorCode.OAUTH_INVALID_REQUEST;
+            return AuthErrorCode.OAUTH_INVALID_REQUEST;
         }
         if ("invalid_user_info".equals(oauthErrorCode)
                 || "invalid_user_id".equals(oauthErrorCode)
                 || "invalid_user_email".equals(oauthErrorCode)) {
-            return ErrorCode.OAUTH_USER_INFO_INVALID;
+            return AuthErrorCode.OAUTH_USER_INFO_INVALID;
         }
         if ("access_denied".equals(oauthErrorCode)) {
-            return ErrorCode.OAUTH_UNAUTHORIZED;
+            return AuthErrorCode.OAUTH_UNAUTHORIZED;
         }
 
-        return ErrorCode.OAUTH_UNAUTHORIZED;
+        return AuthErrorCode.OAUTH_UNAUTHORIZED;
     }
 }

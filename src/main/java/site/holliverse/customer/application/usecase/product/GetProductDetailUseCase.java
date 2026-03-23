@@ -22,8 +22,8 @@ import site.holliverse.customer.persistence.repository.IptvRepository;
 import site.holliverse.customer.persistence.repository.MobilePlanRepository;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.TabWatchPlanRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import org.springframework.context.annotation.Profile;
 import site.holliverse.shared.logging.SystemLogEvent;
 
@@ -59,7 +59,7 @@ public class GetProductDetailUseCase {
     @AlertOwner("hy")
     public ProductDetailResult execute(Long planId) {
         Product product = productRepository.findById(planId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "product", "해당 상품을 찾을 수 없습니다: " + planId));
+                .orElseThrow(() -> new CustomerException(CustomerErrorCode.PRODUCT_NOT_FOUND));
 
         Long productId = product.getProductId();
         ProductType type = product.getProductType();

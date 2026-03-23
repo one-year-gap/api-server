@@ -9,8 +9,8 @@ import site.holliverse.customer.persistence.entity.PersonaType;
 import site.holliverse.customer.persistence.repository.IndexPersonaSnapshotRepository;
 import site.holliverse.customer.persistence.repository.IndexTscoreSnapshotRepository;
 import site.holliverse.customer.persistence.repository.PersonaTypeRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -85,7 +85,7 @@ public class GetMyPersonaUseCase {
         // - 신규 회원(스냅샷 없음)
         // - 스냅샷은 있는데 persona_type row가 없는 경우
         PersonaType fallback = personaTypeRepository.findDefaultFallback()
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "personaType"));
+                .orElseThrow(() -> new CustomerException(CustomerErrorCode.PERSONA_TYPE_NOT_FOUND));
         return toResult(fallback, tscoreIndex, true);
     }
 

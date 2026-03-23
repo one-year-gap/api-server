@@ -32,9 +32,6 @@ public class RecommendationController {
     @GetMapping
     public ApiResponse<RecommendationResponse> getRecommendations(
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        if (customUserDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
-        }
         RecommendationResult result = recommendationService.getRecommendations(customUserDetails.getMemberId());
         return new ApiResponse<>("success", recommendationResponseMapper.toResponse(result), LocalDateTime.now());
     }

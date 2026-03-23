@@ -7,13 +7,17 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
 import site.holliverse.customer.integration.fastapi.dto.FastApiRecommendationResponse;
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
+import site.holliverse.infra.error.InfraErrorCode;
+import site.holliverse.infra.error.InfraException;
+import site.holliverse.shared.error.DomainException;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 
 import java.time.Instant;
@@ -28,10 +32,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * 추천 조회: 캐시 히트 시 즉시 반환, 캐시 미스 시 CompletableFuture로 대기 후 Kafka 수신 결과 반환.
- * FastAPI는 202 수신 후 Kafka로 결과 발행하고, Spring Consumer가 DB 적재 후 Future를 완료함.
- */
 @Service
 @Profile("customer")
 public class RecommendationService {
@@ -45,6 +45,7 @@ public class RecommendationService {
     private final RecommendationPendingFutureRegistry pendingFutureRegistry;
     private final Executor recommendationTaskExecutor;
     private final long awaitTimeoutSeconds;
+    private final CustomerMetrics customerMetrics;
     private final MeterRegistry meterRegistry;
     private final Map<String, Counter> recommendationCacheCounters = new ConcurrentHashMap<>();
     private final Map<String, Counter> recommendationFastApiCounters = new ConcurrentHashMap<>();
@@ -54,26 +55,25 @@ public class RecommendationService {
     private final Map<String, Counter> recommendationErrorCounters = new ConcurrentHashMap<>();
 
     public RecommendationService(MemberRepository memberRepository,
-                                PersonaRecommendationRepository personaRecommendationRepository,
-                                FastApiRecommendationClient fastApiRecommendationClient,
-                                RecommendationPendingFutureRegistry pendingFutureRegistry,
-                                @Qualifier("recommendationTaskExecutor") Executor recommendationTaskExecutor,
-                                @Value("${app.recommendation.await-timeout-seconds:90}") long awaitTimeoutSeconds,
-                                MeterRegistry meterRegistry) {
+                                 PersonaRecommendationRepository personaRecommendationRepository,
+                                 FastApiRecommendationClient fastApiRecommendationClient,
+                                 RecommendationPendingFutureRegistry pendingFutureRegistry,
+                                 @Qualifier("recommendationTaskExecutor") Executor recommendationTaskExecutor,
+                                 CustomerMetrics customerMetrics,
+                                 @Value("${app.recommendation.await-timeout-seconds:90}") long awaitTimeoutSeconds,
+                                 MeterRegistry meterRegistry) {
         this.memberRepository = memberRepository;
         this.personaRecommendationRepository = personaRecommendationRepository;
         this.fastApiRecommendationClient = fastApiRecommendationClient;
         this.pendingFutureRegistry = pendingFutureRegistry;
         this.recommendationTaskExecutor = recommendationTaskExecutor;
+        this.customerMetrics = customerMetrics;
         this.awaitTimeoutSeconds = awaitTimeoutSeconds;
         this.meterRegistry = meterRegistry;
     }
 
-    /**
-     * 캐시 우선: 유효 캐시 있으면 즉시 반환.
-     * 캐시 미스: Future 등록 → FastAPI 202 트리거 → Future.get(timeout) 대기 후 반환. 타임아웃 시 PENDING 반환.
-     */
     public RecommendationResult getRecommendations(Long memberId) {
+        var totalSample = customerMetrics.startSample();
         ensureMemberExists(memberId);
 
         Instant cacheExpiry = Instant.now().minus(CACHE_TTL_DAYS, ChronoUnit.DAYS);
@@ -82,21 +82,22 @@ public class RecommendationService {
                 .map(entity -> RecommendationResult.fromEntity(entity, RecommendationResult.RecommendationSource.CACHE));
 
         if (cached.isPresent()) {
+            customerMetrics.recordRecommendationRequest("cache_hit");
+            customerMetrics.stopRecommendationDuration(totalSample, "success", "cache");
             recommendationCacheCounter("hit").increment();
             recommendationFinalCounter("cache").increment();
             return cached.get();
         }
 
+        customerMetrics.recordRecommendationRequest("cache_miss");
         recommendationCacheCounter("miss").increment();
-
         CompletableFuture<RecommendationResult> future = pendingFutureRegistry.getOrCreate(memberId);
-        Timer.Sample waitSample = Timer.start(meterRegistry);
         recommendationTaskExecutor.execute(() -> {
             try {
                 Optional<FastApiRecommendationResponse> syncResponse = fastApiRecommendationClient.triggerRecommendation(memberId);
                 if (syncResponse.isPresent()) {
                     recommendationFastApiCounter("sync").increment();
-                    // 200 OK 동기 응답: DB 저장 후 Future 즉시 완료
+                    customerMetrics.recordRecommendationTrigger("sync");
                     FastApiRecommendationResponse r = syncResponse.get();
                     List<RecommendedProductItem> products = r.recommendedProducts() == null
                             ? Collections.emptyList()
@@ -128,9 +129,11 @@ public class RecommendationService {
                     }
                 } else {
                     recommendationFastApiCounter("accepted").increment();
+                    customerMetrics.recordRecommendationTrigger("accepted");
                 }
             } catch (Exception e) {
                 recommendationFastApiErrorCounter(e.getClass().getSimpleName()).increment();
+                customerMetrics.recordRecommendationTrigger("error");
                 CompletableFuture<RecommendationResult> removed = pendingFutureRegistry.remove(memberId);
                 if (removed != null) {
                     removed.completeExceptionally(e);
@@ -138,32 +141,42 @@ public class RecommendationService {
             }
         });
 
+        Timer.Sample legacyWaitSample = Timer.start(meterRegistry);
+        var waitSample = customerMetrics.startSample();
         try {
             RecommendationResult result = future.get(awaitTimeoutSeconds, TimeUnit.SECONDS);
-            waitSample.stop(recommendationWaitTimer("completed"));
+            customerMetrics.recordRecommendationRequest("resolved");
+            customerMetrics.stopRecommendationWaitDuration(waitSample, "success");
+            customerMetrics.stopRecommendationDuration(totalSample, "success", result.source().name().toLowerCase());
+            legacyWaitSample.stop(recommendationWaitTimer("completed"));
             recommendationFinalCounter("fastapi").increment();
             return result;
         } catch (TimeoutException e) {
             pendingFutureRegistry.remove(memberId);
-            waitSample.stop(recommendationWaitTimer("timeout"));
+            customerMetrics.recordRecommendationRequest("timeout");
+            customerMetrics.stopRecommendationWaitDuration(waitSample, "timeout");
+            customerMetrics.stopRecommendationDuration(totalSample, "timeout", "pending");
+            legacyWaitSample.stop(recommendationWaitTimer("timeout"));
             recommendationFinalCounter("pending").increment();
             return RecommendationResult.pending(PENDING_MESSAGE);
         } catch (Exception e) {
             Throwable cause = e.getCause() != null ? e.getCause() : e;
             pendingFutureRegistry.remove(memberId);
-            waitSample.stop(recommendationWaitTimer("error"));
+            customerMetrics.recordRecommendationRequest("error");
+            customerMetrics.stopRecommendationWaitDuration(waitSample, "error");
+            customerMetrics.stopRecommendationDuration(totalSample, "error", "exception");
+            legacyWaitSample.stop(recommendationWaitTimer("error"));
             recommendationErrorCounter(cause.getClass().getSimpleName()).increment();
-            if (cause instanceof CustomException ce) {
-                throw ce;
+            if (cause instanceof DomainException de) {
+                throw de;
             }
-            throw new CustomException(ErrorCode.RECOMMENDATION_UNAVAILABLE, "fastapi",
-                    "추천 서비스 호출에 실패했습니다.", cause.getMessage());
+            throw new InfraException(InfraErrorCode.RECOMMENDATION_UNAVAILABLE);
         }
     }
 
     private void ensureMemberExists(Long memberId) {
         if (!memberRepository.existsById(memberId)) {
-            throw new CustomException(ErrorCode.MEMBER_NOT_FOUND, "memberId", "멤버를 찾을 수 없습니다.");
+            throw new CustomerException(CustomerErrorCode.MEMBER_NOT_FOUND);
         }
     }
 
@@ -214,5 +227,4 @@ public class RecommendationService {
                         .tag("exception", exception)
                         .register(meterRegistry));
     }
-
 }

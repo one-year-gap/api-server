@@ -16,6 +16,7 @@ import site.holliverse.customer.integration.kafka.dto.RecommendationMessagePaylo
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
+import site.holliverse.shared.monitoring.CustomerMetrics;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,9 +24,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * recommendation-topic 메시지 수신 → persona_recommendation upsert → 대기 중인 CompletableFuture 완료.
- */
 @Slf4j
 @RequiredArgsConstructor
 public class RecommendationKafkaConsumer {
@@ -34,6 +32,7 @@ public class RecommendationKafkaConsumer {
     private final PersonaRecommendationRepository personaRecommendationRepository;
     private final RecommendationPendingFutureRegistry pendingFutureRegistry;
     private final MeterRegistry meterRegistry;
+    private final CustomerMetrics customerMetrics;
     private final Map<String, Counter> counters = new ConcurrentHashMap<>();
     private final Map<String, Timer> timers = new ConcurrentHashMap<>();
     private final Map<String, Counter> errorCounters = new ConcurrentHashMap<>();
@@ -51,8 +50,9 @@ public class RecommendationKafkaConsumer {
     ) {
         Long memberIdForCleanup = null;
         Timer.Sample sample = Timer.start(meterRegistry);
+        var customerSample = customerMetrics.startSample();
+        String outcome = "error";
         try {
-            // 수신 로그
             log.debug("[Kafka][recommendation] received. topic={}, offset={}, raw={}", topic, offset, payload);
 
             RecommendationMessagePayload message = objectMapper.readValue(
@@ -77,7 +77,6 @@ public class RecommendationKafkaConsumer {
 
             String cachedText = message.cachedLlmRecommendation() != null ? message.cachedLlmRecommendation() : "";
 
-            // upsert 요약 로그
             log.info(
                     "[Kafka][recommendation] upsert. memberId={}, segment={}, productCount={}",
                     message.memberId(), message.segment(), products.size()
@@ -100,11 +99,13 @@ public class RecommendationKafkaConsumer {
             CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(message.memberId());
             if (future != null) {
                 future.complete(RecommendationResult.fromEntity(saved, RecommendationResult.RecommendationSource.FASTAPI));
+                outcome = "completed_pending";
                 log.debug(
                         "[Kafka][recommendation] future completed. memberId={}, updatedAt={}",
                         message.memberId(), saved.getUpdatedAt()
                 );
             } else {
+                outcome = "stored_without_waiter";
                 log.debug(
                         "[Kafka][recommendation] no pending future. memberId={}, updatedAt={}",
                         message.memberId(), saved.getUpdatedAt()
@@ -127,6 +128,8 @@ public class RecommendationKafkaConsumer {
             counter("error").increment();
             sample.stop(timer("error"));
             throw new IllegalStateException("recommendation consume failed", e);
+        } finally {
+            customerMetrics.stopRecommendationKafkaConsume(customerSample, outcome);
         }
     }
 

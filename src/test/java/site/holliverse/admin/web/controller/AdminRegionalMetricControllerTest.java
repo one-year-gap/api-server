@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,6 +17,8 @@ import site.holliverse.admin.web.assembler.AdminRegionalTopPlanAssembler;
 import site.holliverse.admin.web.dto.analytics.AdminRegionalMetricRequestDto;
 import site.holliverse.admin.web.dto.analytics.AdminRegionalMetricResponseDto;
 import site.holliverse.auth.jwt.JwtTokenProvider;
+import site.holliverse.shared.error.ApiErrorResponseFactory;
+import site.holliverse.shared.error.ConstraintExceptionMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("admin")
 @WebMvcTest(AdminRegionalMetricController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import({ApiErrorResponseFactory.class, ConstraintExceptionMapper.class})
 class AdminRegionalMetricControllerTest {
 
     @Autowired

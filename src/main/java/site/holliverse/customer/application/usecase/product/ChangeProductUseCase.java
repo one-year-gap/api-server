@@ -4,12 +4,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.customer.domain.policy.SubscriptionChangeDecision;
 import site.holliverse.customer.domain.policy.SubscriptionChangePolicy;
+import site.holliverse.customer.error.CustomerErrorCode;
+import site.holliverse.customer.error.CustomerException;
 import site.holliverse.customer.persistence.entity.Subscription;
 import site.holliverse.customer.persistence.repository.ProductRepository;
 import site.holliverse.customer.persistence.repository.SubscriptionRepository;
 import site.holliverse.shared.alert.AlertOwner;
-import site.holliverse.shared.error.CustomException;
-import site.holliverse.shared.error.ErrorCode;
 import site.holliverse.shared.logging.SystemLogEvent;
 import site.holliverse.shared.persistence.repository.MemberRepository;
 import site.holliverse.shared.domain.model.ProductType;
@@ -51,10 +51,10 @@ public class ChangeProductUseCase {
     @Transactional
     public ChangeProductResult execute(Long memberId, Long targetProductId) {
         var targetProduct = productRepository.findById(targetProductId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "product", "대상 요금제를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomerException(CustomerErrorCode.PRODUCT_NOT_FOUND));
 
         var member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "member", "회원 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomerException(CustomerErrorCode.MEMBER_NOT_FOUND));
 
         var currentSameType = subscriptionRepository.findActiveByMemberIdAndProductType(memberId, targetProduct.getProductType());
         Long currentProductId = currentSameType.map(s -> s.getProduct().getProductId()).orElse(null);

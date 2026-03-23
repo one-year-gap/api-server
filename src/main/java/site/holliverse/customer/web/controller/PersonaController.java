@@ -36,12 +36,6 @@ public class PersonaController {
     public ApiResponse<PersonaDetailResponse> getPersonaDetail(
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        // 인증 컨텍스트가 비어 있으면 명시적으로 401을 반환한다.
-        // (과거 user.getMemberId()에서 NPE가 발생했던 케이스 방지)
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-        }
-
         // 토큰에서 추출된 memberId 기준으로 유스케이스 실행
         PersonaDetailResult result = getMyPersonaUseCase.execute(user.getMemberId());
 

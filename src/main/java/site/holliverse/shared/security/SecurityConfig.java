@@ -34,7 +34,13 @@ public class SecurityConfig {
             "/api/v1/customer/test",
             "/v1/auth/refresh",
             "/test/callback",
-            "/test/onboarding"
+            "/test/onboarding",
+            "/actuator/health",
+            "/actuator/health/**",
+            "/actuator/info",
+            "/actuator/metrics",
+            "/actuator/metrics/**",
+            "/actuator/prometheus",
     };
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;

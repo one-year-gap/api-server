@@ -1,5 +1,7 @@
 package site.holliverse.customer.application.usecase.recommendation;
 
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -7,10 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import io.micrometer.core.instrument.Timer;
-import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
 import site.holliverse.customer.error.CustomerErrorCode;
 import site.holliverse.customer.error.CustomerException;
+import site.holliverse.customer.integration.fastapi.FastApiRecommendationClient;
 import site.holliverse.customer.persistence.entity.PersonaRecommendation;
 import site.holliverse.customer.persistence.entity.RecommendedProductItem;
 import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
@@ -27,7 +28,10 @@ import java.util.concurrent.Executor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RecommendationServiceTest {
@@ -49,13 +53,14 @@ class RecommendationServiceTest {
     @Mock
     private Timer.Sample waitSample;
 
-    /** 테스트에서 동기 실행해 trigger 호출 후 Future 완료 제어 가능하게 함 */
     private final Executor sameThreadExecutor = Runnable::run;
+    private SimpleMeterRegistry meterRegistry;
 
     private RecommendationService recommendationService;
 
     @BeforeEach
     void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
         when(customerMetrics.startSample()).thenReturn(totalSample, waitSample);
         recommendationService = new RecommendationService(
                 memberRepository,
@@ -64,7 +69,8 @@ class RecommendationServiceTest {
                 pendingFutureRegistry,
                 sameThreadExecutor,
                 customerMetrics,
-                90L
+                90L,
+                meterRegistry
         );
     }
 
@@ -101,7 +107,8 @@ class RecommendationServiceTest {
                     pendingFutureRegistry,
                     sameThreadExecutor,
                     customerMetrics,
-                    1L
+                    1L,
+                    meterRegistry
             );
 
             RecommendationResult result = shortTimeoutService.getRecommendations(MEMBER_ID);

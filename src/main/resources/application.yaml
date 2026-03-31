@@ -74,10 +74,20 @@ management:
       application: ${spring.application.name}-${SPRING_PROFILES_ACTIVE:unknown}
     distribution:
       percentiles-histogram:
-        "[holliverse.recommendation.duration]": true
-        "[holliverse.recommendation.wait.duration]": true
-        "[holliverse.recommendation.kafka.consume.duration]": true
-        "[holliverse.userlog.admin_log_feature.duration]": true
+        http.server.requests: true
+        holliverse.operation.duration: true
+        holliverse.outbound.http.duration: true
+        holliverse.recommendation.duration: true
+        holliverse.recommendation.wait.duration: true
+        holliverse.kafka.consume.duration: true
+        holliverse.recommendation.kafka.consume.duration: true
+        holliverse.userlog.admin_log_feature.duration: true
+      slo:
+        http.server.requests: 100ms,300ms,500ms,1s,3s
+        holliverse.operation.duration: 10ms,50ms,100ms,300ms,1s,3s
+        holliverse.outbound.http.duration: 50ms,100ms,300ms,1s,3s,10s
+        holliverse.recommendation.wait.duration: 100ms,500ms,1s,3s,10s,30s,90s
+        holliverse.kafka.consume.duration: 10ms,50ms,100ms,300ms,1s,3s
     export:
       cloudwatch:
         enabled: true
@@ -95,18 +105,19 @@ management:
         enabled: true
 
 
-logging:
-  level:
-    root: WARN
-    ACCESS_LOG: INFO
-  structured:
-    format:
-      console: logstash
-    json:
-      stacktrace:
-        max-length: 5000
-        include-common-frames: true
-        include-hashes: true
+#logging:
+#  level:
+#    root: WARN
+#    ACCESS_LOG: INFO
+#  structured:
+#    format:
+#      console: logstash
+#    json:
+#      stacktrace:
+#        max-length: 5000
+#        include-common-frames: true
+#        include-hashes: true
+
 
 app:
   oauth2:

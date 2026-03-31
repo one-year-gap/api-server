@@ -1,6 +1,9 @@
 package site.holliverse.infra.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,11 +20,10 @@ import site.holliverse.shared.monitoring.CustomerMetrics;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * recommendation-topic 메시지 수신 → persona_recommendation upsert → 대기 중인 CompletableFuture 완료.
- */
 @Slf4j
 @RequiredArgsConstructor
 public class RecommendationKafkaConsumer {
@@ -30,7 +32,11 @@ public class RecommendationKafkaConsumer {
     private final ObjectMapper objectMapper;
     private final PersonaRecommendationRepository personaRecommendationRepository;
     private final RecommendationPendingFutureRegistry pendingFutureRegistry;
+    private final MeterRegistry meterRegistry;
     private final CustomerMetrics customerMetrics;
+    private final Map<String, Counter> counters = new ConcurrentHashMap<>();
+    private final Map<String, Timer> timers = new ConcurrentHashMap<>();
+    private final Map<String, Counter> errorCounters = new ConcurrentHashMap<>();
 
     @KafkaListener(
             topics = "${spring.kafka.topic.recommendation}",
@@ -124,10 +130,9 @@ public class RecommendationKafkaConsumer {
             }
 
             ack.acknowledge();
-            log.info(
-                    "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} topic={} offset={}",
-                    traceId, message.memberId(), "ack_done", elapsedMs(consumeStartedAt), topic, offset
-            );
+            log.debug("[Kafka][recommendation] acked. topic={}, offset={}", topic, offset);
+            counter("success").increment();
+            sample.stop(timer("success"));
         } catch (Exception e) {
             if (memberIdForCleanup != null) {
                 CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(memberIdForCleanup);
@@ -135,24 +140,40 @@ public class RecommendationKafkaConsumer {
                     future.completeExceptionally(e);
                 }
             }
-            log.error(
-                    "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} topic={} offset={} error={}",
-                    traceId,
-                    memberIdForCleanup != null ? memberIdForCleanup : "unknown",
-                    "consume_failed",
-                    elapsedMs(consumeStartedAt),
-                    topic,
-                    offset,
-                    e.getMessage(),
-                    e
-            );
+            log.error("[Kafka][recommendation] consume failed. topic={}, offset={}, raw={}", topic, offset, payload, e);
+            errorCounter(e.getClass().getSimpleName()).increment();
+            counter("error").increment();
+            sample.stop(timer("error"));
             throw new IllegalStateException("recommendation consume failed", e);
         } finally {
-            customerMetrics.stopRecommendationKafkaConsume(timerSample, outcome);
+            customerMetrics.stopRecommendationKafkaConsume(customerSample, outcome);
         }
     }
 
-    private long elapsedMs(long startedAtNanos) {
-        return (System.nanoTime() - startedAtNanos) / 1_000_000;
+    private Counter counter(String outcome) {
+        return counters.computeIfAbsent(outcome, ignored ->
+                Counter.builder("holliverse.kafka.consume")
+                        .description("Kafka consume result count")
+                        .tag("consumer", "recommendation")
+                        .tag("outcome", outcome)
+                        .register(meterRegistry));
+    }
+
+    private Timer timer(String outcome) {
+        return timers.computeIfAbsent(outcome, ignored ->
+                Timer.builder("holliverse.kafka.consume.duration")
+                        .description("Kafka consumer processing duration")
+                        .tag("consumer", "recommendation")
+                        .tag("outcome", outcome)
+                        .register(meterRegistry));
+    }
+
+    private Counter errorCounter(String exception) {
+        return errorCounters.computeIfAbsent(exception, ignored ->
+                Counter.builder("holliverse.kafka.consume.errors")
+                        .description("Recommendation consumer failures by exception")
+                        .tag("consumer", "recommendation")
+                        .tag("exception", exception)
+                        .register(meterRegistry));
     }
 }

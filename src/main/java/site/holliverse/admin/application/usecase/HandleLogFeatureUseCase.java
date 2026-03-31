@@ -35,7 +35,7 @@ public class HandleLogFeatureUseCase {
 
         calculateLogChurnScoreService.calculateAndStore(
                 request.memberId(),
-                LocalDate.from(request.timeStamp()),
+                resolveBaseDate(request.timeStamp()),
                 List.of(new LogFeatureEvent(
                         resolveEventId(request),
                         request.timeStamp(),
@@ -53,6 +53,13 @@ public class HandleLogFeatureUseCase {
      */
     private long resolveEventId(LogFeatureWebhookRequest request) {
         return Integer.toUnsignedLong((request.memberId() + "|" + request.eventType() + "|" + request.timeStamp()).hashCode());
+    }
+
+    private LocalDate resolveBaseDate(Instant timestamp) {
+        return Optional.ofNullable(timestamp)
+                .orElseGet(Instant::now)
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toLocalDate();
     }
 
 }

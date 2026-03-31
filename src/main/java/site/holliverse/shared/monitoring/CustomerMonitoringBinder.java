@@ -16,6 +16,7 @@ public class CustomerMonitoringBinder {
             MeterRegistry meterRegistry,
             RecommendationPendingFutureRegistry pendingFutureRegistry,
             @Qualifier("userLogTaskExecutor") ThreadPoolTaskExecutor userLogTaskExecutor,
+            @Qualifier("adminLogFeatureTaskExecutor") ThreadPoolTaskExecutor adminLogFeatureTaskExecutor,
             @Qualifier("recommendationTaskExecutor") ThreadPoolTaskExecutor recommendationTaskExecutor
     ) {
         Gauge.builder("holliverse.recommendation.pending.size", pendingFutureRegistry, RecommendationPendingFutureRegistry::size)
@@ -23,6 +24,7 @@ public class CustomerMonitoringBinder {
                 .register(meterRegistry);
 
         bindExecutorMetrics(meterRegistry, "user-log", userLogTaskExecutor);
+        bindExecutorMetrics(meterRegistry, "admin-log-feature", adminLogFeatureTaskExecutor);
         bindExecutorMetrics(meterRegistry, "recommendation-trigger", recommendationTaskExecutor);
     }
 

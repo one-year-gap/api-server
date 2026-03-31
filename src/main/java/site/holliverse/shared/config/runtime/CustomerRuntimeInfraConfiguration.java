@@ -34,6 +34,18 @@ public class CustomerRuntimeInfraConfiguration {
         return executor;
     }
 
+    @Bean(name = "adminLogFeatureTaskExecutor")
+    public ThreadPoolTaskExecutor adminLogFeatureTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(16);
+        executor.setQueueCapacity(512);
+        executor.setThreadNamePrefix("admin-log-feature-");
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
+
     @Bean(name = "recommendationTaskExecutor")
     public ThreadPoolTaskExecutor recommendationTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.github.f4b6a3.tsid.Tsid;
-import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
 import site.holliverse.customer.error.CustomerErrorCode;
 import site.holliverse.customer.error.CustomerException;
@@ -27,7 +26,7 @@ public class UserLogService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private final AdminLogFeaturesClient adminLogFeaturesClient;
+    private final AdminLogFeatureDispatchService adminLogFeatureDispatchService;
     private final CustomerMetrics customerMetrics;
 
     @Value("${app.topic.client-events}")
@@ -121,7 +120,7 @@ public class UserLogService {
             return;
         }
 
-        adminLogFeaturesClient.sendLogFeature(
+        adminLogFeatureDispatchService.dispatch(
                 memberId,
                 eventName,
                 request.timestamp()

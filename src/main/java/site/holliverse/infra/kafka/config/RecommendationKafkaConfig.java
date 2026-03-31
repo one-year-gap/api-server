@@ -1,14 +1,12 @@
 package site.holliverse.infra.kafka.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
-import site.holliverse.customer.application.usecase.recommendation.RecommendationPendingFutureRegistry;
-import site.holliverse.customer.persistence.repository.PersonaRecommendationRepository;
+import site.holliverse.customer.application.usecase.recommendation.RecommendationKafkaConsumeUseCase;
 import site.holliverse.infra.kafka.consumer.RecommendationKafkaConsumer;
 import org.springframework.context.annotation.Profile;
 import site.holliverse.shared.monitoring.CustomerMetrics;
@@ -35,16 +33,12 @@ public class RecommendationKafkaConfig {
     @Bean
     public RecommendationKafkaConsumer recommendationKafkaConsumer(
             ObjectMapper objectMapper,
-            PersonaRecommendationRepository personaRecommendationRepository,
-            RecommendationPendingFutureRegistry pendingFutureRegistry,
-            MeterRegistry meterRegistry,
+            RecommendationKafkaConsumeUseCase recommendationKafkaConsumeUseCase,
             CustomerMetrics customerMetrics
     ) {
         return new RecommendationKafkaConsumer(
                 objectMapper,
-                personaRecommendationRepository,
-                pendingFutureRegistry,
-                meterRegistry,
+                recommendationKafkaConsumeUseCase,
                 customerMetrics
         );
     }

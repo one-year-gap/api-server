@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @RequiredArgsConstructor
 public class RecommendationKafkaConsumer {
+    private static final String TRACE_ID_FALLBACK = "NA";
 
     private final ObjectMapper objectMapper;
     private final PersonaRecommendationRepository personaRecommendationRepository;
@@ -42,17 +43,28 @@ public class RecommendationKafkaConsumer {
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
+        long consumeStartedAt = System.nanoTime();
         Long memberIdForCleanup = null;
+        String traceId = TRACE_ID_FALLBACK;
         var timerSample = customerMetrics.startSample();
         String outcome = "error";
         try {
-            // 수신 로그
-            log.debug("[Kafka][recommendation] received. topic={}, offset={}, raw={}", topic, offset, payload);
+            log.info(
+                    "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} topic={} offset={}",
+                    traceId, "unknown", "received", elapsedMs(consumeStartedAt), topic, offset
+            );
 
             RecommendationMessagePayload message = objectMapper.readValue(
                     payload, RecommendationMessagePayload.class);
 
             memberIdForCleanup = message.memberId();
+            traceId = message.traceId() != null && !message.traceId().isBlank()
+                    ? message.traceId()
+                    : TRACE_ID_FALLBACK;
+            log.info(
+                    "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} topic={} offset={}",
+                    traceId, message.memberId(), "parsed", elapsedMs(consumeStartedAt), topic, offset
+            );
 
             List<RecommendedProductItem> products = message.recommendedProducts() == null
                     ? Collections.emptyList()
@@ -71,10 +83,10 @@ public class RecommendationKafkaConsumer {
 
             String cachedText = message.cachedLlmRecommendation() != null ? message.cachedLlmRecommendation() : "";
 
-            // upsert 요약 로그
             log.info(
-                    "[Kafka][recommendation] upsert. memberId={}, segment={}, productCount={}",
-                    message.memberId(), message.segment(), products.size()
+                    "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} segment={} product_count={}",
+                    traceId, message.memberId(), "upsert_start", elapsedMs(consumeStartedAt),
+                    message.segment(), products.size()
             );
 
             PersonaRecommendation saved = personaRecommendationRepository
@@ -90,25 +102,32 @@ public class RecommendationKafkaConsumer {
                                     .cachedLlmRecommendation(cachedText)
                                     .recommendedProducts(products)
                                     .build()));
+            log.info(
+                    "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} updated_at={}",
+                    traceId, message.memberId(), "upsert_done", elapsedMs(consumeStartedAt), saved.getUpdatedAt()
+            );
 
             CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(message.memberId());
             if (future != null) {
                 future.complete(RecommendationResult.fromEntity(saved, RecommendationResult.RecommendationSource.FASTAPI));
                 outcome = "completed_pending";
-                log.debug(
-                        "[Kafka][recommendation] future completed. memberId={}, updatedAt={}",
-                        message.memberId(), saved.getUpdatedAt()
+                log.info(
+                        "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} outcome={}",
+                        traceId, message.memberId(), "future_completed", elapsedMs(consumeStartedAt), outcome
                 );
             } else {
                 outcome = "stored_without_waiter";
-                log.debug(
-                        "[Kafka][recommendation] no pending future. memberId={}, updatedAt={}",
-                        message.memberId(), saved.getUpdatedAt()
+                log.info(
+                        "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} outcome={}",
+                        traceId, message.memberId(), "no_pending_future", elapsedMs(consumeStartedAt), outcome
                 );
             }
 
             ack.acknowledge();
-            log.debug("[Kafka][recommendation] acked. topic={}, offset={}", topic, offset);
+            log.info(
+                    "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} topic={} offset={}",
+                    traceId, message.memberId(), "ack_done", elapsedMs(consumeStartedAt), topic, offset
+            );
         } catch (Exception e) {
             if (memberIdForCleanup != null) {
                 CompletableFuture<RecommendationResult> future = pendingFutureRegistry.remove(memberIdForCleanup);
@@ -116,10 +135,24 @@ public class RecommendationKafkaConsumer {
                     future.completeExceptionally(e);
                 }
             }
-            log.error("[Kafka][recommendation] consume failed. topic={}, offset={}, raw={}", topic, offset, payload, e);
+            log.error(
+                    "[REC][trace_id={}][member_id={}] stage={} elapsed_ms={} topic={} offset={} error={}",
+                    traceId,
+                    memberIdForCleanup != null ? memberIdForCleanup : "unknown",
+                    "consume_failed",
+                    elapsedMs(consumeStartedAt),
+                    topic,
+                    offset,
+                    e.getMessage(),
+                    e
+            );
             throw new IllegalStateException("recommendation consume failed", e);
         } finally {
             customerMetrics.stopRecommendationKafkaConsume(timerSample, outcome);
         }
+    }
+
+    private long elapsedMs(long startedAtNanos) {
+        return (System.nanoTime() - startedAtNanos) / 1_000_000;
     }
 }

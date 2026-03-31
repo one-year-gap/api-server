@@ -1,11 +1,8 @@
 package site.holliverse.customer.application.usecase.recommendation;
 
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,12 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RecommendationPendingFutureRegistry {
 
     private final ConcurrentHashMap<Long, CompletableFuture<RecommendationResult>> pending = new ConcurrentHashMap<>();
-
-    public RecommendationPendingFutureRegistry(MeterRegistry meterRegistry) {
-        Gauge.builder("holliverse.recommendation.pending.size", pending, Map::size)
-                .description("Current number of pending recommendation futures")
-                .register(meterRegistry);
-    }
 
     /**
      * 해당 회원에 대한 대기 Future를 반환하거나, 없으면 새로 생성해 등록 후 반환.

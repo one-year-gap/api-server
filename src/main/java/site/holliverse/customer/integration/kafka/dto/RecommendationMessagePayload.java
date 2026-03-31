@@ -1,5 +1,6 @@
 package site.holliverse.customer.integration.kafka.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import site.holliverse.shared.domain.model.PersonaSegment;
 
@@ -11,6 +12,9 @@ import java.util.List;
 public record RecommendationMessagePayload(
         @JsonProperty("memberId")
         Long memberId,
+        @JsonProperty("trace_id")
+        @JsonAlias("traceId")
+        String traceId,
         PersonaSegment segment,
         @JsonProperty("cachedLlmRecommendation")
         String cachedLlmRecommendation,

@@ -8,10 +8,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.customer.persistence.entity.UserLogAdminDispatchOutbox;
 import site.holliverse.customer.persistence.entity.UserLogDispatchStatus;
-import site.holliverse.customer.persistence.repository.UserLogAdminDispatchOutboxRepository;
 import site.holliverse.customer.web.dto.log.UserLogRequest;
 import site.holliverse.shared.monitoring.CustomerMetrics;
 
@@ -31,7 +29,6 @@ public class UserLogAdminDispatchOutboxService {
     private final ObjectMapper objectMapper;
     private final CustomerMetrics customerMetrics;
 
-    @Transactional
     public void enqueueBatch(Long memberId, List<UserLogRequest> requests) {
         if (requests == null || requests.isEmpty()) {
             return;
@@ -62,17 +59,15 @@ public class UserLogAdminDispatchOutboxService {
         }
 
         try {
-            repository.saveAll(rows);
-            rows.forEach(ignored -> customerMetrics.recordAdminLogFeatureOutbox("stored"));
+            stateService.storeBatch(rows);
         } catch (DataIntegrityViolationException e) {
             log.warn("[UserLog][Outbox] batch store fallback. size={}", rows.size(), e);
-            rows.forEach(this::storeRow);
+            rows.forEach(stateService::store);
         }
     }
 
-    @Transactional
     public void enqueue(Long eventId, Long memberId, UserLogEventName eventName, UserLogRequest request) {
-        storeRow(buildOutboxRow(eventId, memberId, eventName, request));
+        stateService.store(buildOutboxRow(eventId, memberId, eventName, request));
     }
 
     public void dispatchReadyBatch(int batchSize) {
@@ -113,21 +108,6 @@ public class UserLogAdminDispatchOutboxService {
                 .status(UserLogDispatchStatus.READY)
                 .attemptCount(0)
                 .build();
-    }
-
-    private void storeRow(UserLogAdminDispatchOutbox row) {
-        try {
-            repository.save(row);
-            customerMetrics.recordAdminLogFeatureOutbox("stored");
-        } catch (DataIntegrityViolationException e) {
-            customerMetrics.recordAdminLogFeatureOutbox("duplicate");
-            log.debug("[UserLog][Outbox] duplicate event_id={} memberId={} eventName={}",
-                    row.getEventId(), row.getMemberId(), row.getEventName());
-        } catch (Exception e) {
-            customerMetrics.recordAdminLogFeatureOutbox("store_error");
-            log.warn("[UserLog][Outbox] store failed event_id={} memberId={} eventName={}",
-                    row.getEventId(), row.getMemberId(), row.getEventName(), e);
-        }
     }
 
     private boolean isAdminTarget(UserLogEventName eventName) {

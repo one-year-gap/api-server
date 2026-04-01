@@ -1,8 +1,10 @@
 package site.holliverse.customer.application.usecase.log;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Profile("customer")
 @RequiredArgsConstructor
@@ -27,6 +30,28 @@ public class UserLogAdminDispatchOutboxStateService {
 
     @Value("${app.userlog.admin-dispatch.max-attempts:5}")
     private int maxAttempts;
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void storeBatch(List<UserLogAdminDispatchOutbox> rows) {
+        repository.saveAllAndFlush(rows);
+        rows.forEach(ignored -> customerMetrics.recordAdminLogFeatureOutbox("stored"));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void store(UserLogAdminDispatchOutbox row) {
+        try {
+            repository.saveAndFlush(row);
+            customerMetrics.recordAdminLogFeatureOutbox("stored");
+        } catch (DataIntegrityViolationException e) {
+            customerMetrics.recordAdminLogFeatureOutbox("duplicate");
+            log.debug("[UserLog][Outbox] duplicate event_id={} memberId={} eventName={}",
+                    row.getEventId(), row.getMemberId(), row.getEventName());
+        } catch (Exception e) {
+            customerMetrics.recordAdminLogFeatureOutbox("store_error");
+            log.warn("[UserLog][Outbox] store failed event_id={} memberId={} eventName={}",
+                    row.getEventId(), row.getMemberId(), row.getEventName(), e);
+        }
+    }
 
     @Transactional
     public List<Long> claimReadyBatch(int batchSize) {

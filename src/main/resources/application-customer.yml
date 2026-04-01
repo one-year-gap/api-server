@@ -19,9 +19,10 @@ app:
     read-timeout-ms: ${ADMIN_READ_TIMEOUT_MS:5000}
   userlog:
     admin-dispatch:
-      fixed-delay-ms: ${USERLOG_ADMIN_DISPATCH_FIXED_DELAY_MS:1000}
-      batch-size: ${USERLOG_ADMIN_DISPATCH_BATCH_SIZE:100}
-      retry-delay-ms: ${USERLOG_ADMIN_DISPATCH_RETRY_DELAY_MS:10000}
+      initial-delay-ms: ${USERLOG_ADMIN_DISPATCH_INITIAL_DELAY_MS:5000}
+      fixed-delay-ms: ${USERLOG_ADMIN_DISPATCH_FIXED_DELAY_MS:3000}
+      batch-size: ${USERLOG_ADMIN_DISPATCH_BATCH_SIZE:20}
+      retry-delay-ms: ${USERLOG_ADMIN_DISPATCH_RETRY_DELAY_MS:30000}
       max-attempts: ${USERLOG_ADMIN_DISPATCH_MAX_ATTEMPTS:5}
   jwt:
     secret: ${JWT_SECRET:change-this-secret-key-at-least-32-characters}

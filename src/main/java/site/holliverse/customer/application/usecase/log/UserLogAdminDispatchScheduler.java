@@ -16,7 +16,10 @@ public class UserLogAdminDispatchScheduler {
     @Value("${app.userlog.admin-dispatch.batch-size:100}")
     private int batchSize;
 
-    @Scheduled(fixedDelayString = "${app.userlog.admin-dispatch.fixed-delay-ms:1000}")
+    @Scheduled(
+            initialDelayString = "${app.userlog.admin-dispatch.initial-delay-ms:5000}",
+            fixedDelayString = "${app.userlog.admin-dispatch.fixed-delay-ms:3000}"
+    )
     public void dispatch() {
         outboxService.dispatchReadyBatch(batchSize);
     }

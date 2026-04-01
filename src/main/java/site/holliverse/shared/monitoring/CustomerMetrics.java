@@ -82,4 +82,12 @@ public class CustomerMetrics {
                 .tag("result", result)
                 .register(meterRegistry));
     }
+
+    public void recordAdminLogFeatureDispatch(String result) {
+        Counter.builder("holliverse.userlog.admin_log_feature.dispatch")
+                .description("Admin log-feature async dispatch enqueue results")
+                .tag("result", result)
+                .register(meterRegistry)
+                .increment();
+    }
 }

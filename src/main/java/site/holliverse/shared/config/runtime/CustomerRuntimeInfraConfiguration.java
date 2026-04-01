@@ -41,7 +41,7 @@ public class CustomerRuntimeInfraConfiguration {
         executor.setMaxPoolSize(16);
         executor.setQueueCapacity(512);
         executor.setThreadNamePrefix("admin-log-feature-");
-        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
         executor.initialize();
         return executor;
     }

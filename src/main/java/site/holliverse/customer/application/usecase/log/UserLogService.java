@@ -42,8 +42,7 @@ public class UserLogService {
             doPublish(memberId, request);
         }
 
-        // 이벤트 전달
-        requests.forEach(request -> sendAdminTarget(memberId, request));
+        userLogAdminDispatchOutboxService.enqueueBatch(memberId, requests);
     }
 
     @Async("userLogTaskExecutor")

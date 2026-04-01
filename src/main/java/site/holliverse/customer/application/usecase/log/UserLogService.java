@@ -129,6 +129,7 @@ public class UserLogService {
             );
             customerMetrics.recordAdminLogFeatureDispatch("enqueued");
         } catch (TaskRejectedException e) {
+            log.warn("[UserLog] Admin log-feature dispatch rejected. memberId={}, eventName={}", memberId, eventName);
             customerMetrics.recordAdminLogFeatureDispatch("rejected");
         }
     }

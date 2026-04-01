@@ -18,6 +18,8 @@ import java.util.Optional;
 @Profile("admin")
 public class HandleLogFeatureUseCase {
 
+    private static final ZoneId BASE_DATE_ZONE = ZoneId.of("Asia/Seoul");
+
     private final CalculateLogChurnScoreService calculateLogChurnScoreService;
 
     /**
@@ -58,7 +60,7 @@ public class HandleLogFeatureUseCase {
     private LocalDate resolveBaseDate(Instant timestamp) {
         return Optional.ofNullable(timestamp)
                 .orElseGet(Instant::now)
-                .atZone(ZoneId.of("Asia/Seoul"))
+                .atZone(BASE_DATE_ZONE)
                 .toLocalDate();
     }
 

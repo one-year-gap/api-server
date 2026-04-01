@@ -49,6 +49,7 @@ public class UserLogAdminDispatchOutbox extends BaseEntity {
     private JsonNode payload;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "status", nullable = false, length = 20)
     private UserLogDispatchStatus status;
 

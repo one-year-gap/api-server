@@ -90,4 +90,12 @@ public class CustomerMetrics {
                 .register(meterRegistry)
                 .increment();
     }
+
+    public void recordAdminLogFeatureOutbox(String result) {
+        Counter.builder("holliverse.userlog.admin_log_feature.outbox")
+                .description("Admin log-feature outbox lifecycle results")
+                .tag("result", result)
+                .register(meterRegistry)
+                .increment();
+    }
 }

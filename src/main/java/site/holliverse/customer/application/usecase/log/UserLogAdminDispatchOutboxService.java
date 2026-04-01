@@ -23,7 +23,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserLogAdminDispatchOutboxService {
 
-    private final UserLogAdminDispatchOutboxRepository repository;
     private final UserLogAdminDispatchOutboxStateService stateService;
     private final AdminLogFeatureDispatchService dispatchService;
     private final ObjectMapper objectMapper;

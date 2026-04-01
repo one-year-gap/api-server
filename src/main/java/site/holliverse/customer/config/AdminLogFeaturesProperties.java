@@ -10,6 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record AdminLogFeaturesProperties(
         String baseUrl,
         String logFeaturesPath,
+        String logFeaturesBatchPath,
         int connectTimeoutMs,
         int readTimeoutMs
 ) {
@@ -18,6 +19,9 @@ public record AdminLogFeaturesProperties(
         if (readTimeoutMs <= 0) readTimeoutMs = 5_000;
         if (logFeaturesPath == null || logFeaturesPath.isBlank()) {
             logFeaturesPath = "/internal/v1/log-features";
+        }
+        if (logFeaturesBatchPath == null || logFeaturesBatchPath.isBlank()) {
+            logFeaturesBatchPath = logFeaturesPath + "/batch";
         }
     }
 

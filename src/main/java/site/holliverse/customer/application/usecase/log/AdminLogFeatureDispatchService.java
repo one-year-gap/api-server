@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import site.holliverse.customer.integration.external.AdminLogFeaturesClient;
 import site.holliverse.customer.persistence.entity.UserLogAdminDispatchOutbox;
 
+import java.util.List;
+
 /**
  * admin log-feature 별도 executor로 분리
  */
@@ -21,29 +23,37 @@ public class AdminLogFeatureDispatchService {
     private final UserLogAdminDispatchOutboxStateService stateService;
 
     @Async("adminLogFeatureTaskExecutor")
-    public void dispatch(Long eventId) {
-        stateService.get(eventId).ifPresentOrElse(
-                this::dispatchClaimedRow,
-                () -> log.warn("[UserLog][Outbox] claimed row not found eventId={}", eventId)
-        );
-    }
+    public void dispatchBatch(List<UserLogAdminDispatchOutbox> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
 
-    private void dispatchClaimedRow(UserLogAdminDispatchOutbox row) {
+        List<Long> eventIds = rows.stream()
+                .map(UserLogAdminDispatchOutbox::getEventId)
+                .toList();
+
         try {
-            var result = adminLogFeaturesClient.sendLogFeature(
-                    row.getMemberId(),
-                    UserLogEventName.from(row.getEventName()),
-                    row.getEventTimestamp().toString()
+            var result = adminLogFeaturesClient.sendLogFeaturesBatch(
+                    rows.get(0).getMemberId(),
+                    rows.stream()
+                            .map(row -> new AdminLogFeaturesClient.BatchLogEvent(
+                                    row.getEventId(),
+                                    row.getEventTimestamp().toString(),
+                                    row.getEventType(),
+                                    row.getEventName(),
+                                    row.getPayload().path("event_properties")
+                            ))
+                            .toList()
             );
 
             if (result.success()) {
-                stateService.markAcked(row.getEventId());
+                stateService.markAcked(eventIds);
                 return;
             }
 
-            stateService.markRetry(row.getEventId(), result.errorMessage());
+            stateService.markRetry(eventIds, result.errorMessage());
         } catch (Exception e) {
-            stateService.markRetry(row.getEventId(), e.getClass().getSimpleName() + ":" + e.getMessage());
+            stateService.markRetry(eventIds, e.getClass().getSimpleName() + ":" + e.getMessage());
         }
     }
 }

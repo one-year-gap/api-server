@@ -77,16 +77,26 @@ public class CustomerMetrics {
     }
 
     public void stopAdminLogFeatureDuration(Timer.Sample sample, String result) {
+        stopAdminLogFeatureDuration(sample, result, "single");
+    }
+
+    public void stopAdminLogFeatureDuration(Timer.Sample sample, String result, String mode) {
         sample.stop(Timer.builder("holliverse.userlog.admin_log_feature.duration")
                 .description("Admin log-feature API call duration")
                 .tag("result", result)
+                .tag("mode", mode)
                 .register(meterRegistry));
     }
 
     public void recordAdminLogFeatureDispatch(String result) {
+        recordAdminLogFeatureDispatch(result, "single");
+    }
+
+    public void recordAdminLogFeatureDispatch(String result, String mode) {
         Counter.builder("holliverse.userlog.admin_log_feature.dispatch")
                 .description("Admin log-feature async dispatch enqueue results")
                 .tag("result", result)
+                .tag("mode", mode)
                 .register(meterRegistry)
                 .increment();
     }
@@ -97,5 +107,13 @@ public class CustomerMetrics {
                 .tag("result", result)
                 .register(meterRegistry)
                 .increment();
+    }
+
+    public void recordAdminLogFeatureBatchSize(int size) {
+        DistributionSummary.builder("holliverse.userlog.admin_log_feature.batch.size")
+                .description("Admin log-feature batch request size")
+                .baseUnit("events")
+                .register(meterRegistry)
+                .record(size);
     }
 }

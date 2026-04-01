@@ -1,5 +1,6 @@
 package site.holliverse.customer.integration.external;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -11,6 +12,8 @@ import site.holliverse.customer.config.AdminLogFeaturesProperties;
 import site.holliverse.customer.application.usecase.log.UserLogEventName;
 import site.holliverse.shared.monitoring.CustomerMetrics;
 
+import java.util.List;
+
 /**
  * Admin API POST /internal/v1/log-features 호출용 클라이언트.
  * customer 모듈은 admin 패키지를 의존하지 않고 HTTP만 사용(ArchUnit 준수).
@@ -21,6 +24,7 @@ public class AdminLogFeaturesClient {
     private final RestTemplate restTemplate;
     private final String baseUrl;
     private final String logFeaturesPath;
+    private final String logFeaturesBatchPath;
     private final CustomerMetrics customerMetrics;
 
     public AdminLogFeaturesClient(
@@ -32,6 +36,7 @@ public class AdminLogFeaturesClient {
         String url = properties.baseUrl();
         this.baseUrl =  url;
         this.logFeaturesPath = properties.logFeaturesPath();
+        this.logFeaturesBatchPath = properties.logFeaturesBatchPath();
         this.customerMetrics = customerMetrics;
     }
 
@@ -44,33 +49,74 @@ public class AdminLogFeaturesClient {
             return DispatchResult.ok();
         }
 
-        String path =  logFeaturesPath;
-        String url = baseUrl + path;
+        String url = baseUrl + logFeaturesPath;
 
         LogFeatureRequestBody body = new LogFeatureRequestBody(eventType.value(), memberId, timeStamp);
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<LogFeatureRequestBody> entity = new HttpEntity<>(body, headers);
         var timerSample = customerMetrics.startSample();
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    url,
+                    jsonEntity(body),
+                    String.class
+            );
 
             if (!response.getStatusCode().is2xxSuccessful()) {
-                customerMetrics.stopAdminLogFeatureDuration(timerSample, "non_2xx");
+                customerMetrics.stopAdminLogFeatureDuration(timerSample, "non_2xx", "single");
                 log.warn("[AdminLogFeatures] POST {} memberId={} eventType={} status={}",
                         url, memberId, eventType.value(), response.getStatusCode());
                 return DispatchResult.fail("non_2xx:" + response.getStatusCode().value());
             }
-            customerMetrics.stopAdminLogFeatureDuration(timerSample, "success");
+            customerMetrics.stopAdminLogFeatureDuration(timerSample, "success", "single");
             return DispatchResult.ok();
         } catch (RestClientException e) {
-            customerMetrics.stopAdminLogFeatureDuration(timerSample, "error");
+            customerMetrics.stopAdminLogFeatureDuration(timerSample, "error", "single");
             log.warn("[AdminLogFeatures] POST {} memberId={} eventType={} failed",
                     url, memberId, eventType.value(), e);
             return DispatchResult.fail(e.getClass().getSimpleName() + ":" + e.getMessage());
         }
+    }
+
+    public DispatchResult sendLogFeaturesBatch(long memberId, List<BatchLogEvent> events) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return DispatchResult.ok();
+        }
+        if (events == null || events.isEmpty()) {
+            return DispatchResult.ok();
+        }
+
+        String url = baseUrl + logFeaturesBatchPath;
+        customerMetrics.recordAdminLogFeatureBatchSize(events.size());
+        var timerSample = customerMetrics.startSample();
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    url,
+                    jsonEntity(new BatchLogFeatureRequestBody(memberId, events)),
+                    String.class
+            );
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                customerMetrics.stopAdminLogFeatureDuration(timerSample, "non_2xx", "batch");
+                log.warn("[AdminLogFeatures][Batch] POST {} memberId={} size={} status={}",
+                        url, memberId, events.size(), response.getStatusCode());
+                return DispatchResult.fail("non_2xx:" + response.getStatusCode().value());
+            }
+
+            customerMetrics.stopAdminLogFeatureDuration(timerSample, "success", "batch");
+            return DispatchResult.ok();
+        } catch (RestClientException e) {
+            customerMetrics.stopAdminLogFeatureDuration(timerSample, "error", "batch");
+            log.warn("[AdminLogFeatures][Batch] POST {} memberId={} size={} failed",
+                    url, memberId, events.size(), e);
+            return DispatchResult.fail(e.getClass().getSimpleName() + ":" + e.getMessage());
+        }
+    }
+
+    private HttpEntity<?> jsonEntity(Object body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(body, headers);
     }
 
     public record DispatchResult(boolean success, String errorMessage) {
@@ -90,6 +136,21 @@ public class AdminLogFeaturesClient {
             String eventType,
             long memberId,
             String timeStamp
+    ) {
+    }
+
+    public record BatchLogFeatureRequestBody(
+            long memberId,
+            List<BatchLogEvent> events
+    ) {
+    }
+
+    public record BatchLogEvent(
+            long eventId,
+            String timestamp,
+            String event,
+            String eventName,
+            JsonNode eventProperties
     ) {
     }
 }

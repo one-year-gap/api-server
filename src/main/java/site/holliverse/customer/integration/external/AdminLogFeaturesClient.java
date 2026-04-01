@@ -37,9 +37,12 @@ public class AdminLogFeaturesClient {
 
     /**
      * log-features API 호출. baseUrl이 비어 있으면 호출하지 않음(no-op).
-     * 실패 시 로깅만 하고 예외 전파하지 않음(배치 처리 방해 방지).
+     * 실패 시 결과 객체로 반환하고 예외 전파하지 않음(재시도 경로 위임).
      */
-    public void sendLogFeature(long memberId, UserLogEventName eventType, String timeStamp) {
+    public DispatchResult sendLogFeature(long memberId, UserLogEventName eventType, String timeStamp) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return DispatchResult.ok();
+        }
 
         String path =  logFeaturesPath;
         String url = baseUrl + path;
@@ -58,13 +61,25 @@ public class AdminLogFeaturesClient {
                 customerMetrics.stopAdminLogFeatureDuration(timerSample, "non_2xx");
                 log.warn("[AdminLogFeatures] POST {} memberId={} eventType={} status={}",
                         url, memberId, eventType.value(), response.getStatusCode());
-                return;
+                return DispatchResult.fail("non_2xx:" + response.getStatusCode().value());
             }
             customerMetrics.stopAdminLogFeatureDuration(timerSample, "success");
+            return DispatchResult.ok();
         } catch (RestClientException e) {
             customerMetrics.stopAdminLogFeatureDuration(timerSample, "error");
             log.warn("[AdminLogFeatures] POST {} memberId={} eventType={} failed",
                     url, memberId, eventType.value(), e);
+            return DispatchResult.fail(e.getClass().getSimpleName() + ":" + e.getMessage());
+        }
+    }
+
+    public record DispatchResult(boolean success, String errorMessage) {
+        public static DispatchResult ok() {
+            return new DispatchResult(true, null);
+        }
+
+        public static DispatchResult fail(String errorMessage) {
+            return new DispatchResult(false, errorMessage);
         }
     }
 

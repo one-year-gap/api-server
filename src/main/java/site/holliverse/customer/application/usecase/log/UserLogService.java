@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.core.task.TaskRejectedException;
 import org.springframework.stereotype.Service;
 
 import com.github.f4b6a3.tsid.Tsid;
@@ -27,7 +26,7 @@ public class UserLogService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private final AdminLogFeatureDispatchService adminLogFeatureDispatchService;
+    private final UserLogAdminDispatchOutboxService userLogAdminDispatchOutboxService;
     private final CustomerMetrics customerMetrics;
 
     @Value("${app.topic.client-events}")
@@ -122,15 +121,15 @@ public class UserLogService {
         }
 
         try {
-            adminLogFeatureDispatchService.dispatch(
+            long eventId = decodeTsidToLong(request.tsid());
+            userLogAdminDispatchOutboxService.enqueue(
+                    eventId,
                     memberId,
                     eventName,
-                    request.timestamp()
+                    request
             );
-            customerMetrics.recordAdminLogFeatureDispatch("enqueued");
-        } catch (TaskRejectedException e) {
-            log.warn("[UserLog] Admin log-feature dispatch rejected. memberId={}, eventName={}", memberId, eventName);
-            customerMetrics.recordAdminLogFeatureDispatch("rejected");
+        } catch (IllegalArgumentException e) {
+            customerMetrics.recordAdminLogFeatureOutbox("invalid_tsid");
         }
     }
 

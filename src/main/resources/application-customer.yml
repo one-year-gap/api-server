@@ -15,6 +15,7 @@ app:
   admin:
     base-url: ${ADMIN_BASE_URL:http://admin-api.holliverse.internal:8081}
     log-features-path: ${ADMIN_LOG_FEATURES_PATH:/internal/v1/log-features}
+    log-features-batch-path: ${ADMIN_LOG_FEATURES_BATCH_PATH:/internal/v1/log-features/batch}
     connect-timeout-ms: ${ADMIN_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${ADMIN_READ_TIMEOUT_MS:5000}
   userlog:

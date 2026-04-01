@@ -14,7 +14,6 @@ import site.holliverse.shared.monitoring.CustomerMetrics;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -54,35 +53,40 @@ public class UserLogAdminDispatchOutboxStateService {
     }
 
     @Transactional
-    public List<Long> claimReadyBatch(int batchSize) {
+    public List<UserLogAdminDispatchOutbox> claimReadyBatchRows(int batchSize) {
         List<Long> ids = repository.findReadyEventIdsForUpdate(batchSize);
         if (ids.isEmpty()) {
-            return ids;
+            return List.of();
         }
 
         List<UserLogAdminDispatchOutbox> rows = repository.findAllById(ids);
         rows.forEach(UserLogAdminDispatchOutbox::markProcessing);
         repository.saveAll(rows);
-        return ids;
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<UserLogAdminDispatchOutbox> get(Long eventId) {
-        return repository.findById(eventId);
+        return rows;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void markAcked(Long eventId) {
-        repository.findById(eventId).ifPresent(row -> {
+    public void markAcked(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return;
+        }
+
+        List<UserLogAdminDispatchOutbox> rows = repository.findAllById(eventIds);
+        rows.forEach(row -> {
             row.markAcked();
-            repository.save(row);
             customerMetrics.recordAdminLogFeatureOutbox("acked");
         });
+        repository.saveAll(rows);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void markRetry(Long eventId, String errorMessage) {
-        repository.findById(eventId).ifPresent(row -> {
+    public void markRetry(List<Long> eventIds, String errorMessage) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return;
+        }
+
+        List<UserLogAdminDispatchOutbox> rows = repository.findAllById(eventIds);
+        rows.forEach(row -> {
             if (row.getAttemptCount() + 1 >= maxAttempts) {
                 row.markDead(errorMessage);
                 customerMetrics.recordAdminLogFeatureOutbox("dead");
@@ -90,7 +94,7 @@ public class UserLogAdminDispatchOutboxStateService {
                 row.markRetry(errorMessage, Instant.now().plusMillis(retryDelayMs));
                 customerMetrics.recordAdminLogFeatureOutbox("retry");
             }
-            repository.save(row);
         });
+        repository.saveAll(rows);
     }
 }

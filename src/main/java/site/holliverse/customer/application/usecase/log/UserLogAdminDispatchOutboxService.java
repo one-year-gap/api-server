@@ -15,13 +15,19 @@ import site.holliverse.shared.monitoring.CustomerMetrics;
 
 import java.util.ArrayList;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
 @Profile("customer")
 @RequiredArgsConstructor
 public class UserLogAdminDispatchOutboxService {
+
+    private static final ZoneId BASE_DATE_ZONE = ZoneId.of("Asia/Seoul");
 
     private final UserLogAdminDispatchOutboxStateService stateService;
     private final AdminLogFeatureDispatchService dispatchService;
@@ -70,14 +76,17 @@ public class UserLogAdminDispatchOutboxService {
     }
 
     public void dispatchReadyBatch(int batchSize) {
-        List<Long> claimedIds = stateService.claimReadyBatch(batchSize);
-        for (Long eventId : claimedIds) {
+        List<UserLogAdminDispatchOutbox> claimedRows = stateService.claimReadyBatchRows(batchSize);
+        for (List<UserLogAdminDispatchOutbox> rows : groupDispatchRows(claimedRows).values()) {
+            List<Long> eventIds = rows.stream()
+                    .map(UserLogAdminDispatchOutbox::getEventId)
+                    .toList();
             try {
-                dispatchService.dispatch(eventId);
-                customerMetrics.recordAdminLogFeatureDispatch("enqueued");
+                dispatchService.dispatchBatch(rows);
+                customerMetrics.recordAdminLogFeatureDispatch("enqueued", "batch");
             } catch (TaskRejectedException e) {
-                customerMetrics.recordAdminLogFeatureDispatch("rejected");
-                stateService.markRetry(eventId, "dispatch_rejected: " + e.getClass().getSimpleName());
+                customerMetrics.recordAdminLogFeatureDispatch("rejected", "batch");
+                stateService.markRetry(eventIds, "dispatch_rejected: " + e.getClass().getSimpleName());
             }
         }
     }
@@ -120,5 +129,25 @@ public class UserLogAdminDispatchOutboxService {
             throw new IllegalArgumentException("TSID must not be null or blank");
         }
         return Tsid.from(tsid).toLong();
+    }
+
+    private Map<DispatchGroupKey, List<UserLogAdminDispatchOutbox>> groupDispatchRows(
+            List<UserLogAdminDispatchOutbox> rows
+    ) {
+        Map<DispatchGroupKey, List<UserLogAdminDispatchOutbox>> groups = new LinkedHashMap<>();
+        for (UserLogAdminDispatchOutbox row : rows) {
+            DispatchGroupKey key = new DispatchGroupKey(
+                    row.getMemberId(),
+                    row.getEventTimestamp().atZone(BASE_DATE_ZONE).toLocalDate()
+            );
+            groups.computeIfAbsent(key, ignored -> new ArrayList<>()).add(row);
+        }
+        return groups;
+    }
+
+    private record DispatchGroupKey(
+            Long memberId,
+            LocalDate baseDate
+    ) {
     }
 }

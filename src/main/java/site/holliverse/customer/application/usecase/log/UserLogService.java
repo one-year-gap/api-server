@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.stereotype.Service;
 
 import com.github.f4b6a3.tsid.Tsid;
@@ -120,11 +121,16 @@ public class UserLogService {
             return;
         }
 
-        adminLogFeatureDispatchService.dispatch(
-                memberId,
-                eventName,
-                request.timestamp()
-        );
+        try {
+            adminLogFeatureDispatchService.dispatch(
+                    memberId,
+                    eventName,
+                    request.timestamp()
+            );
+            customerMetrics.recordAdminLogFeatureDispatch("enqueued");
+        } catch (TaskRejectedException e) {
+            customerMetrics.recordAdminLogFeatureDispatch("rejected");
+        }
     }
 
     /**

@@ -15,6 +15,7 @@ public class CustomerMetrics {
 
     public CustomerMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
+        preRegisterAdminLogFeatureMeters();
     }
 
     public Timer.Sample startSample() {
@@ -101,14 +102,6 @@ public class CustomerMetrics {
                 .increment();
     }
 
-    public void recordAdminLogFeatureOutbox(String result) {
-        Counter.builder("holliverse.userlog.admin_log_feature.outbox")
-                .description("Admin log-feature outbox lifecycle results")
-                .tag("result", result)
-                .register(meterRegistry)
-                .increment();
-    }
-
     public void recordAdminLogFeatureCandidate(String eventName) {
         Counter.builder("holliverse.userlog.admin_log_feature.candidate")
                 .description("Admin log-feature candidate events before outbox persistence")
@@ -118,19 +111,19 @@ public class CustomerMetrics {
     }
 
     public void recordAdminLogFeatureEventNameError(String mode) {
-        Counter.builder("holliverse.userlog.admin_log_feature.event_name_error")
-                .description("Admin log-feature event_name parsing failures")
-                .tag("mode", mode)
+        adminLogFeatureEventNameErrorCounter(mode).increment();
+    }
+
+    public void recordAdminLogFeatureOutbox(String result) {
+        Counter.builder("holliverse.userlog.admin_log_feature.outbox")
+                .description("Admin log-feature outbox lifecycle results")
+                .tag("result", result)
                 .register(meterRegistry)
                 .increment();
     }
 
     public void recordAdminLogFeatureStoreBatchError(String result) {
-        Counter.builder("holliverse.userlog.admin_log_feature.store_batch_error")
-                .description("Admin log-feature outbox batch store errors")
-                .tag("result", result)
-                .register(meterRegistry)
-                .increment();
+        adminLogFeatureStoreBatchErrorCounter(result).increment();
     }
 
     public void recordAdminLogFeatureBatchSize(int size) {
@@ -139,5 +132,26 @@ public class CustomerMetrics {
                 .baseUnit("events")
                 .register(meterRegistry)
                 .record(size);
+    }
+
+    private void preRegisterAdminLogFeatureMeters() {
+        adminLogFeatureEventNameErrorCounter("single");
+        adminLogFeatureEventNameErrorCounter("batch");
+        adminLogFeatureStoreBatchErrorCounter("data_integrity");
+        adminLogFeatureStoreBatchErrorCounter("general");
+    }
+
+    private Counter adminLogFeatureEventNameErrorCounter(String mode) {
+        return Counter.builder("holliverse.userlog.admin_log_feature.event_name_error")
+                .description("Admin log-feature event_name parsing failures")
+                .tag("mode", mode)
+                .register(meterRegistry);
+    }
+
+    private Counter adminLogFeatureStoreBatchErrorCounter(String result) {
+        return Counter.builder("holliverse.userlog.admin_log_feature.store_batch_error")
+                .description("Admin log-feature outbox batch store errors")
+                .tag("result", result)
+                .register(meterRegistry);
     }
 }

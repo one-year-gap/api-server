@@ -109,6 +109,30 @@ public class CustomerMetrics {
                 .increment();
     }
 
+    public void recordAdminLogFeatureCandidate(String eventName) {
+        Counter.builder("holliverse.userlog.admin_log_feature.candidate")
+                .description("Admin log-feature candidate events before outbox persistence")
+                .tag("event_name", eventName)
+                .register(meterRegistry)
+                .increment();
+    }
+
+    public void recordAdminLogFeatureEventNameError(String mode) {
+        Counter.builder("holliverse.userlog.admin_log_feature.event_name_error")
+                .description("Admin log-feature event_name parsing failures")
+                .tag("mode", mode)
+                .register(meterRegistry)
+                .increment();
+    }
+
+    public void recordAdminLogFeatureStoreBatchError(String result) {
+        Counter.builder("holliverse.userlog.admin_log_feature.store_batch_error")
+                .description("Admin log-feature outbox batch store errors")
+                .tag("result", result)
+                .register(meterRegistry)
+                .increment();
+    }
+
     public void recordAdminLogFeatureBatchSize(int size) {
         DistributionSummary.builder("holliverse.userlog.admin_log_feature.batch.size")
                 .description("Admin log-feature batch request size")

@@ -41,10 +41,19 @@ public class UserLogAdminDispatchOutboxService {
 
         List<UserLogAdminDispatchOutbox> rows = new ArrayList<>();
         for (UserLogRequest request : requests) {
-            UserLogEventName eventName = UserLogEventName.from(request.eventName());
+            UserLogEventName eventName;
+            try {
+                eventName = UserLogEventName.from(request.eventName());
+            } catch (IllegalArgumentException e) {
+                customerMetrics.recordAdminLogFeatureEventNameError("batch");
+                log.warn("[UserLog][Outbox] invalid event_name. memberId={}, eventName={}",
+                        memberId, request.eventName(), e);
+                continue;
+            }
             if (!isAdminTarget(eventName)) {
                 continue;
             }
+            customerMetrics.recordAdminLogFeatureCandidate(eventName.value());
 
             try {
                 rows.add(buildOutboxRow(decodeTsidToLong(request.tsid()), memberId, eventName, request));

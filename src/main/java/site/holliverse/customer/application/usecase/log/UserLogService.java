@@ -114,10 +114,19 @@ public class UserLogService {
      * Admin 이벤트 변환.
      */
     private void sendAdminTarget(Long memberId, UserLogRequest request) {
-        UserLogEventName eventName = UserLogEventName.from(request.eventName());
+        UserLogEventName eventName;
+        try {
+            eventName = UserLogEventName.from(request.eventName());
+        } catch (IllegalArgumentException e) {
+            customerMetrics.recordAdminLogFeatureEventNameError("single");
+            log.warn("[UserLog][Outbox] invalid event_name. memberId={}, eventName={}",
+                    memberId, request.eventName(), e);
+            return;
+        }
         if (!isAdminTarget(eventName)) {
             return;
         }
+        customerMetrics.recordAdminLogFeatureCandidate(eventName.value());
 
         try {
             long eventId = decodeTsidToLong(request.tsid());

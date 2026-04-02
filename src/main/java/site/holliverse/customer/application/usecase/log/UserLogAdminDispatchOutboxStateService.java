@@ -32,8 +32,16 @@ public class UserLogAdminDispatchOutboxStateService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void storeBatch(List<UserLogAdminDispatchOutbox> rows) {
-        repository.saveAllAndFlush(rows);
-        rows.forEach(ignored -> customerMetrics.recordAdminLogFeatureOutbox("stored"));
+        try {
+            repository.saveAllAndFlush(rows);
+            rows.forEach(ignored -> customerMetrics.recordAdminLogFeatureOutbox("stored"));
+        } catch (DataIntegrityViolationException e) {
+            customerMetrics.recordAdminLogFeatureStoreBatchError("data_integrity");
+            throw e;
+        } catch (Exception e) {
+            customerMetrics.recordAdminLogFeatureStoreBatchError("general");
+            throw e;
+        }
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

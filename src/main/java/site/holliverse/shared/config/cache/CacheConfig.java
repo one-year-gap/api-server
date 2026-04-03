@@ -2,14 +2,14 @@ package site.holliverse.shared.config.cache;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
+
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.support.CompositeCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Collection;
-import java.util.List;
+
 
 /**
  * ==========================
@@ -43,7 +43,7 @@ public class CacheConfig {
          * caffeine 정책으로 적용
          * 별도 TTL/사이즈 정책으로 가질 수 잇음.
          */
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+
         var regionalMetricsCache = new CaffeineCacheManager(REGIONAL_METRICS_CACHE);
         regionalMetricsCache.setCaffeine(Caffeine.from(regionalMetricsSpec));
 
@@ -61,40 +61,5 @@ public class CacheConfig {
     }
 
 
-    /**
-     * 여러개의 캐시 매니저를 보관하는 래퍼클래스
-     * delegates 는 실제로 위에서 만든 캐시를 보관하는 매니저 목록.
-     */
-    private static final class CompositeCacheManager implements CacheManager {
-        private final List<CacheManager> delegates;
 
-        /**
-         * 생성자에서 전달받은 캐시 매니저들을 리스트로 저장.
-         */
-        private CompositeCacheManager(CacheManager... delegates) {
-            this.delegates = List.of(delegates);
-        }
-
-
-        @Override
-        public Cache getCache(String name) {
-            for (CacheManager delegate : delegates) {
-                Cache cache = delegate.getCache(name);
-                if (cache != null) {
-                    return cache;
-                }
-            }
-            return null;
-        }
-
-        /**
-         * 현재 등록된 전체 캐시 이름 목록을 합쳐서 반환
-         */
-        @Override
-        public Collection<String> getCacheNames() {
-            return delegates.stream()
-                    .flatMap(delegate -> delegate.getCacheNames().stream())
-                    .toList();
-        }
-    }
 }

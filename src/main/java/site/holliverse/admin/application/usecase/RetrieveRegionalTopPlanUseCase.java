@@ -1,12 +1,14 @@
 package site.holliverse.admin.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.holliverse.admin.query.dao.AdminRegionalTopPlanDao;
 import site.holliverse.admin.query.dao.RegionalSubscriberCountRawData;
 import site.holliverse.admin.query.dao.RegionalTopPlanRawData;
+import site.holliverse.shared.config.cache.CacheConfig;
 import site.holliverse.shared.alert.AlertOwner;
 import site.holliverse.shared.logging.SystemLogEvent;
 
@@ -43,6 +45,7 @@ public class RetrieveRegionalTopPlanUseCase {
     @Transactional(readOnly = true)
     @SystemLogEvent("admin.regional.topN")
     @AlertOwner("bm")
+    @Cacheable(cacheNames = CacheConfig.REGIONAL_TOP_PLANS_CACHE, sync = true)
     public List<RegionalTopPlanSummary> execute() {
 
         // 지역별

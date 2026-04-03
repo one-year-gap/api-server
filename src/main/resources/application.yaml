@@ -131,6 +131,11 @@ app:
   version: ${APP_VERSION:latest} #현재 release version 명시
   logging:
     member-hash-salt: ${APP_LOGGING_MEMBER_HASH_SALT:change-me-local}
+  cache:
+    regional-metrics:
+      spec: ${APP_CACHE_REGIONAL_METRICS_SPEC:maximumSize=50,expireAfterWrite=5m}
+    regional-top-plans:
+      spec: ${APP_CACHE_REGIONAL_TOP_PLANS_SPEC:maximumSize=10,expireAfterWrite=5m}
 
   #Discord
   alerts:
